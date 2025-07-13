@@ -1,22 +1,23 @@
-# 💼 GeniPay/PayChain: Blockchain Payroll System
+# 💼 GeniePay: Blockchain Payroll System
 
 ## 🧭 Executive Summary
 
-**GeniPay/PayChain** is a compliant blockchain-based payroll system enabling businesses to pay employees and contractors globally in stablecoins, while ensuring full tax and regulatory compliance in countries like Canada, the U.S., and the UAE. We simplify global payroll, reduce fees, increase transparency, and eliminate traditional banking delays.
+**GeniePay** is a compliant blockchain-based payroll system enabling businesses to pay employees and contractors globally in stablecoins, while ensuring full tax and regulatory compliance. We simplify global payroll, reduce fees, increase transparency, and eliminate traditional banking delays.
 
 ---
 
 ## 🎯 Problem Statement
+- Paying people in other countries is slow, messy, and expensive. Companies can spend over **$1,000 per employee per year** just to manage international payroll.
 
-- Global payroll is costly, slow, and heavily fragmented across jurisdictions.
-- Cross-border contractor payments incur high FX and processing fees.
-- Cryptocurrency payroll lacks tax compliance and regulatory support in most systems.
+- Sending money to contractors overseas often costs **6% or more** in fees and takes up to **5 days** to arrive.
+
+- Most crypto payroll systems don’t handle taxes or legal reporting properly, which makes them risky or unusable for real businesses.
 
 ---
 
-## ✅ Solution: GeniPay/PayChain
+## ✅ Solution: GeniePay
 
-GeniPay/PayChain allows companies to:
+GeniePay allows companies to:
 
 - Pay employees in **stablecoins (USDC, USDT)** instantly.
 - Automatically compute, deduct, and remit taxes in supported regions.
@@ -61,33 +62,26 @@ GeniPay/PayChain allows companies to:
 
 ## 🧪 MVP Roadmap
 
-**Phase 1: UAE Pilot (0–3 months)**
-- Payroll in USDC via Polygon
-- VARA-compliant sandbox application
-- Employer/employee dashboard
+**Phase 1**
+- Connect USDC wallet and transfer money to another wallet via simple dashboard.
 
-**Phase 2: Canada Integration (3–6 months)**
-- CRA-compatible reporting
-- Tax deduction engine
-- Fiat off-ramp to Canadian banks
+**Phase 2**
+- Complete dashboard UI
 
-**Phase 3: U.S. MSB Partnership (6–9 months)**
-- Partner with Circle or Prime Trust
-- Full IRS-compliant remittance layer
+**Phase 3**
+- Implement all features from dasboard IU
 
-**Phase 4: Full SaaS Launch (9–12 months)**
-- Subscription plans
-- API for HRMS integration
+**Phase 4**
+- Make them tax compliant
 
-**Phase 5: Global Scaling (12+ months)**
+**Phase 5**
 - Add more countries
-- Add crypto-native features like DAO governance modules
 
 ---
 
 ## 🏗️ Technical Architecture (High-Level)
 
-The GeniPay/PayChain system is structured in modular components that work together to ensure seamless and compliant crypto payroll execution:
+The GeniePay system is structured in modular components that work together to ensure seamless and compliant crypto payroll execution:
 
 1. **Employer Dashboard**: Web interface for HR/payroll teams to manage employees, input salaries, bonuses, and schedules.
 
@@ -154,25 +148,6 @@ Diagram:
 
 ---
 
-## 🤝 Partnerships & Go-To-Market
-
-- Partner with **UAE Free Zones** (DMCC, DIFC, ADGM)
-- Canadian Fintechs like **NDAX, BitBuy**
-- U.S. MSBs (Circle, Prime Trust)
-- Integrate with HR platforms like Gusto, BambooHR
-
----
-
-## 🔒 Compliance Strategy
-
-| Jurisdiction | Regulatory Strategy                               |
-| ------------ | ------------------------------------------------- |
-| 🇨🇦 Canada  | CRA reporting, fiat remittance APIs               |
-| 🇺🇸 USA     | MSB compliance, IRS integration, 1099/W-2 support |
-| 🇦🇪 UAE     | VARA licensing, free zone sandbox                 |
-
----
-
 ## 🚀 Why Now?
 
 - Rise in **remote workers and DAOs**
@@ -190,4 +165,6 @@ Diagram:
 - Crypto tax lawyer, HR/payroll SaaS operator
 
 ---
-**Let’s redefine global payroll — fast, transparent, and compliant.**
+**Let’s redefine global payroll — fast, transparent, and compliant.** <br>
+(might turn into PayChain for domain name)
+
