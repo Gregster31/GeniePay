@@ -1,14 +1,16 @@
 import React from 'react';
-import { Wallet } from 'lucide-react';
+import { Wallet, LogOut } from 'lucide-react';
 
 interface DashboardHeaderProps {
   walletAddress: string;
   isConnected: boolean;
+  onDisconnect: () => void;  // <-- Added this prop
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
   walletAddress, 
-  isConnected 
+  isConnected,
+  onDisconnect,
 }) => {
   const truncateAddress = (address: string): string => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -33,12 +35,24 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </div>
           <div className="flex items-center gap-4">
             {isConnected && (
-              <div className="status-connected">
-                <div className="status-dot"></div>
-                <span className="text-sm font-medium text-green-700">
-                  Connected
-                </span>
-              </div>
+              <>
+                <div className="status-connected">
+                  <div className="status-dot"></div>
+                  <span className="text-sm font-medium text-green-700">
+                    Connected
+                  </span>
+                </div>
+                {/* Add a disconnect button */}
+                <button
+                  onClick={onDisconnect}
+                  className="flex items-center gap-1 text-red-600 hover:text-red-800 transition-colors text-sm font-medium"
+                  title="Disconnect Wallet"
+                  type="button"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Disconnect
+                </button>
+              </>
             )}
           </div>
         </div>
