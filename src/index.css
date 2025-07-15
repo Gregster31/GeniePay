@@ -1,68 +1,95 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Component Styles */
+.gradient-bg {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.card-hover {
+  @apply hover:shadow-md transition-shadow;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.btn-primary {
+  @apply bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.btn-secondary {
+  @apply border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors;
+}
+
+.btn-icon {
+  @apply flex items-center justify-center gap-2;
+}
+
+.input-field {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-xl shadow-xl max-w-md w-full p-6;
+}
+
+.status-connected {
+  @apply flex items-center gap-2 bg-green-100 px-3 py-1 rounded-full;
+}
+
+.status-dot {
+  @apply w-2 h-2 bg-green-500 rounded-full;
+}
+
+.avatar-placeholder {
+  @apply w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center;
+}
+
+.balance-card {
+  @apply card p-6;
+}
+
+.employee-card {
+  @apply bg-gray-50 rounded-lg p-6 border border-gray-200 card-hover;
+}
+
+.section-header {
+  @apply p-6 border-b border-gray-200;
+}
+
+.truncate-address {
+  @apply text-sm text-gray-500;
+}
+
+.copy-button {
+  @apply text-gray-400 hover:text-gray-600 transition-colors;
+}
+
+.fee-info {
+  @apply bg-yellow-50 border border-yellow-200 rounded-lg p-4;
+}
+
+.empty-state {
+  @apply text-center py-12;
 }
