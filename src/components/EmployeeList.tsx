@@ -1,12 +1,27 @@
+/**
+ * EmployeeList Component
+ * -----------------------
+ * Renders a responsive grid of employee cards for managing team members
+ * and sending payments in a crypto payroll system.
+ *
+ * Props (EmployeeListProps):
+ * - employees: Employee[] — array of employee objects to display
+ * - onAddEmployee: () => void — callback triggered when "Add Employee" is clicked
+ * - onPayEmployee: (employee: Employee) => void — callback triggered when sending a payment
+ *
+ * Features:
+ * - Displays an empty state if no employees are added
+ * - Each employee card shows avatar, name, and a truncated wallet address
+ * - Users can copy wallet addresses to clipboard
+ * - "Send Payment" button calls onPayEmployee with the selected employee
+ * - Responsive layout using TailwindCSS (1–3 columns based on screen size)
+ *
+ */
+
 import React, { useState } from 'react';
 import { Plus, User, Send, Copy, Check } from 'lucide-react';
-import type { Employee } from './AddEmployeeModal';
-
-interface EmployeeListProps {
-  employees: Employee[];
-  onAddEmployee: () => void;
-  onPayEmployee: (employee: Employee) => void;
-}
+import { truncateAddress, type EmployeeListProps } from '../utils/EmployeeListProps';
+import type { Employee } from '../utils/AddEmployeeModalProps';
 
 const EmployeeList: React.FC<EmployeeListProps> = ({
   employees,
@@ -14,10 +29,6 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   onPayEmployee,
 }) => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-
-  const truncateAddress = (address: string): string => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   const copyAddress = async (address: string) => {
     try {

@@ -1,12 +1,25 @@
+/**
+ * WalletConnection Component
+ * ---------------------------
+ * Handles user onboarding by checking for MetaMask availability
+ * and prompting the user to connect their wallet or install MetaMask.
+ *
+ * Props (WalletConnectionProps):
+ * - onConnect: () => void — callback to initiate wallet connection (e.g., using MetaMask)
+ * - isConnecting?: boolean — optional loading state while connecting
+ * - error?: string — optional error message to display when connection fails
+ *
+ * Features:
+ * - Detects if MetaMask is installed in the browser
+ * - Renders either a "Connect MetaMask" or "Install MetaMask" button
+ * - Shows error messages if provided
+ * - Responsive and styled with TailwindCSS
+ */
+
+
 import React, { useState, useEffect } from 'react';
 import { Wallet, AlertCircle } from 'lucide-react';
-import type { EthereumProvider } from '../types/ethereum';
-
-interface WalletConnectionProps {
-  onConnect: () => void;
-  isConnecting?: boolean;
-  error?: string;
-}
+import type WalletConnectionProps from '../utils/WalletConnectionProps';
 
 const WalletConnection: React.FC<WalletConnectionProps> = ({ 
   onConnect, 

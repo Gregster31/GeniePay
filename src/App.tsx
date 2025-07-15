@@ -3,12 +3,11 @@ import WalletConnection from './components/WalletConnection';
 import DashboardHeader from './components/DashboardHeader';
 import BalanceCards from './components/BalanceCards';
 import EmployeeList from './components/EmployeeList';
-import AddEmployeeModal, { type Employee } from './components/AddEmployeeModal';
+import type { Employee } from './utils/AddEmployeeModalProps';
 import PaymentModal from './components/PaymentModal';
-
 import type { EthereumProvider, MetaMaskError } from './types/ethereum';
+import AddEmployeeModal from './components/AddEmployeeModal';
 
-// MetaMask utility functions
 const isMetaMaskInstalled = (): boolean => {
   return typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
 };

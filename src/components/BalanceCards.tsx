@@ -1,14 +1,17 @@
+/**
+ * BalanceCards Component
+ * ----------------------
+ * Displays a grid of balance cards for different coins in the current wallet.
+ *
+ * Props:
+ * - stablecoins: An array of stablecoin objects, each containing:
+ *    - symbol: string — the currency symbol (e.g., "USDC", "DAI")
+ *    - icon: JSX.Element — a visual icon representing the coin
+ *    - balance: string or number — the user's current balance of the coin
+ */
+
 import React from 'react';
-
-interface Stablecoin {
-  symbol: string;
-  balance: string;
-  icon: string;
-}
-
-interface BalanceCardsProps {
-  stablecoins: Stablecoin[];
-}
+import { type BalanceCardsProps } from '../utils/BalanceCardsProps';
 
 const BalanceCards: React.FC<BalanceCardsProps> = ({ stablecoins }) => {
   return (

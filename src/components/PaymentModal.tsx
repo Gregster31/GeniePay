@@ -1,20 +1,7 @@
 import React, { useState } from 'react';
 import { X, User } from 'lucide-react';
-import type { Employee } from './AddEmployeeModal';
+import type { PaymentModalProps } from '../utils/PaymentModalProps';
 
-interface Stablecoin {
-  symbol: string;
-  balance: string;
-  icon: string;
-}
-
-interface PaymentModalProps {
-  isOpen: boolean;
-  employee: Employee | null;
-  stablecoins: Stablecoin[];
-  onClose: () => void;
-  onSendPayment: (employee: Employee, token: string, amount: string) => void;
-}
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen,

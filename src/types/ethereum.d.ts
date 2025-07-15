@@ -1,4 +1,3 @@
-// types/ethereum.d.ts
 export interface EthereumProvider {
   request: (args: { method: string; params?: any[] }) => Promise<any>;
   on: (event: string, handler: (...args: any[]) => void) => void;
@@ -15,7 +14,6 @@ declare global {
   }
 }
 
-// Common MetaMask error codes
 export const METAMASK_ERRORS = {
   USER_REJECTED: 4001,
   UNAUTHORIZED: 4100,
