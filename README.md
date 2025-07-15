@@ -168,3 +168,44 @@ Diagram:
 **Let’s redefine global payroll — fast, transparent, and compliant.** <br>
 (might turn into PayChain for domain name)
 
+## 🛠️ Tools
+
+#### 🧠 Frontend Framework
+
+- **React 18 with TypeScript** – Type safety for crypto operations
+- **Vite** – Fast development server and build tool
+- **Tailwind CSS** – Utility-first styling for rapid UI development
+
+#### 🔗 Web3 Integration
+
+- **Wagmi 2.x** – React hooks for Ethereum interactions
+- **Viem** – TypeScript-first Ethereum library (replaces `ethers.js`)
+- **@rainbow-me/rainbowkit** – Wallet connection UI components
+- **@tanstack/react-query** – Required dependency for Wagmi
+
+#### ⛓️ Blockchain Network
+
+- **Sepolia Testnet** – Ethereum test network for development
+- **MetaMask** – Primary wallet provider
+- **Test Stablecoins** – USDC / DAI on Sepolia
+
+#### 🧩 UI Components & Icons
+
+- **Lucide React** – Clean, consistent icon library
+- **Headless UI** *(optional)* – Unstyled, accessible components
+- **React Hook Form** – Form handling and validation
+
+#### 🗂️ State Management
+
+- **React state (`useState`, `useReducer`)** – Local component state
+- **Wagmi hooks** – Web3 state handling
+
+#### 🛠️ Development Tools
+
+- **ESLint + Prettier** – Code formatting and linting
+- **TypeScript** – Static type checking
+- **Vite** – Build tool and dev server
+
+#### 🚀 Deployment
+
+- **GitHub** – Version control and CI/CD triggers
