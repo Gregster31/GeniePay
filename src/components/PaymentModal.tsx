@@ -1,3 +1,24 @@
+/**
+ * PaymentModal Component
+ * ----------------------
+ * A modal form to send cryptocurrency payments to employees.
+ * Allows selection of a stablecoin, entry of payment amount, 
+ * and validation against available balance.
+ *
+ * Props (PaymentModalProps):
+ * - isOpen: boolean — controls the visibility of the modal
+ * - employee: Employee — the employee receiving the payment
+ * - stablecoins: Array<{ symbol: string; balance: string }> — list of supported stablecoins and their balances
+ * - onClose: () => void — called when the modal is closed
+ * - onSendPayment: (employee, tokenSymbol, amount) => void — called when the payment is confirmed
+ *
+ * Features:
+ * - Input validation for amount and balance checks
+ * - Truncates employee wallet address for UI clarity
+ * - Displays mock network fee estimate
+ * - Uses TailwindCSS utility classes for styling
+ */
+
 import React, { useState } from 'react';
 import { X, User } from 'lucide-react';
 import type { PaymentModalProps } from '../utils/PaymentModalProps';

@@ -1,8 +1,8 @@
 export interface BalanceCardsProps {
-  stablecoins: Stablecoin[];
+  stablecoins: Coin[];
 }
 
-export interface Stablecoin {
+export interface Coin {
   symbol: string;
   balance: string;
   icon: string;

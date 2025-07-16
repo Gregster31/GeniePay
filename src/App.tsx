@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import WalletConnection from './components/WalletConnection';
 import DashboardHeader from './components/DashboardHeader';
 import BalanceCards from './components/BalanceCards';
 import EmployeeList from './components/EmployeeList';
 import type { Employee } from './utils/AddEmployeeModalProps';
 import PaymentModal from './components/PaymentModal';
-import type { EthereumProvider, MetaMaskError } from './types/ethereum';
 import AddEmployeeModal from './components/AddEmployeeModal';
-
-const isMetaMaskInstalled = (): boolean => {
-  return typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
-};
-
-const getMetaMask = (): EthereumProvider | null => {
-  return isMetaMaskInstalled() ? window.ethereum! : null;
-};
+import { fetchEthBalance, getCurrentNetwork, type AccountBalance, isMetaMaskInstalled, getMetaMask } from './utils/balanceUtils';
+import type { MetaMaskError } from './types/ethereum';
 
 const App: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState('');
+  const [currentNetwork, setCurrentNetwork] = useState<string>('');
 
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [showPayEmployee, setShowPayEmployee] = useState(false);
@@ -41,11 +35,36 @@ const App: React.FC = () => {
     },
   ]);
 
-  const stablecoins = [
-    { symbol: 'USDC', balance: '1,250.50', icon: '💰' },
-    { symbol: 'USDT', balance: '850.25', icon: '💵' },
-    { symbol: 'DAI', balance: '2,100.75', icon: '💲' },
-  ];
+  const [accountBalance, setAccountBalance] = useState<AccountBalance>({
+    symbol: 'ETH',
+    balance: '0.0000',
+    icon: '⚡',
+    loading: false,
+  });
+
+  // Function to fetch account balance
+  const fetchAccountBalance = useCallback(async () => {
+    if (!walletAddress || !isConnected) return;
+
+    setAccountBalance(prev => ({ ...prev, loading: true, error: undefined }));
+
+    try {
+      const balance = await fetchEthBalance(walletAddress);
+      setAccountBalance(prev => ({
+        ...prev,
+        balance,
+        loading: false,
+      }));
+    } catch (error) {
+      console.error('Error fetching account balance:', error);
+      setAccountBalance(prev => ({
+        ...prev,
+        balance: '0.0000',
+        loading: false,
+        error: 'Failed to fetch balance',
+      }));
+    }
+  }, [walletAddress, isConnected]);
 
   const handleConnectWallet = async () => {
     if (!isMetaMaskInstalled()) {
@@ -64,6 +83,10 @@ const App: React.FC = () => {
       if (accounts.length > 0) {
         setWalletAddress(accounts[0]);
         setIsConnected(true);
+        
+        // Get current network
+        const network = await getCurrentNetwork();
+        setCurrentNetwork(network);
       } else {
         setConnectionError('No accounts found. Please make sure MetaMask is unlocked.');
       }
@@ -87,6 +110,13 @@ const App: React.FC = () => {
     setIsConnected(false);
     setWalletAddress('');
     setConnectionError('');
+    setCurrentNetwork('');
+    setAccountBalance({
+      symbol: 'ETH',
+      balance: '0.0000',
+      icon: '⚡',
+      loading: false,
+    });
   };
 
   useEffect(() => {
@@ -96,12 +126,24 @@ const App: React.FC = () => {
     if (!ethereum) return;
 
     const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length === 0) handleDisconnectWallet();
-      else setWalletAddress(accounts[0]);
+      if (accounts.length === 0) {
+        handleDisconnectWallet();
+      } else {
+        setWalletAddress(accounts[0]);
+      }
     };
 
-    const handleChainChanged = (chainId: string) => {
+    const handleChainChanged = async (chainId: string) => {
       console.log('Chain changed to:', chainId);
+      
+      // Update network name
+      const network = await getCurrentNetwork();
+      setCurrentNetwork(network);
+      
+      // Refetch balance when chain changes
+      if (isConnected && walletAddress) {
+        setTimeout(() => fetchAccountBalance(), 1000);
+      }
     };
 
     ethereum.on('accountsChanged', handleAccountsChanged);
@@ -111,7 +153,7 @@ const App: React.FC = () => {
       ethereum.removeListener?.('accountsChanged', handleAccountsChanged);
       ethereum.removeListener?.('chainChanged', handleChainChanged);
     };
-  }, []);
+  }, [isConnected, walletAddress, fetchAccountBalance]);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -125,6 +167,10 @@ const App: React.FC = () => {
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
           setIsConnected(true);
+          
+          // Get current network
+          const network = await getCurrentNetwork();
+          setCurrentNetwork(network);
         }
       } catch (error) {
         console.error('Error checking connection:', error);
@@ -133,6 +179,13 @@ const App: React.FC = () => {
 
     checkConnection();
   }, []);
+
+  // Fetch balance when connected or wallet address changes
+  useEffect(() => {
+    if (isConnected && walletAddress) {
+      fetchAccountBalance();
+    }
+  }, [isConnected, walletAddress, fetchAccountBalance]);
 
   const handleAddEmployee = (employeeData: Omit<Employee, 'id'>) => {
     const newEmployee: Employee = { ...employeeData, id: employees.length + 1 };
@@ -156,6 +209,11 @@ const App: React.FC = () => {
       console.log('Amount:', amount, token);
 
       alert(`Payment of ${amount} ${token} sent to ${employee.name}!`);
+      
+      // Refresh balance after payment
+      setTimeout(() => {
+        fetchAccountBalance();
+      }, 2000);
     } catch (error: any) {
       console.error('Payment failed:', error);
       alert('Payment failed: ' + error.message);
@@ -186,7 +244,20 @@ const App: React.FC = () => {
         onDisconnect={handleDisconnectWallet}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <BalanceCards stablecoins={stablecoins} />
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">Account Balance</h2>
+            <div className="text-sm text-gray-500">
+              Network: <span className="font-medium">{currentNetwork}</span>
+            </div>
+          </div>
+        </div>
+        
+        <BalanceCards 
+          accountBalance={accountBalance} 
+          onRefresh={fetchAccountBalance}
+        />
+        
         <EmployeeList
           employees={employees}
           onAddEmployee={() => setShowAddEmployee(true)}
@@ -203,7 +274,7 @@ const App: React.FC = () => {
         isOpen={showPayEmployee}
         onClose={handleClosePayEmployee}
         employee={selectedEmployee}
-        stablecoins={stablecoins}
+        stablecoins={[accountBalance]}
         onSendPayment={handleSendPayment}
       />
     </div>
