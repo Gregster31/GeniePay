@@ -84,7 +84,9 @@ Need check RISE: what they offer <br>
 - Implement all features from dasboard IU
 
 **Phase 4**
-- Make them tax compliant
+- Make them tax compliant <br>
+Clean the readme <br>
+Make a product presentation PDF <br>
 
 **Phase 5**
 - Add more countries
