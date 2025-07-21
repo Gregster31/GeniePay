@@ -63,10 +63,21 @@ GeniePay allows companies to:
 ## 🧪 MVP Roadmap
 
 **Phase 1**
-- Connect USDC wallet and transfer money to another wallet via simple dashboard.
+- Connect USDC wallet and transfer money to another wallet via simple dashboard. <br>
+Basic UI with functions <br>
+Able to connect to connect wallet vai MetaMask extension <br>
+Able to send money to different wallets <br>
+Able to add new employee and perform actions to them <br>
+Get amount in wallet in UI card <br>
+https://youtu.be/w4mI5J88Kbg
 
 **Phase 2**
-- Complete dashboard UI
+- Complete dashboard UI <br>
+Need Security/downfalls check <br>
+Need Flow drawings <br>
+Need documentations on current functions <br>
+Need completed dashboard UI (no logic for now) <br>
+Need check RISE: what they offer <br>
 
 **Phase 3**
 - Implement all features from dasboard IU
