@@ -6,7 +6,14 @@ import EmployeeList from './components/EmployeeList';
 import type { Employee } from './utils/AddEmployeeModalProps';
 import PaymentModal from './components/PaymentModal';
 import AddEmployeeModal from './components/AddEmployeeModal';
-import { fetchEthBalance, getCurrentNetwork, type AccountBalance, isMetaMaskInstalled, getMetaMask } from './utils/balanceUtils';
+import { 
+  fetchEthBalance, 
+  getCurrentNetwork, 
+  type AccountBalance, 
+  isMetaMaskInstalled, 
+  getMetaMask,
+  sendEthTransaction
+} from './utils/balanceUtils';
 import type { MetaMaskError } from './types/ethereum';
 
 const App: React.FC = () => {
@@ -24,13 +31,19 @@ const App: React.FC = () => {
     {
       id: 1,
       name: 'John Doe',
-      walletAddress: '0x742d35Cc6634C0532925a3b8D34EAB',
+      walletAddress: '0x742d35Cc6634C0532925a3b8D34EAB123456',
       avatar: null,
     },
     {
       id: 2,
       name: 'Sarah Wilson',
-      walletAddress: '0x892f45Bc7745D0643856a4c9E45FAC',
+      walletAddress: '0x892f45Bc7745D0643856a4c9E45FAC789ABC',
+      avatar: null,
+    },    
+    {
+      id: 3,
+      name: 'Test Wallet',
+      walletAddress: '0x5Db7DaEFaa39E7e3C14e9dC9e2d2Fdca3127E722',
       avatar: null,
     },
   ]);
@@ -199,24 +212,71 @@ const App: React.FC = () => {
 
   const handleSendPayment = async (employee: Employee, token: string, amount: string) => {
     try {
-      if (!isMetaMaskInstalled()) throw new Error('MetaMask is not installed');
+      if (!isMetaMaskInstalled()) {
+        throw new Error('MetaMask is not installed');
+      }
 
       const ethereum = getMetaMask();
-      if (!ethereum) throw new Error('Ethereum provider not found');
+      if (!ethereum) {
+        throw new Error('Ethereum provider not found');
+      }
 
-      console.log('Would send transaction from:', walletAddress);
-      console.log('To:', employee.walletAddress);
-      console.log('Amount:', amount, token);
+      if (!walletAddress) {
+        throw new Error('Wallet not connected');
+      }
 
-      alert(`Payment of ${amount} ${token} sent to ${employee.name}!`);
+      // Validate Ethereum address format
+      const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+      if (!ethAddressRegex.test(employee.walletAddress)) {
+        throw new Error('Invalid recipient wallet address');
+      }
+
+      console.log('Sending transaction:', {
+        from: walletAddress,
+        to: employee.walletAddress,
+        amount: amount,
+        token: token
+      });
+
+      // For now, we'll only support ETH transactions
+      if (token !== 'ETH') {
+        throw new Error('Only ETH transactions are supported in this version');
+      }
+
+      // Send the transaction
+      const txHash = await sendEthTransaction(
+        walletAddress,
+        employee.walletAddress,
+        amount
+      );
+
+      console.log('Transaction sent:', txHash);
       
-      // Refresh balance after payment
+      // Show success message
+      alert(`Payment sent successfully!\nTransaction Hash: ${txHash}\n\nAmount: ${amount} ${token}\nTo: ${employee.name}\nAddress: ${employee.walletAddress}`);
+      
+      // Refresh balance after a short delay to allow for transaction processing
       setTimeout(() => {
         fetchAccountBalance();
-      }, 2000);
+      }, 3000);
+
     } catch (error: any) {
       console.error('Payment failed:', error);
-      alert('Payment failed: ' + error.message);
+      
+      // Handle specific MetaMask errors
+      if (error.code === 4001) {
+        throw new Error('Transaction rejected by user');
+      } else if (error.code === -32603) {
+        throw new Error('Transaction failed - insufficient funds for gas');
+      } else if (error.code === -32000) {
+        throw new Error('Transaction failed - insufficient funds');
+      } else if (error.message?.includes('insufficient funds')) {
+        throw new Error('Insufficient funds for transaction and gas fees');
+      } else if (error.message?.includes('gas required exceeds allowance')) {
+        throw new Error('Gas limit exceeded - transaction too complex');
+      } else {
+        throw new Error(error.message || 'Transaction failed');
+      }
     }
   };
 
@@ -249,6 +309,11 @@ const App: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900">Account Balance</h2>
             <div className="text-sm text-gray-500">
               Network: <span className="font-medium">{currentNetwork}</span>
+              {currentNetwork.includes('Sepolia') && (
+                <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                  Testnet
+                </span>
+              )}
             </div>
           </div>
         </div>

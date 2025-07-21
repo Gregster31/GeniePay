@@ -15,14 +15,16 @@
  * Features:
  * - Input validation for amount and balance checks
  * - Truncates employee wallet address for UI clarity
- * - Displays mock network fee estimate
+ * - Real network fee estimation for Sepolia testnet
+ * - Ethereum transaction support
  * - Uses TailwindCSS utility classes for styling
  */
 
-import React, { useState } from 'react';
-import { X, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, User, Loader2 } from 'lucide-react';
 import type { PaymentModalProps } from '../utils/PaymentModalProps';
-
+import { truncateAddress } from '../utils/EmployeeListProps';
+import { getMetaMask, estimateGasPrice } from '../utils/balanceUtils';
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen,
@@ -36,10 +38,77 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [errors, setErrors] = useState({
     amount: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [estimatedFee, setEstimatedFee] = useState<string>('0.00');
+  const [gasPrice, setGasPrice] = useState<string>('0');
+  const [ethBalance, setEthBalance] = useState<string>('0');
 
-  const truncateAddress = (address: string): string => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  useEffect(() => {
+    const fetchGasEstimate = async () => {
+      if (!isOpen || !employee?.walletAddress) return;
+
+      try {
+        console.log('Fetching gas estimate...');
+        
+        const ethereum = await getMetaMask();
+        if (!ethereum) {
+          throw new Error('MetaMask not available');
+        }
+
+        const accounts = await ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length === 0) {
+          throw new Error('No accounts found');
+        }
+
+        const fromAddress = accounts[0];
+
+        const gasEstimate = await estimateGasPrice(
+          employee.walletAddress, 
+          selectedToken, 
+          amount || '0.001',
+          fromAddress
+        );
+        
+        console.log('Gas estimate received:', gasEstimate);
+        
+        setGasPrice(gasEstimate.gasPrice);
+        setEstimatedFee(gasEstimate.estimatedFee);
+
+        const balance = await ethereum.request({
+          method: 'eth_getBalance',
+          params: [fromAddress, 'latest']
+        });
+        const ethBal = parseInt(balance, 16) / Math.pow(10, 18);
+        console.log('ETH balance:', ethBal);
+        setEthBalance(ethBal.toString());
+
+      } catch (error) {
+        console.error('Error fetching gas estimate:', error);
+        setEstimatedFee('0.002'); 
+        setGasPrice('25'); 
+        
+        try {
+          const ethereum = await getMetaMask();
+          if (ethereum) {
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+              const balance = await ethereum.request({
+                method: 'eth_getBalance',
+                params: [accounts[0], 'latest']
+              });
+              const ethBal = parseInt(balance, 16) / Math.pow(10, 18);
+              setEthBalance(ethBal.toString());
+            }
+          }
+        } catch (balanceError) {
+          console.error('Failed to get balance:', balanceError);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(fetchGasEstimate, 300);
+    return () => clearTimeout(timeoutId);
+  }, [isOpen, employee?.walletAddress, selectedToken, amount]);
 
   const validateAmount = (value: string): boolean => {
     const numValue = parseFloat(value);
@@ -50,14 +119,50 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     const selectedCoin = stablecoins.find(coin => coin.symbol === selectedToken);
     const balance = parseFloat(selectedCoin?.balance.replace(/,/g, '') || '0');
+    const currentEthBalance = parseFloat(ethBalance) || 0;
+    let feeAmount = parseFloat(estimatedFee) || 0;
     
-    if (numValue > balance) {
-      setErrors({ amount: 'Insufficient balance' });
-      return false;
+    if (feeAmount < 0.001) {
+      feeAmount = 0.002; 
+      setEstimatedFee(feeAmount.toString());
+    }
+    
+    console.log('Validation Details:');
+    console.log('- Selected Token:', selectedToken);
+    console.log('- Payment Amount:', numValue);
+    console.log('- ETH Balance:', currentEthBalance);
+    console.log('- Estimated Fee:', feeAmount);
+    console.log('- Token Balance:', balance);
+    
+    if (selectedToken === 'ETH') {
+      const totalRequired = numValue + feeAmount;
+      if (totalRequired > currentEthBalance) {
+        setErrors({ 
+          amount: `Insufficient ETH. Need ${totalRequired.toFixed(6)} ETH (${numValue} payment + ${feeAmount.toFixed(6)} gas) but you have ${currentEthBalance.toFixed(6)} ETH` 
+        });
+        return false;
+      }
+    } else {
+      if (numValue > balance) {
+        setErrors({ amount: `Insufficient ${selectedToken} balance. Need ${numValue} but you have ${balance}` });
+        return false;
+      }
+      
+      if (currentEthBalance < feeAmount) {
+        setErrors({ 
+          amount: `Insufficient ETH for gas fees. Need ${feeAmount.toFixed(6)} ETH for gas but you have ${currentEthBalance.toFixed(6)} ETH` 
+        });
+        return false;
+      }
     }
     
     setErrors({ amount: '' });
     return true;
+  };
+
+  const validateWalletAddress = (address: string): boolean => {
+    const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+    return ethAddressRegex.test(address);
   };
 
   const handleAmountChange = (value: string) => {
@@ -67,22 +172,52 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  const handleSendPayment = () => {
+  const handleSendPayment = async () => {
     if (!employee || !validateAmount(amount)) return;
     
-    onSendPayment(employee, selectedToken, amount);
-    handleClose();
+    if (!validateWalletAddress(employee.walletAddress)) {
+      setErrors({ amount: 'Invalid wallet address' });
+      return;
+    }
+
+    const currentEthBalance = parseFloat(ethBalance);
+    const feeAmount = parseFloat(estimatedFee);
+    const paymentAmount = parseFloat(amount);
+
+    if (selectedToken === 'ETH' && (paymentAmount + feeAmount) > currentEthBalance) {
+      setErrors({ amount: 'Insufficient balance for payment + gas fees' });
+      return;
+    }
+
+    if (currentEthBalance < feeAmount) {
+      setErrors({ amount: 'Insufficient ETH for gas fees' });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      await onSendPayment(employee, selectedToken, amount);
+      handleClose();
+    } catch (error) {
+      console.error('Payment failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
     setAmount('');
     setErrors({ amount: '' });
+    setIsLoading(false);
     onClose();
   };
 
   if (!isOpen || !employee) return null;
 
-  const estimatedFee = 2.50; // Mock fee calculation
+  const totalCost = amount && selectedToken === 'ETH' 
+    ? (parseFloat(amount) + parseFloat(estimatedFee)).toFixed(6)
+    : amount;
 
   return (
     <div className="modal-overlay">
@@ -92,6 +227,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isLoading}
           >
             <X className="w-6 h-6" />
           </button>
@@ -119,6 +255,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         <div className="space-y-4">
+          {/* Current Balances */}
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Available Balances</h4>
+            <div className="text-sm text-gray-600">
+              <div className="flex justify-between">
+                <span>ETH (for gas):</span>
+                <span className="font-medium">{parseFloat(ethBalance).toFixed(6)} ETH</span>
+              </div>
+              {stablecoins.map((coin) => (
+                <div key={coin.symbol} className="flex justify-between">
+                  <span>{coin.symbol}:</span>
+                  <span className="font-medium">{coin.balance}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Token Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -128,6 +281,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               value={selectedToken}
               onChange={(e) => setSelectedToken(e.target.value)}
               className="input-field"
+              disabled={isLoading}
             >
               {stablecoins.map((coin) => (
                 <option key={coin.symbol} value={coin.symbol}>
@@ -140,7 +294,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           {/* Amount Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Amount
+              Amount ({selectedToken})
             </label>
             <input
               type="number"
@@ -149,7 +303,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               className={`input-field ${errors.amount ? 'border-red-500' : ''}`}
               placeholder="0.00"
               min="0"
-              step="0.01"
+              step="0.000001"
+              disabled={isLoading}
             />
             {errors.amount && (
               <p className="text-red-500 text-sm mt-1">{errors.amount}</p>
@@ -159,17 +314,41 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           {/* Fee Information */}
           <div className="fee-info">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Network Fee (Est.)</span>
-              <span className="font-medium">${estimatedFee.toFixed(2)}</span>
+              <span className="text-gray-600">Network Fee (Sepolia)</span>
+              <span className="font-medium">{estimatedFee} ETH</span>
             </div>
-            {amount && (
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Gas Price</span>
+              <span>{parseFloat(gasPrice).toFixed(2)} Gwei</span>
+            </div>
+            {amount && selectedToken === 'ETH' && (
               <div className="flex justify-between text-sm mt-2 pt-2 border-t border-yellow-200">
-                <span className="text-gray-600">Total Cost</span>
-                <span className="font-medium">
-                  {amount} {selectedToken} + ${estimatedFee.toFixed(2)}
+                <span className="text-gray-600 font-medium">Total Required</span>
+                <span className="font-medium text-gray-900">
+                  {totalCost} ETH
                 </span>
               </div>
             )}
+            {amount && selectedToken !== 'ETH' && (
+              <div className="flex justify-between text-sm mt-2 pt-2 border-t border-yellow-200">
+                <span className="text-gray-600 font-medium">Total Required</span>
+                <span className="font-medium text-gray-900">
+                  {amount} {selectedToken} + {estimatedFee} ETH
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Network Info */}
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <p className="text-sm text-blue-700">
+              💡 You're sending on Sepolia testnet. This transaction will use test ETH for gas fees.
+              {parseFloat(ethBalance) < parseFloat(estimatedFee) && (
+                <span className="block mt-1 text-red-600 font-medium">
+                  ⚠️ You need more ETH to cover gas fees!
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
@@ -178,19 +357,27 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <button
             onClick={handleClose}
             className="flex-1 px-4 py-2 btn-secondary"
+            disabled={isLoading}
           >
             Cancel
           </button>
           <button
             onClick={handleSendPayment}
-            disabled={!amount || !!errors.amount}
+            disabled={!amount || !!errors.amount || isLoading}
             className={`flex-1 px-4 py-2 btn-primary ${
-              !amount || !!errors.amount 
+              !amount || !!errors.amount || isLoading
                 ? 'opacity-50 cursor-not-allowed' 
                 : ''
             }`}
           >
-            Send Payment
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              'Send Payment'
+            )}
           </button>
         </div>
       </div>
