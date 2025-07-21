@@ -4,6 +4,7 @@
 
 **GeniePay** is a compliant blockchain-based payroll system enabling businesses to pay employees and contractors globally in stablecoins, while ensuring full tax and regulatory compliance. We simplify global payroll, reduce fees, increase transparency, and eliminate traditional banking delays.
 
+Goal explained: I want to make a web app where people are freely able to create a team and pay them via (mainly) crypto, so as to bypass the fees from global transactions. The admin of the team would be able to simply add wallets addresses (his employees) and send them money, choosing an automated process if wanted.
 ---
 
 ## 🎯 Problem Statement
