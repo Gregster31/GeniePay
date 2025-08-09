@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calendar, DollarSign, Download, MoreHorizontal, User, Users } from "lucide-react";
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
 import { mockEmployees } from "../utils/MockData";
-import type { Employee } from '../utils/Types.ts';
+import type { Employee } from '../types/Types.ts';
 import AddEmployeeModal from './AddEmployeeModal';
 
 // Main Payroll Page Component

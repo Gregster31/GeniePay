@@ -1,4 +1,4 @@
-import type { Employee } from "./Types";
+import type { Employee } from "../types/Types";
 
 export interface AddEmployeeModalProps {
   isOpen: boolean;

@@ -1,4 +1,4 @@
-import type { Employee } from "./Types.ts";
+import type { Employee } from "../types/Types.ts";
 
 // Mock data
 export const mockEmployees: Employee[] = [
