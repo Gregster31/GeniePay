@@ -1,8 +1,22 @@
+import React, { useState } from 'react';
 import { Calendar, DollarSign, Download, MoreHorizontal, User, Users } from "lucide-react";
 import { mockEmployees } from "../utils/MockData";
+import type { Employee } from '../utils/Types.ts';
+import AddEmployeeModal from './AddEmployeeModal';
 
-// Payroll Page Component (Main Page)
+// Main Payroll Page Component
 const PayrollPage: React.FC = () => {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [employees, setEmployees] = useState(mockEmployees);
+
+  const handleAddEmployee = (employeeData: Omit<Employee, 'id'>) => {
+    const newEmployee: Employee = {
+      id: Date.now(),
+      ...employeeData
+    };
+    setEmployees(prev => [...prev, newEmployee]);
+  };
+
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
@@ -16,7 +30,10 @@ const PayrollPage: React.FC = () => {
           <button className="px-3 py-1 text-gray-500 hover:bg-gray-100 rounded-md transition-colors">
             Severance
           </button>
-          <button className="px-3 py-1 text-gray-500 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-1">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-3 py-1 text-gray-500 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-1"
+          >
             <Users className="w-4 h-4" />
             Add Employee
           </button>
@@ -122,14 +139,22 @@ const PayrollPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockEmployees.map((employee) => (
+              {employees.map((employee) => (
                 <tr key={employee.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                          <User className="h-5 w-5 text-gray-600" />
-                        </div>
+                        {employee.avatar ? (
+                          <img
+                            src={employee.avatar}
+                            alt={employee.name}
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <User className="h-5 w-5 text-gray-600" />
+                          </div>
+                        )}
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{employee.name}</div>
@@ -159,6 +184,13 @@ const PayrollPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Add Employee Modal */}
+      <AddEmployeeModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddEmployee}
+      />
     </div>
   );
 };

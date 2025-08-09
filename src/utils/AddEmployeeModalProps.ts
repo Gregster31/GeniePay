@@ -1,12 +1,7 @@
-export interface Employee {
-  id: number;
-  name: string;
-  walletAddress: string;
-  avatar?: string | null;
-}
+import type { Employee } from "./Types";
 
 export interface AddEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddEmployee: (employee: Omit<Employee, 'id'>) => void;
+  onAdd: (employee: Omit<Employee, 'id'>) => void;
 }

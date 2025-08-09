@@ -3,8 +3,9 @@ export interface Employee {
   id: number;
   name: string;
   walletAddress: string;
-  avatar: string | null;
+  avatar?: string | null;
 }
+
 
 export interface AccountBalance {
   symbol: string;

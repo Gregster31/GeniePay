@@ -12,7 +12,6 @@ import {
   CreditCard,
   Wallet,
 } from 'lucide-react';
-
 import Sidebar from './components/SidebarNavigationComponent';
 import Header from './components/HeaderComponent';
 import PayrollPage from './components/PayrollComponent';
