@@ -1,347 +1,195 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import WalletConnection from './components/WalletConnection';
-import DashboardHeader from './components/DashboardHeader';
-import BalanceCards from './components/BalanceCards';
-import EmployeeList from './components/EmployeeList';
-import type { Employee } from './utils/AddEmployeeModalProps';
-import PaymentModal from './components/PaymentModal';
-import AddEmployeeModal from './components/AddEmployeeModal';
+import React, { useState } from 'react';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { 
-  fetchEthBalance, 
-  getCurrentNetwork, 
-  type AccountBalance, 
-  isMetaMaskInstalled, 
-  getMetaMask,
-  sendEthTransaction
-} from './utils/balanceUtils';
-import type { MetaMaskError } from './types/ethereum';
+  Calendar, 
+  DollarSign,
+  Users, 
+  Settings, 
+  TrendingUp,
+  FileText,
+  History,
+  CreditCard,
+  Wallet,
+} from 'lucide-react';
 
-const App: React.FC = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState('');
-  const [currentNetwork, setCurrentNetwork] = useState<string>('');
+import Sidebar from './components/SidebarNavigationComponent';
+import Header from './components/HeaderComponent';
+import PayrollPage from './components/PayrollComponent';
+import PlaceholderPage from './components/PlaceholderComponent';
 
-  const [showAddEmployee, setShowAddEmployee] = useState(false);
-  const [showPayEmployee, setShowPayEmployee] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-
-  const [employees, setEmployees] = useState<Employee[]>([
-    {
-      id: 1,
-      name: 'John Doe',
-      walletAddress: '0x742d35Cc6634C0532925a3b8D34EAB123456',
-      avatar: null,
-    },
-    {
-      id: 2,
-      name: 'Sarah Wilson',
-      walletAddress: '0x892f45Bc7745D0643856a4c9E45FAC789ABC',
-      avatar: null,
-    },    
-    {
-      id: 3,
-      name: 'Test Wallet',
-      walletAddress: '0x5Db7DaEFaa39E7e3C14e9dC9e2d2Fdca3127E722',
-      avatar: null,
-    },
-  ]);
-
-  const [accountBalance, setAccountBalance] = useState<AccountBalance>({
-    symbol: 'ETH',
-    balance: '0.0000',
-    icon: '⚡',
-    loading: false,
-  });
-
-  // Function to fetch account balance
-  const fetchAccountBalance = useCallback(async () => {
-    if (!walletAddress || !isConnected) return;
-
-    setAccountBalance(prev => ({ ...prev, loading: true, error: undefined }));
-
-    try {
-      const balance = await fetchEthBalance(walletAddress);
-      setAccountBalance(prev => ({
-        ...prev,
-        balance,
-        loading: false,
-      }));
-    } catch (error) {
-      console.error('Error fetching account balance:', error);
-      setAccountBalance(prev => ({
-        ...prev,
-        balance: '0.0000',
-        loading: false,
-        error: 'Failed to fetch balance',
-      }));
-    }
-  }, [walletAddress, isConnected]);
-
-  const handleConnectWallet = async () => {
-    if (!isMetaMaskInstalled()) {
-      setConnectionError('MetaMask is not installed. Please install it to continue.');
-      return;
-    }
-
-    setIsConnecting(true);
-    setConnectionError('');
-
-    try {
-      const ethereum = getMetaMask();
-      if (!ethereum) throw new Error('Ethereum provider not found');
-
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts.length > 0) {
-        setWalletAddress(accounts[0]);
-        setIsConnected(true);
-        
-        // Get current network
-        const network = await getCurrentNetwork();
-        setCurrentNetwork(network);
-      } else {
-        setConnectionError('No accounts found. Please make sure MetaMask is unlocked.');
-      }
-    } catch (error: any) {
-      console.error('Error connecting to MetaMask:', error);
-      const err = error as MetaMaskError;
-
-      if (err.code === 4001) {
-        setConnectionError('Connection rejected. Please approve the connection request.');
-      } else if (err.code === -32002) {
-        setConnectionError('Connection request is already pending. Please check MetaMask.');
-      } else {
-        setConnectionError('Failed to connect to MetaMask. Please try again.');
-      }
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const handleDisconnectWallet = () => {
-    setIsConnected(false);
-    setWalletAddress('');
-    setConnectionError('');
-    setCurrentNetwork('');
-    setAccountBalance({
-      symbol: 'ETH',
-      balance: '0.0000',
-      icon: '⚡',
-      loading: false,
-    });
-  };
-
-  useEffect(() => {
-    if (!isMetaMaskInstalled()) return;
-
-    const ethereum = getMetaMask();
-    if (!ethereum) return;
-
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length === 0) {
-        handleDisconnectWallet();
-      } else {
-        setWalletAddress(accounts[0]);
-      }
-    };
-
-    const handleChainChanged = async (chainId: string) => {
-      console.log('Chain changed to:', chainId);
-      
-      // Update network name
-      const network = await getCurrentNetwork();
-      setCurrentNetwork(network);
-      
-      // Refetch balance when chain changes
-      if (isConnected && walletAddress) {
-        setTimeout(() => fetchAccountBalance(), 1000);
-      }
-    };
-
-    ethereum.on('accountsChanged', handleAccountsChanged);
-    ethereum.on('chainChanged', handleChainChanged);
-
-    return () => {
-      ethereum.removeListener?.('accountsChanged', handleAccountsChanged);
-      ethereum.removeListener?.('chainChanged', handleChainChanged);
-    };
-  }, [isConnected, walletAddress, fetchAccountBalance]);
-
-  useEffect(() => {
-    const checkConnection = async () => {
-      if (!isMetaMaskInstalled()) return;
-
-      const ethereum = getMetaMask();
-      if (!ethereum) return;
-
-      try {
-        const accounts = await ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0]);
-          setIsConnected(true);
-          
-          // Get current network
-          const network = await getCurrentNetwork();
-          setCurrentNetwork(network);
-        }
-      } catch (error) {
-        console.error('Error checking connection:', error);
-      }
-    };
-
-    checkConnection();
-  }, []);
-
-  // Fetch balance when connected or wallet address changes
-  useEffect(() => {
-    if (isConnected && walletAddress) {
-      fetchAccountBalance();
-    }
-  }, [isConnected, walletAddress, fetchAccountBalance]);
-
-  const handleAddEmployee = (employeeData: Omit<Employee, 'id'>) => {
-    const newEmployee: Employee = { ...employeeData, id: employees.length + 1 };
-    setEmployees((prev) => [...prev, newEmployee]);
-  };
-
-  const handlePayEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setShowPayEmployee(true);
-  };
-
-  const handleSendPayment = async (employee: Employee, token: string, amount: string) => {
-    try {
-      if (!isMetaMaskInstalled()) {
-        throw new Error('MetaMask is not installed');
-      }
-
-      const ethereum = getMetaMask();
-      if (!ethereum) {
-        throw new Error('Ethereum provider not found');
-      }
-
-      if (!walletAddress) {
-        throw new Error('Wallet not connected');
-      }
-
-      // Validate Ethereum address format
-      const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/;
-      if (!ethAddressRegex.test(employee.walletAddress)) {
-        throw new Error('Invalid recipient wallet address');
-      }
-
-      console.log('Sending transaction:', {
-        from: walletAddress,
-        to: employee.walletAddress,
-        amount: amount,
-        token: token
-      });
-
-      // For now, we'll only support ETH transactions
-      if (token !== 'ETH') {
-        throw new Error('Only ETH transactions are supported in this version');
-      }
-
-      // Send the transaction
-      const txHash = await sendEthTransaction(
-        walletAddress,
-        employee.walletAddress,
-        amount
-      );
-
-      console.log('Transaction sent:', txHash);
-      
-      // Show success message
-      alert(`Payment sent successfully!\nTransaction Hash: ${txHash}\n\nAmount: ${amount} ${token}\nTo: ${employee.name}\nAddress: ${employee.walletAddress}`);
-      
-      // Refresh balance after a short delay to allow for transaction processing
-      setTimeout(() => {
-        fetchAccountBalance();
-      }, 3000);
-
-    } catch (error: any) {
-      console.error('Payment failed:', error);
-      
-      // Handle specific MetaMask errors
-      if (error.code === 4001) {
-        throw new Error('Transaction rejected by user');
-      } else if (error.code === -32603) {
-        throw new Error('Transaction failed - insufficient funds for gas');
-      } else if (error.code === -32000) {
-        throw new Error('Transaction failed - insufficient funds');
-      } else if (error.message?.includes('insufficient funds')) {
-        throw new Error('Insufficient funds for transaction and gas fees');
-      } else if (error.message?.includes('gas required exceeds allowance')) {
-        throw new Error('Gas limit exceeded - transaction too complex');
-      } else {
-        throw new Error(error.message || 'Transaction failed');
-      }
-    }
-  };
-
-  const handleCloseAddEmployee = () => setShowAddEmployee(false);
-  const handleClosePayEmployee = () => {
-    setShowPayEmployee(false);
-    setSelectedEmployee(null);
-  };
-
-  if (!isConnected) {
-    return (
-      <WalletConnection
-        onConnect={handleConnectWallet}
-        isConnecting={isConnecting}
-        error={connectionError}
-      />
-    );
-  }
-
+// Wallet Connection Component using RainbowKit
+const WalletConnection: React.FC = () => {
   return (
-    <div className="min-h-screen gradient-bg">
-      <DashboardHeader
-        walletAddress={walletAddress}
-        isConnected={isConnected}
-        onDisconnect={handleDisconnectWallet}
-      />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Account Balance</h2>
-            <div className="text-sm text-gray-500">
-              Network: <span className="font-medium">{currentNetwork}</span>
-              {currentNetwork.includes('Sepolia') && (
-                <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                  Testnet
-                </span>
-              )}
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 max-w-md w-full text-center">
+        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Wallet className="w-8 h-8 text-blue-600" />
+        </div>
+
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          GeniePay Crypto Payroll
+        </h1>
+
+        <p className="text-gray-600 mb-8">
+          Connect your wallet to get started with blockchain payroll management
+        </p>
+
+        <div className="mb-8 flex justify-center">
+          <ConnectButton />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <p className="text-xs text-gray-500 mb-2">Supported Features:</p>
+          <div className="flex justify-center gap-4 text-xs text-gray-400">
+            <span>• ETH Payments</span>
+            <span>• Team Management</span>
+            <span>• Transaction History</span>
           </div>
         </div>
-        
-        <BalanceCards 
-          accountBalance={accountBalance} 
-          onRefresh={fetchAccountBalance}
-        />
-        
-        <EmployeeList
-          employees={employees}
-          onAddEmployee={() => setShowAddEmployee(true)}
-          onPayEmployee={handlePayEmployee}
-        />
       </div>
+    </div>
+  );
+};
 
-      <AddEmployeeModal
-        isOpen={showAddEmployee}
-        onClose={handleCloseAddEmployee}
-        onAddEmployee={handleAddEmployee}
-      />
-      <PaymentModal
-        isOpen={showPayEmployee}
-        onClose={handleClosePayEmployee}
-        employee={selectedEmployee}
-        stablecoins={[accountBalance]}
-        onSendPayment={handleSendPayment}
-      />
+// Main App Component
+const App: React.FC = () => {
+  const { address, isConnected } = useAccount();
+  const [activeTab, setActiveTab] = useState('payroll');
+
+  // Show wallet connection screen if not connected
+  if (!isConnected) {
+    return <WalletConnection />;
+  }
+
+  const getPageContent = () => {
+    switch (activeTab) {
+      case 'payroll':
+        return <PayrollPage />;
+      case 'dashboard':
+        return (
+          <PlaceholderPage
+            title="Dashboard"
+            description="View your blockchain payroll analytics and overview"
+            icon={<TrendingUp className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'action-items':
+        return (
+          <PlaceholderPage
+            title="Action Items"
+            description="Manage pending payroll actions and approvals"
+            icon={<Calendar className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'team':
+        return (
+          <PlaceholderPage
+            title="Team Management"
+            description="Add, edit, and manage your team members and their crypto wallets"
+            icon={<Users className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'pay':
+        return (
+          <PlaceholderPage
+            title="Quick Pay"
+            description="Send instant crypto payments to employees"
+            icon={<DollarSign className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'invoices':
+        return (
+          <PlaceholderPage
+            title="Invoices"
+            description="Manage and track blockchain-based invoices"
+            icon={<FileText className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'account-history':
+        return (
+          <PlaceholderPage
+            title="Account History"
+            description="View all blockchain transactions and payment history"
+            icon={<History className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'documents':
+        return (
+          <PlaceholderPage
+            title="Documents"
+            description="Store and manage payroll documents on IPFS"
+            icon={<FileText className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'deposit':
+        return (
+          <PlaceholderPage
+            title="Deposit Funds"
+            description="Add cryptocurrency to your payroll account"
+            icon={<CreditCard className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      case 'settings':
+        return (
+          <PlaceholderPage
+            title="Settings"
+            description="Configure your blockchain payroll preferences"
+            icon={<Settings className="w-8 h-8 text-gray-400" />}
+          />
+        );
+      default:
+        return <PayrollPage />;
+    }
+  };
+
+  const getHeaderActions = () => {
+    if (activeTab === 'payroll') {
+      return (
+        <>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            Quick Pay
+          </button>
+          <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+            Fund Account
+          </button>
+          <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+            Invite Team
+          </button>
+        </>
+      );
+    }
+    return null;
+  };
+
+  const getPageTitle = () => {
+    const titles: Record<string, string> = {
+      dashboard: 'Dashboard',
+      'action-items': 'Action Items',
+      team: 'Team Management',
+      pay: 'Quick Pay',
+      payroll: 'Payroll',
+      invoices: 'Invoices',
+      'account-history': 'Account History',
+      documents: 'Documents',
+      deposit: 'Deposit Funds',
+      settings: 'Settings',
+    };
+    return titles[activeTab] || 'Payroll';
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex-1 flex flex-col">
+        <Header 
+          title={getPageTitle()}
+          actions={getHeaderActions()}
+          walletAddress={address || ''} onDisconnect={function (): void {
+            throw new Error('Function not implemented.');
+          } }        />
+        {getPageContent()}
+      </div>
     </div>
   );
 };
