@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import Sidebar from './components/SidebarNavigationComponent';
 import Header from './components/HeaderComponent';
-import PayrollPage from './components/PayrollComponent';
+import PayrollPage from './components/payroll/PayrollComponent';
 import PlaceholderPage from './components/PlaceholderComponent';
 
 // Wallet Connection Component using RainbowKit

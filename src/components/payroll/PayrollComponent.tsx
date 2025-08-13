@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Calendar, DollarSign, Download, MoreHorizontal, User, Users, Loader2 } from "lucide-react";
 import { useAccount, useBalance, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
-import { mockEmployees } from "../utils/MockData";
-import type { Employee } from '../types/Types.ts';
-import AddEmployeeModal from './AddEmployeeModal';
-import { config } from '../utils/environment.ts';
+import { mockEmployees } from "../../Data/MockData.ts";
+import type { Employee } from "../../models/EmployeeModel.ts";
+import AddEmployeeModal from './AddEmployeeModal.tsx';
+import { config } from '../../utils/environment.ts';
 
 // Main Payroll Page Component
 const PayrollPage: React.FC = () => {

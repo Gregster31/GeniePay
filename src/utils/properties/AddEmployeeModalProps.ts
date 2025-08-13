@@ -1,4 +1,4 @@
-import type { Employee } from "../types/Types";
+import type { Employee } from "../../models/EmployeeModel.ts";
 
 export interface AddEmployeeModalProps {
   isOpen: boolean;

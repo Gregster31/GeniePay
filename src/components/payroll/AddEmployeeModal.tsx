@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Camera, Upload } from "lucide-react";
-import type { AddEmployeeModalProps } from "../utils/AddEmployeeModalProps";
-import { useImageUpload } from "../utils/UploadImageHook";
+import type { AddEmployeeModalProps } from "../../utils/properties/AddEmployeeModalProps";
+import { useImageUpload } from "../..//utils/UploadImageHook";
 
 // Add Employee Modal Component
 const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onClose, onAdd }) => {
