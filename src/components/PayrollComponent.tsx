@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Calendar, DollarSign, Download, MoreHorizontal, User, Users } from "lucide-react";
-import { useAccount, useBalance } from 'wagmi';
-import { formatEther } from 'viem';
+import { Calendar, DollarSign, Download, MoreHorizontal, User, Users, Loader2 } from "lucide-react";
+import { useAccount, useBalance, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+import { formatEther, parseEther } from 'viem';
 import { mockEmployees } from "../utils/MockData";
 import type { Employee } from '../types/Types.ts';
 import AddEmployeeModal from './AddEmployeeModal';
@@ -11,7 +11,14 @@ import { config } from '../utils/environment.ts';
 const PayrollPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [employees, setEmployees] = useState(mockEmployees);
+  const [payingEmployeeId, setPayingEmployeeId] = useState<number | null>(null);
   const { address } = useAccount();
+  
+  // Wagmi hooks for transactions
+  const { sendTransaction, data: txHash, isPending: isSending } = useSendTransaction();
+  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
   
   // Get balance for the appropriate network (mainnet or Sepolia)
   const { data: balanceData, isError, isLoading } = useBalance({
@@ -22,9 +29,7 @@ const PayrollPage: React.FC = () => {
   // Calculate total payroll amount from all employees
   const calculateTotalPayroll = () => {
     return employees.reduce((total, employee) => {
-      // Generate consistent salary for each employee based on their ID
-      const salary = parseFloat(((employee.id % 5) + 1).toFixed(2));
-      return total + salary;
+      return total + parseFloat(String(employee.salary || '0'));
     }, 0);
   };
 
@@ -34,6 +39,61 @@ const PayrollPage: React.FC = () => {
       ...employeeData
     };
     setEmployees(prev => [...prev, newEmployee]);
+  };
+
+  // Handle individual employee payment
+  const handlePayEmployee = async (employee: Employee) => {
+    if (!employee.walletAddress || !employee.salary) {
+      alert('Employee wallet address or salary is missing');
+      return;
+    }
+
+    try {
+      setPayingEmployeeId(employee.id);
+      
+      await sendTransaction({
+        to: employee.walletAddress as `0x${string}`,
+        value: parseEther(employee.salary.toString()),
+      });
+
+      // Transaction submitted successfully
+      console.log(`Payment of ${employee.salary} ETH sent to ${employee.name}`);
+      
+    } catch (error) {
+      console.error('Payment failed:', error);
+      alert(`Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setPayingEmployeeId(null);
+    }
+  };
+
+  // Handle bulk payment (Pay now button)
+  const handleBulkPayment = async () => {
+    if (availableBalance < totalPayrollAmount) {
+      alert('Insufficient funds for bulk payment');
+      return;
+    }
+
+    const confirmPayment = window.confirm(
+      `Are you sure you want to pay all ${employees.length} employees a total of ${totalPayrollAmount.toFixed(4)} ETH?`
+    );
+
+    if (!confirmPayment) return;
+
+    try {
+      // For demo purposes, we'll pay employees sequentially
+      // In production, you might want to use a smart contract for batch payments
+      for (const employee of employees) {
+        if (employee.walletAddress && employee.salary) {
+          await handlePayEmployee(employee);
+          // Add small delay between transactions
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    } catch (error) {
+      console.error('Bulk payment failed:', error);
+      alert('Bulk payment failed. Some payments may have been processed.');
+    }
   };
 
   // Get formatted balance
@@ -60,6 +120,19 @@ const PayrollPage: React.FC = () => {
         <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
           <div className="flex items-center gap-2 text-amber-800">
             <span className="text-sm font-medium">🧪 Test Mode - Using Sepolia Testnet</span>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Status */}
+      {(isSending || isConfirming) && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-blue-800">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm font-medium">
+              {isSending && 'Sending transaction...'}
+              {isConfirming && 'Confirming transaction...'}
+            </span>
           </div>
         </div>
       )}
@@ -120,7 +193,7 @@ const PayrollPage: React.FC = () => {
           <div className="grid grid-cols-3 gap-6 mb-4">
             <div>
               <div className="text-sm text-gray-600 mb-1">Total Payroll Amount</div>
-              <div className="text-2xl font-bold text-gray-900">{totalPayrollAmount.toFixed(2)} ETH</div>
+              <div className="text-2xl font-bold text-gray-900">{totalPayrollAmount.toFixed(4)} ETH</div>
             </div>
             <div>
               <div className="text-sm text-gray-600 mb-1">
@@ -148,22 +221,30 @@ const PayrollPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm opacity-90 mb-1">Total Amount to Pay</div>
-                <div className="text-2xl font-bold">{totalPayrollAmount.toFixed(2)} ETH</div>
+                <div className="text-2xl font-bold">{totalPayrollAmount.toFixed(4)} ETH</div>
               </div>
               <div className="text-right">
                 <div className="text-sm opacity-90 mb-1">Due by</div>
                 <div className="text-lg font-semibold">Jun 01</div>
               </div>
               <button 
+                onClick={handleBulkPayment}
                 className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                  availableBalance >= totalPayrollAmount
+                  availableBalance >= totalPayrollAmount && !isSending
                     ? 'bg-white bg-opacity-20 hover:bg-opacity-30'
                     : 'bg-white bg-opacity-20 hover:bg-opacity-30 cursor-not-allowed opacity-75'
                 }`}
-                disabled={availableBalance < totalPayrollAmount}
+                disabled={availableBalance < totalPayrollAmount || isSending}
               >
-                <Download className="w-4 h-4" />
-                {availableBalance >= totalPayrollAmount ? 'Pay now' : 'Insufficient funds'}
+                {isSending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {availableBalance >= totalPayrollAmount 
+                  ? (isSending ? 'Processing...' : 'Pay now') 
+                  : 'Insufficient funds'
+                }
               </button>
             </div>
           </div>
@@ -177,7 +258,7 @@ const PayrollPage: React.FC = () => {
             <div className="flex items-center gap-4">
               <button className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg">
                 <Users className="w-4 h-4" />
-                All Employees
+                All Employees ({employees.length})
               </button>
               <button className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
                 <Calendar className="w-4 h-4" />
@@ -205,6 +286,8 @@ const PayrollPage: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {employees.map((employee) => {
+                const isPayingThisEmployee = payingEmployeeId === employee.id;
+                
                 return (
                   <tr key={employee.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -228,10 +311,12 @@ const PayrollPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {employee.walletAddress}
+                      <span className="font-mono text-xs">
+                        {employee.walletAddress}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      0.1 ETH
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                      {employee.salary || '0'} ETH
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
@@ -239,7 +324,24 @@ const PayrollPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-4">Pay</button>
+                      <button 
+                        onClick={() => handlePayEmployee(employee)}
+                        disabled={isPayingThisEmployee || isSending || !employee.walletAddress || !employee.salary}
+                        className={`text-blue-600 hover:text-blue-900 mr-4 flex items-center gap-1 ${
+                          (isPayingThisEmployee || isSending || !employee.walletAddress || !employee.salary) 
+                            ? 'opacity-50 cursor-not-allowed' 
+                            : ''
+                        }`}
+                      >
+                        {isPayingThisEmployee ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Paying...
+                          </>
+                        ) : (
+                          'Pay'
+                        )}
+                      </button>
                       <button className="text-gray-600 hover:text-gray-900">
                         <MoreHorizontal className="w-4 h-4" />
                       </button>

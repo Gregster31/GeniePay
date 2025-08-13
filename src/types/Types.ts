@@ -4,6 +4,7 @@ export interface Employee {
   name: string;
   walletAddress: string;
   avatar?: string | null;
+  salary: number;
 }
 
 
