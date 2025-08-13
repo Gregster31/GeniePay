@@ -1,7 +1,14 @@
 import { Calendar, CreditCard, DollarSign, FileText, HelpCircle, LogOut, Settings, TrendingUp, Users, History } from "lucide-react";
+import { useDisconnect } from 'wagmi';
 
 // Sidebar Navigation Component
 const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void }> = ({ activeTab, onTabChange }) => {
+  const { disconnect } = useDisconnect();
+
+  const handleDisconnect = () => {
+    disconnect();
+  };
+
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
     { id: 'action-items', label: 'Action Items', icon: Calendar, badge: '4' },
@@ -72,7 +79,10 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
           <HelpCircle className="w-4 h-4" />
           Support
         </button>
-        <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mt-2 w-full">
+        <button 
+          onClick={handleDisconnect} 
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mt-2 w-full"
+          title="Disconnect Wallet">
           <LogOut className="w-4 h-4" />
           Log out
         </button>
