@@ -5,6 +5,7 @@ import { formatEther } from 'viem';
 import { mockEmployees } from "../utils/MockData";
 import type { Employee } from '../types/Types.ts';
 import AddEmployeeModal from './AddEmployeeModal';
+import { config } from '../utils/environment.ts';
 
 // Main Payroll Page Component
 const PayrollPage: React.FC = () => {
@@ -12,9 +13,10 @@ const PayrollPage: React.FC = () => {
   const [employees, setEmployees] = useState(mockEmployees);
   const { address } = useAccount();
   
-  // Get real ETH balance
+  // Get balance for the appropriate network (mainnet or Sepolia)
   const { data: balanceData, isError, isLoading } = useBalance({
     address: address,
+    chainId: config.chainId,
   });
 
   // Calculate total payroll amount from all employees
@@ -53,6 +55,15 @@ const PayrollPage: React.FC = () => {
 
   return (
     <div className="flex-1 p-6">
+      {/* Environment indicator */}
+      {!config.isProduction && (
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-amber-800">
+            <span className="text-sm font-medium">🧪 Test Mode - Using Sepolia Testnet</span>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
           <button className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
@@ -112,7 +123,9 @@ const PayrollPage: React.FC = () => {
               <div className="text-2xl font-bold text-gray-900">{totalPayrollAmount.toFixed(2)} ETH</div>
             </div>
             <div>
-              <div className="text-sm text-gray-600 mb-1">Available Balance</div>
+              <div className="text-sm text-gray-600 mb-1">
+                Available Balance {!config.isProduction && '(Sepolia)'}
+              </div>
               <div className={`text-2xl font-bold ${isLoading ? 'text-gray-400' : 'text-gray-900'}`}>
                 {getFormattedBalance()}
               </div>
@@ -192,8 +205,6 @@ const PayrollPage: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {employees.map((employee) => {
-                // Generate consistent salary based on employee ID
-                const salary = ((employee.id % 5) + 1).toFixed(2);
                 return (
                   <tr key={employee.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -220,7 +231,7 @@ const PayrollPage: React.FC = () => {
                       {employee.walletAddress}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {salary} ETH
+                      0.1 ETH
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
