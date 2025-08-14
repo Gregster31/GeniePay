@@ -22,6 +22,7 @@ const CashRequirementCard: React.FC<CashRequirementCardProps> = ({
   const requiredAmount = Math.max(0, totalPayroll - availableBalance);
   const hasEnoughFunds = availableBalance >= totalPayroll;
 
+  //TODO: MAKE THIS SHIT GLOBAL IN UTILS
   const getFormattedBalance = () => {
     if (balanceLoading) return "Loading...";
     if (balanceError) return "0.00 ETH";
@@ -55,7 +56,7 @@ const CashRequirementCard: React.FC<CashRequirementCardProps> = ({
           )}
         </div>
         <div>
-          <div className="text-sm text-gray-600 mb-1">Required</div>
+          <div className="text-sm text-gray-600 mb-1">Amount Needed</div>
           <div className={`text-2xl font-bold ${requiredAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
             {requiredAmount > 0 ? `${requiredAmount.toFixed(4)} ETH` : '0.00 ETH'}
           </div>

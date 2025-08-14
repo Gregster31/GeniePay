@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, User, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Users, User, Loader2 } from 'lucide-react';
 import type { Employee } from '../../models/EmployeeModel';
 
 interface EmployeeTableProps {

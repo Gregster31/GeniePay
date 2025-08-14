@@ -1,9 +1,24 @@
 import { Calendar, CreditCard, DollarSign, FileText, HelpCircle, LogOut, Settings, TrendingUp, Users, History } from "lucide-react";
-import { useDisconnect } from 'wagmi';
+import { useAccount, useBalance, useDisconnect } from 'wagmi';
+import { formatEther } from 'viem';
+import { config } from '../utils/Environment';
 
 // Sidebar Navigation Component
 const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void }> = ({ activeTab, onTabChange }) => {
+  const { address } = useAccount();
   const { disconnect } = useDisconnect();
+
+  // Get real wallet balance
+  const { data: balanceData, isError, isLoading } = useBalance({
+    address: address,
+    chainId: config.chainId,
+  });
+
+  const getFormattedBalance = () => {
+    if (isLoading) return "Loading...";
+    if (isError || !balanceData) return "0.00 ETH";
+    return `${parseFloat(formatEther(balanceData.value)).toFixed(4)} ETH`;
+  };
 
   const handleDisconnect = () => {
     disconnect();
@@ -27,12 +42,14 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
       {/* Logo */}
       <div className="p-6 border-b border-gray-800">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">B</span>
-          </div>
+          <img 
+            src="/geniepay_logov2.png" 
+            alt="GeniePay Logo" 
+            className="w-8 h-8 object-contain" 
+          />
           <span className="text-xl font-bold">GeniePay</span>
         </div>
-        <div className="mt-2 text-xs text-gray-400">Crypto Payroll</div>
+        <div className="mt-2 text-xs text-gray-400">Online Crypto Payroll</div>
       </div>
 
       {/* Navigation */}
@@ -71,9 +88,13 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
       {/* Bottom Section */}
       <div className="p-4 border-t border-gray-800">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-center mb-4">
-          <div className="text-sm text-blue-100 mb-1">WALLET BALANCE</div>
-          <div className="text-2xl font-bold text-white">4.78 ETH</div>
-          <div className="text-xs text-blue-100 mt-1">≈ $15,847.00</div>
+          <div className="text-sm text-blue-100 mb-1">
+            WALLET BALANCE{!config.isProduction && ' (Sepolia)'}
+          </div>
+          <div className="text-2xl font-bold text-white">{getFormattedBalance()}</div>
+          {!config.isProduction && (
+            <div className="text-xs text-yellow-200 mt-1">🧪 Test Network</div>
+          )}
         </div>
         <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm w-full">
           <HelpCircle className="w-4 h-4" />
