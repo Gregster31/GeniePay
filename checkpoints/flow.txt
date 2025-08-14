@@ -1,0 +1,18 @@
+main.tsx:
+- Enables wagmi (React Lib that allows to interact with Eth) blockchain hooks
+- Enables QueryClient to cache data
+- Enables RainbowKit for wallet connection
+- Calls App to render app
+
+App.tsx:
+- Checks and displays WalletConnection view
+- Checks and displays MainLayout view
+
+WalletConnectionComponent.tsx:
+- Has nice UI and calls ConnectButton which is handled by rainbowKit
+
+MainLayout.tsx:
+- Gets the active page and loads the content from it
+
+DashboardComponent.tsx:
+- To be continued...
