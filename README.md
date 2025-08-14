@@ -1,115 +1,93 @@
-# 💼 GeniePay: Blockchain Payroll System
+# 💼 GeniePay – Online Crypto Payroll Service
 
-## 🧭 Executive Summary
+<p align="center">
+  <a href="#">
+    <img src="https://img.shields.io/badge/Built%20with-Wagmi-purple" alt="Built with Wagmi/Viem" height="24">
+    <img src="https://img.shields.io/badge/Powered%20by-Ethereum-3c3c3d" alt="Powered by Ethereum" height="24">
+    <img src="https://img.shields.io/badge/Smart%20Contracts-Hardhat-yellow" alt="Hardhat" height="24">
+    <img src="https://img.shields.io/badge/Frontend-React-blue" alt="React" height="24">
+    <img src="https://img.shields.io/badge/Web3%20Wallet-MetaMask-f6851b" alt="MetaMask" height="24">
+    <img src="https://img.shields.io/badge/Network-Sepolia%20Testnet-5c4ee5" alt="Ethereum Testnet" height="24">
+  </a>
+</p>
 
-**GeniePay** is a compliant blockchain-based payroll system enabling businesses to pay employees and contractors globally in stablecoins, while ensuring full tax and regulatory compliance. We simplify global payroll, reduce fees, increase transparency, and eliminate traditional banking delays.
+## 1️⃣ Overview
 
-Goal explained: I want to make a web app where people are freely able to create a team and pay them via (mainly) crypto, so as to bypass the fees from global transactions. The admin of the team would be able to simply add wallets addresses (his employees) and send them money, choosing an automated process if wanted.
----
+**GeniePay** is a crypto-based payroll platform that lets businesses pay employees and contractors globally using any kind of cryptocurrency, while staying **tax and compliance ready**. And what differenciates us from the rest is that we're entirely free, you don't even need an account to use us!  
 
-## 🎯 Problem Statement
-- Paying people in other countries is slow, messy, and expensive. Companies can spend over **$1,000 per employee per year** just to manage international payroll.
-
-- Sending money to contractors overseas often costs **6% or more** in fees and takes up to **5 days** to arrive.
-
-- Most crypto payroll systems don’t handle taxes or legal reporting properly, which makes them risky or unusable for real businesses.
-
----
-
-## ✅ Solution: GeniePay
-
-GeniePay allows companies to:
-
-- Pay employees in **stablecoins (USDC, USDT)** instantly.
-- Automatically compute, deduct, and remit taxes in supported regions.
-- Offer **fiat on/off ramps** for seamless conversion.
-- Maintain full **regulatory compliance** in Canada, U.S., and UAE.
+**Our goals:** Remove the **cost, delays, and friction** of international payments and managing your team.  
 
 ---
 
-## 🛠️ Product Features
+## 2️⃣ Why GeniePay?
 
-- **Smart Contract Payroll Automation**
-- **Fiat On/Off Ramps** for deposits and withdrawals
-- **Compliance Engine** (KYC, AML, Tax Withholding)
-- **Multi-Currency Support** (Stablecoins + Fiat Conversion)
-- **Employer Dashboard**
-- **Employee Wallet (Custodial/Non-Custodial)**
+### **The Problem**
+- International payroll is **slow**, **expensive**, and **complicated**.
+- Fees can be **6%+** and delays up to **5 days**.
+- Most crypto payroll solutions ignore tax/legal compliance.
+- Most of these companies need you to pay or even schedule an appointement with them before use
+
+### **The Solution**
+GeniePay enables:
+- **Instant** cryptocurrency payouts
+- **Automated** tax & compliance handling
+- **Entirely** free and no accounts needed
+  
+---
+
+## 3️⃣ Core Features
+
+- **Send** 1000 employee payouts in a single click using smart contracts
+- **Easy** big team management with CSV files
+- **Employer Dashboard** for managing teams and payouts
+- **Multi-Currency Support** (Stablecoins + Fiat)
 
 ---
 
-## 🌍 Best Countries for Launch & Why
+## 4️⃣ MVP Roadmap
 
-| Country          | Why It Works                                                          |
-| ---------------- | --------------------------------------------------------------------- |
-| 🇦🇪 UAE         | Crypto sandbox-ready, tax-free income, low compliance burden          |
-| 🇨🇦 Canada      | Clear CRA tax framework, crypto-friendly fintechs                     |
-| 🇺🇸 USA         | Regulated with MSB model, large remote workforce                      |
-| 🇸🇬 Singapore   | Strong fintech hub, forward crypto regulation                         |
-| 🇨🇭 Switzerland | Crypto-native ecosystem, clear compliance laws                        |
-| 🇵🇹 Portugal    | No personal crypto tax, freelancer-heavy economy                      |
-| 🇧🇷 Brazil      | Central bank exploring tokenized real (Drex), pro-blockchain policies |
+| Phase | Goal | Key Actions |
+|-------|------|-------------|
+| [**1**](https://www.youtube.com/watch?v=w4mI5J88Kbg) | Basic wallet-to-wallet payment | ✅ Connect wallet via MetaMask<br>✅ Send USDC/ETH to employee wallets<br>✅ Add employees in dashboard<br>✅ Display wallet balance |
+| [**2**](https://www.youtube.com/watch?v=w4mI5J88Kbg) | New Website UI & Environment Setup | 🛠️ Implement new website UI<br>🛠️ Start flow diagrams<br>🛠️ Create new company logo<br>🛠️ Setup separate test & production environments<br>🛠️ Implement new wallet connection using RainbowKit UI |
+| **3** | Prepare for Public Deployment | 🔄 Implement mass payouts via smart contracts<br>🔄 Settings to switch between USD, CAD, ETH, or other crypto<br>🔄 Support account & no-account workflows<br>🔄 Implement all required pages |
+| **4** | Touch-up & Security | 🛡 Security review<br>🛡 Finish flow diagrams/documentation<br>🛡 Improve website design (less AI-looking)<br>🧾 Generate professional invoices and accountant-friendly files after transactions |
+| **5** | Product Presentation | 📄 Prepare product presentation for investors, or demos |
 
 ---
 
-## 🧩 Use Cases
+## 5️⃣ Tech Stack
 
-- Cross-border remote teams
-- Freelancers and DAOs
-- Startups looking to offer alternative compensation
-- Global payroll automation for tech companies
+### **Frontend**
+- React 18 + TypeScript
+- Vite (build tool)
+- Tailwind CSS
 
----
+### **Web3 Integration**
+- Wagmi 2.x (Ethereum hooks)
+- Viem (TS-first Ethereum library)
+- RainbowKit (wallet connection UI)
+- React Query (@tanstack/react-query)
 
-## 🧪 MVP Roadmap
+### **Blockchain**
+- Sepolia Testnet
+- MetaMask
+- Test USDC / DAI
 
-**Phase 1**
-- Connect USDC wallet and transfer money to another wallet via simple dashboard. <br>
-Basic UI with functions <br>
-Able to connect to connect wallet vai MetaMask extension <br>
-Able to send money to different wallets <br>
-Able to add new employee and perform actions to them <br>
-Get amount in wallet in UI card <br>
-https://youtu.be/w4mI5J88Kbg
+### **UI & State**
+- Lucide React (icons)
+- Headless UI *(optional)*
+- React Hook Form
+- Local React state + Wagmi hooks
 
-**Phase 2**
-- Complete dashboard UI <br>
-Need Security/downfalls check <br>
-Need Flow drawings <br>
-Need documentations on current functions <br>
-Need completed dashboard UI (no logic for now) <br>
-Need check RISE: what they offer <br>
-
-**Phase 3**
-- Implement all features from dasboard IU
-
-**Phase 4**
-- Make them tax compliant <br>
-Clean the readme <br>
-Make a product presentation PDF <br>
-
-**Phase 5**
-- Add more countries
+### **Dev Tools**
+- ESLint + Prettier
+- TypeScript
+- GitHub (deployment & CI/CD)
 
 ---
 
-## 🏗️ Technical Architecture (High-Level)
-
-The GeniePay system is structured in modular components that work together to ensure seamless and compliant crypto payroll execution:
-
-1. **Employer Dashboard**: Web interface for HR/payroll teams to manage employees, input salaries, bonuses, and schedules.
-
-2. **Compliance Layer**: Enforces KYC/AML checks, local tax rules, and generates remittance reports. Country-specific logic ensures compliance.
-
-3. **Smart Contracts**: Deployed on supported blockchains (Ethereum, Polygon, etc.) to manage payroll automation logic such as salary releases, bonus rules, and vesting schedules.
-
-4. **Payment Processor**: Handles the transaction orchestration for paying salaries in stablecoins (e.g., USDC). Monitors gas fees, schedules disbursements.
-
-5. **Employee Wallets**: Can be custodial (for ease of use) or non-custodial (for privacy/security-conscious users). Integrated with wallet providers.
-
-6. **Fiat On/Off Ramps**: Enables employers to fund payroll in fiat and employees to convert crypto into fiat using services like Circle, Transak, or local banking APIs.
-
-Diagram:
+## 6️⃣ Architecture (High Level)
 ```
 +----------------------+
 | Employer Dashboard   |
@@ -143,83 +121,25 @@ Diagram:
 
 ---
 
-## 💰 Business Model
+## 7️⃣ Post-Payment Documents for Employers
 
-| Revenue Stream          | Description                                   |
-| ----------------------- | --------------------------------------------- |
-| SaaS Licensing          | Monthly fee per active employee or contractor |
-| Conversion Fees         | Spread on crypto-fiat conversions             |
-| Compliance-as-a-Service | Offer compliance tools to 3rd parties         |
-| API Licensing           | For HR/payroll system integrations            |
-
----
-
-## 📈 Market Opportunity
-
-- **Global Payroll Market**: $500B+
-- **Crypto Payroll TAM (2025 est.)**: $10B+ and growing
-- **Remote Work Boom**: 35% of companies have global teams
+After each payroll run, the employer should have:
+1. **Payment Receipts** (per employee)
+   - Employee name, wallet, amount, token, USD equivalent, tx hash, timestamp, gas fees
+2. **Batch Payroll Summary**
+   - All employees in the run, totals, fees, status
+3. **Reconciliation Report**
+   - Total sent vs. remaining balance, accounting match
+4. **Audit/Compliance Exports**
+   - PDF, CSV/XLSX, JSON formats
 
 ---
 
-## 🚀 Why Now?
+## 8️⃣ Business Model
 
-- Rise in **remote workers and DAOs**
-- Legal clarity improving in key markets
-- Stablecoins adoption increasing
-- Global demand for **faster, cheaper payroll**
-
----
-
-## 🧠 Roles Needed
-
-- Blockchain Dev
-- Smart contract + Web3 infra expert
-- Compliance/Finance background (CPA/Law)
-- Crypto tax lawyer, HR/payroll SaaS operator
-
----
-**Let’s redefine global payroll — fast, transparent, and compliant.** <br>
-(might turn into PayChain for domain name)
-
-## 🛠️ Tools
-
-#### 🧠 Frontend Framework
-
-- **React 18 with TypeScript** – Type safety for crypto operations
-- **Vite** – Fast development server and build tool
-- **Tailwind CSS** – Utility-first styling for rapid UI development
-
-#### 🔗 Web3 Integration
-
-- **Wagmi 2.x** – React hooks for Ethereum interactions
-- **Viem** – TypeScript-first Ethereum library (replaces `ethers.js`)
-- **@rainbow-me/rainbowkit** – Wallet connection UI components
-- **@tanstack/react-query** – Required dependency for Wagmi
-
-#### ⛓️ Blockchain Network
-
-- **Sepolia Testnet** – Ethereum test network for development
-- **MetaMask** – Primary wallet provider
-- **Test Stablecoins** – USDC / DAI on Sepolia
-
-#### 🧩 UI Components & Icons
-
-- **Lucide React** – Clean, consistent icon library
-- **Headless UI** *(optional)* – Unstyled, accessible components
-- **React Hook Form** – Form handling and validation
-
-#### 🗂️ State Management
-
-- **React state (`useState`, `useReducer`)** – Local component state
-- **Wagmi hooks** – Web3 state handling
-
-#### 🛠️ Development Tools
-
-- **ESLint + Prettier** – Code formatting and linting
-- **TypeScript** – Static type checking
-- **Vite** – Build tool and dev server
-
-#### 🚀 Deployment
-
-- **GitHub** – Version control and CI/CD triggers
+| Revenue Stream          | Description |
+|-------------------------|-------------|
+| SaaS Licensing          | Monthly fee per employee |
+| Conversion Fees         | Crypto ↔ Fiat spread |
+| Compliance-as-a-Service | Compliance engine for 3rd parties |
+| API Licensing           | Payroll API integrations |
