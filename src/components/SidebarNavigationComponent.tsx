@@ -89,7 +89,7 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
       <div className="p-4 border-t border-gray-800">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-center mb-4">
           <div className="text-sm text-blue-100 mb-1">
-            WALLET BALANCE{!config.isProduction && ' (Sepolia)'}
+            WALLET BALANCE{!config.isProduction}
           </div>
           <div className="text-2xl font-bold text-white">{getFormattedBalance()}</div>
           {!config.isProduction && (
