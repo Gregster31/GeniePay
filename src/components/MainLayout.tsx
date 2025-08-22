@@ -12,6 +12,7 @@ import {
 import Sidebar from './SidebarNavigationComponent';
 import Header from './HeaderComponent';
 import DashboardPage from './dashboard/DashboardComponent';
+import TeamManagementPage from './team/TeamComponent';
 import PlaceholderPage from './PlaceholderComponent';
 
 export const MainLayout: React.FC = () => {
@@ -30,13 +31,7 @@ export const MainLayout: React.FC = () => {
           />
         );
       case 'team':
-        return (
-          <PlaceholderPage
-            title="Team Management"
-            description="Add, edit, and manage your team members and their crypto wallets"
-            icon={<Users className="w-8 h-8 text-gray-400" />}
-          />
-        );
+        return <TeamManagementPage />; // Use the new team management page
       case 'pay':
         return (
           <PlaceholderPage
