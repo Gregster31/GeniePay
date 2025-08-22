@@ -13,6 +13,7 @@ import Header from './HeaderComponent';
 import DashboardPage from './dashboard/DashboardComponent';
 import TeamManagementPage from './team/TeamComponent';
 import PlaceholderPage from './PlaceholderComponent';
+import PayPage from './pay/PayComponent';
 
 export const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -30,15 +31,9 @@ export const MainLayout: React.FC = () => {
           />
         );
       case 'team':
-        return <TeamManagementPage />; // Use the new team management page
+        return <TeamManagementPage />; 
       case 'pay':
-        return (
-          <PlaceholderPage
-            title="Quick Pay"
-            description="Send instant crypto payments to employees"
-            icon={<DollarSign className="w-8 h-8 text-gray-400" />}
-          />
-        );
+        return <PayPage />; 
       case 'payroll':
         return (
           <PlaceholderPage

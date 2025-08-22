@@ -89,3 +89,41 @@ export const mockEmployees: Employee[] = [
     paymentHistory: []
   }
 ];
+
+
+// Mock transaction history
+export const mockTransactions: Transaction[] = [
+  {
+    id: '1',
+    recipientName: 'John Doe',
+    recipientAddress: '0x5Db7DaEFaa39E7e3C14e9dC9e2d2Fdca3127E722',
+    amount: 0.5,
+    token: 'ETH',
+    date: new Date('2024-08-20T10:30:00'),
+    status: 'Success',
+    txHash: '0xabc123def456789012345678901234567890abcdef123456789012345678901234',
+    note: 'Monthly salary payment'
+  },
+  {
+    id: '2',
+    recipientName: 'External Wallet',
+    recipientAddress: '0x742d35Cc7bF429F4a7c9b7F4E8e6B9e1234567890',
+    amount: 0.25,
+    token: 'ETH',
+    date: new Date('2024-08-19T14:15:00'),
+    status: 'Success',
+    txHash: '0xdef456abc789012345678901234567890123456def789012345678901234567',
+    note: 'Contractor payment'
+  },
+  {
+    id: '3',
+    recipientName: 'Sarah Wilson',
+    recipientAddress: '0x8F2b3C4d5E6f7A8B9C0d1E2f3A4B5C6d7E8f9A0B',
+    amount: 0.3,
+    token: 'ETH',
+    date: new Date('2024-08-18T09:45:00'),
+    status: 'Failed',
+    txHash: '0x789012345def456abc789012345678901234567890def456789012345678901',
+    note: 'Bonus payment - insufficient gas'
+  }
+];
