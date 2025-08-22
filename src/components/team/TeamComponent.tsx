@@ -179,7 +179,6 @@ const TeamManagementPage: React.FC = () => {
     reader.onload = (e) => {
       const text = e.target?.result as string;
       const lines = text.split('\n');
-      const headers = lines[0].split(',');
       
       const importedEmployees = lines.slice(1)
         .filter(line => line.trim())

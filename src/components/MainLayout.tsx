@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   Calendar, 
   DollarSign,
-  Users, 
   Settings, 
   TrendingUp,
   FileText,
