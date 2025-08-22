@@ -16,3 +16,10 @@ MainLayout.tsx:
 
 DashboardComponent.tsx:
 - To be continued...
+
+
+BULK PAY FLOW EXPLAINED:
+- Contract: Singleton, no employee data stored.
+- Employer: Prepares list off-chain, approves tokens, calls bulkPayERC20(token, addresses[], amounts[]).
+- Employees: Receive tokens automatically; no interaction needed.
+- Notes: Gas grows with employee count; employer pays all fees.
