@@ -38,9 +38,9 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
   ];
 
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col">
+    <div className="w-64 bg-gray-900 text-white flex flex-col h-screen fixed left-0 top-0">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-800">
+      <div className="p-6 border-b border-gray-800 flex-shrink-0">
         <div className="flex items-center gap-3">
           <img 
             src="/geniepay_logov2.png" 
@@ -53,7 +53,7 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;
@@ -86,7 +86,7 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
       </nav>
 
       {/* Bottom Section */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-gray-800 flex-shrink-0">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-center mb-4">
           <div className="text-sm text-blue-100 mb-1">
             WALLET BALANCE{!config.isProduction}
