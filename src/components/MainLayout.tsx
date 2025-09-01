@@ -12,6 +12,7 @@ import TeamManagementPage from './team/TeamComponent';
 import PlaceholderPage from './PlaceholderComponent';
 import PayPage from './pay/PayComponent';
 import AccountHistoryPage from './accountHistory/AccountHistoryPage';
+import PayrollPage from './payroll/PayrollComponent';
 
 export const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -25,13 +26,7 @@ export const MainLayout: React.FC = () => {
       case 'pay':
         return <PayPage />; 
       case 'payroll':
-        return (
-          <PlaceholderPage
-            title="Payroll"
-            description="View your blockchain payroll"
-            icon={<TrendingUp className="w-8 h-8 text-gray-400" />}
-          />
-        );  
+        return <PayrollPage />
       case 'account-history':
         return <AccountHistoryPage/>
       case 'documents':
