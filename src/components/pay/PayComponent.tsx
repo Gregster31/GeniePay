@@ -2,20 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Send, 
-  User, 
-  DollarSign, 
-  Clock, 
   CheckCircle, 
-  XCircle, 
-  AlertCircle,
-  Search,
-  ExternalLink,
   Loader2,
-  ChevronDown,
-  Copy,
-  Check,
-  Calendar,
-  Hash,
   RefreshCw
 } from 'lucide-react';
 import { formatEther, isAddress } from 'viem';

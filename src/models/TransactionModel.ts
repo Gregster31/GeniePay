@@ -10,3 +10,4 @@ export interface Transaction {
   txHash: string;
   note?: string;
 }
+

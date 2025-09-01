@@ -1,6 +1,6 @@
 // components/SidebarNavigationComponent.tsx
 import React from 'react';
-import { Calendar, CreditCard, DollarSign, FileText, HelpCircle, LogOut, Settings, TrendingUp, Users, History, RefreshCw } from "lucide-react";
+import { Calendar, CreditCard, DollarSign, FileText, LogOut, Settings, TrendingUp, Users, History, RefreshCw } from "lucide-react";
 import { useAccount, useDisconnect } from 'wagmi';
 import { useGlobalBalance } from '../contexts/BalanceContext';
 
@@ -17,11 +17,9 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-    { id: 'action-items', label: 'Action Items', icon: Calendar, badge: '4' },
     { id: 'team', label: 'Team', icon: Users },
     { id: 'pay', label: 'Pay', icon: DollarSign, badge: 'New', badgeColor: 'bg-orange-500' },
     { id: 'payroll', label: 'Payroll', icon: Calendar },
-    { id: 'invoices', label: 'Invoices', icon: FileText },
     { id: 'account-history', label: 'Account History', icon: History },
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'deposit', label: 'Deposit', icon: CreditCard },

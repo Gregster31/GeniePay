@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { 
   Calendar, 
-  DollarSign,
   Settings, 
   TrendingUp,
   FileText,
-  History,
   CreditCard,
 } from 'lucide-react';
 import Sidebar from './SidebarNavigationComponent';
@@ -14,6 +12,7 @@ import DashboardPage from './dashboard/DashboardComponent';
 import TeamManagementPage from './team/TeamComponent';
 import PlaceholderPage from './PlaceholderComponent';
 import PayPage from './pay/PayComponent';
+import AccountHistoryPage from './accountHistory/AccountHistoryPage';
 
 export const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -22,14 +21,6 @@ export const MainLayout: React.FC = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage />;
-      case 'action-items':
-        return (
-          <PlaceholderPage
-            title="Action Items"
-            description="Manage pending payroll actions and approvals"
-            icon={<Calendar className="w-8 h-8 text-gray-400" />}
-          />
-        );
       case 'team':
         return <TeamManagementPage />; 
       case 'pay':
@@ -42,22 +33,8 @@ export const MainLayout: React.FC = () => {
             icon={<TrendingUp className="w-8 h-8 text-gray-400" />}
           />
         );  
-      case 'invoices':
-        return (
-          <PlaceholderPage
-            title="Invoices"
-            description="Manage and track blockchain-based invoices"
-            icon={<FileText className="w-8 h-8 text-gray-400" />}
-          />
-        );
       case 'account-history':
-        return (
-          <PlaceholderPage
-            title="Account History"
-            description="View all blockchain transactions and payment history"
-            icon={<History className="w-8 h-8 text-gray-400" />}
-          />
-        );
+        return <AccountHistoryPage/>
       case 'documents':
         return (
           <PlaceholderPage

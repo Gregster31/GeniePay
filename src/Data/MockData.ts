@@ -1,5 +1,5 @@
+import type { AccountHistoryTransaction } from "../models/AccountHistoryTransactionModel.ts";
 import type { Employee } from "../models/EmployeeModel.ts";
-import type { Transaction } from "../models/TransactionModel.ts";
 
 export const mockEmployees: Employee[] = [
   {
@@ -92,39 +92,82 @@ export const mockEmployees: Employee[] = [
 ];
 
 
-// Mock transaction history
-export const mockTransactions: Transaction[] = [
+// Mock transaction data
+export const mockTransactions: AccountHistoryTransaction[] = [
   {
-    id: '1',
-    recipientName: 'John Doe',
-    recipientAddress: '0x5Db7DaEFaa39E7e3C14e9dC9e2d2Fdca3127E722',
-    amount: 0.5,
-    token: 'ETH',
-    date: new Date('2024-08-20T10:30:00'),
+    id: 'tx-001',
+    date: new Date('2025-08-31T14:30:00Z'),
+    recipientName: 'Alice Johnson',
+    recipientAddress: '0x742d35Cc6634C0532925a3b8D404B0532925a3b8',
+    amount: 2500.00,
+    token: 'USDC',
+    type: 'Payroll',
     status: 'Success',
-    txHash: '0xabc123def456789012345678901234567890abcdef123456789012345678901234',
-    note: 'Monthly salary payment'
+    txHash: '0xa1b2c3d4e5f6789012345678901234567890abcdef123456789012345678901234',
+    gasUsed: '21000',
+    companyName: 'GeniePay Demo Corp'
   },
   {
-    id: '2',
-    recipientName: 'External Wallet',
-    recipientAddress: '0x742d35Cc7bF429F4a7c9b7F4E8e6B9e1234567890',
-    amount: 0.25,
+    id: 'tx-002',
+    date: new Date('2025-08-31T14:25:00Z'),
+    recipientName: 'Bob Smith',
+    recipientAddress: '0x8ba1f109551bD432803012645Hac189B739c9BF',
+    amount: 3.2,
     token: 'ETH',
-    date: new Date('2024-08-19T14:15:00'),
-    status: 'Success',
-    txHash: '0xdef456abc789012345678901234567890123456def789012345678901234567',
-    note: 'Contractor payment'
-  },
-  {
-    id: '3',
-    recipientName: 'Sarah Wilson',
-    recipientAddress: '0x8F2b3C4d5E6f7A8B9C0d1E2f3A4B5C6d7E8f9A0B',
-    amount: 0.3,
-    token: 'ETH',
-    date: new Date('2024-08-18T09:45:00'),
+    type: 'Payroll',
     status: 'Failed',
-    txHash: '0x789012345def456abc789012345678901234567890def456789012345678901',
-    note: 'Bonus payment - insufficient gas'
+    txHash: '0xb2c3d4e5f6789012345678901234567890abcdef123456789012345678901234a',
+    companyName: 'GeniePay Demo Corp'
+  },
+  {
+    id: 'tx-003',
+    date: new Date('2025-08-30T09:15:00Z'),
+    recipientName: 'Carol Davis',
+    recipientAddress: '0x9cb2f109551bD432803012645Hac189B739c9CF',
+    amount: 500.00,
+    token: 'USDC',
+    type: 'Bonus',
+    status: 'Success',
+    txHash: '0xc3d4e5f6789012345678901234567890abcdef123456789012345678901234ab',
+    gasUsed: '28500',
+    companyName: 'GeniePay Demo Corp'
+  },
+  {
+    id: 'tx-004',
+    date: new Date('2025-08-29T16:45:00Z'),
+    recipientName: 'External Wallet',
+    recipientAddress: '0x1a2b3c4d5e6f789012345678901234567890abcd',
+    amount: 1.2,
+    token: 'ETH',
+    type: 'One-off Pay',
+    status: 'Success',
+    txHash: '0xd4e5f6789012345678901234567890abcdef123456789012345678901234abc',
+    gasUsed: '21000',
+    companyName: 'GeniePay Demo Corp'
+  },
+  {
+    id: 'tx-005',
+    date: new Date('2025-08-28T11:20:00Z'),
+    recipientName: 'David Wilson',
+    recipientAddress: '0x2b3c4d5e6f789012345678901234567890abcdef',
+    amount: 150.75,
+    token: 'USDC',
+    type: 'Reimbursement',
+    status: 'Failed',
+    txHash: '0xe5f6789012345678901234567890abcdef123456789012345678901234abcd',
+    companyName: 'GeniePay Demo Corp'
+  },
+  {
+    id: 'tx-006',
+    date: new Date('2025-08-25T08:30:00Z'),
+    recipientName: 'Emma Brown',
+    recipientAddress: '0x3c4d5e6f789012345678901234567890abcdef12',
+    amount: 2.8,
+    token: 'ETH',
+    type: 'Payroll',
+    status: 'Success',
+    txHash: '0xf6789012345678901234567890abcdef123456789012345678901234abcde',
+    gasUsed: '21000',
+    companyName: 'GeniePay Demo Corp'
   }
 ];
