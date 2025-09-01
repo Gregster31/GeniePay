@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Calendar, 
   Settings, 
   TrendingUp,
   FileText,
