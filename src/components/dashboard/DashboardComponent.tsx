@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+// components/dashboard/DashboardComponent.tsx
+import React, { useState, useEffect } from 'react';
 import { Loader2 } from "lucide-react";
-import { useAccount, useBalance, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
-import { formatEther, parseEther } from 'viem';
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+import { parseEther } from 'viem';
 import { mockEmployees } from "../../Data/MockData";
 import type { Employee } from "../../models/EmployeeModel";
 import AddEmployeeModal from './AddEmployeeModal';
-import PayCycleCard from './PayCycleCard.tsx';
-import CashRequirementCard from './CashRequirementCard.tsx';
-import EmployeeTable from './EmployeeTable.tsx';
-import { config } from '../../utils/Environment';
+import PayCycleCard from './PayCycleCard';
+import CashRequirementCard from './CashRequirementCard';
+import EmployeeTable from './EmployeeTable';
+import { useGlobalBalance } from '../../contexts/BalanceContext';
 
 const DashboardPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -18,16 +19,13 @@ const DashboardPage: React.FC = () => {
   
   const { address } = useAccount();
   
-  // Wagmi hooks for transactions
-  const { sendTransaction, data: txHash, isPending: isSending } = useSendTransaction();
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
+  // Use global balance from context
+  const { balance, formattedBalance, isLoading: balanceLoading, refetch: refetchBalance } = useGlobalBalance();
   
-  // Get balance
-  const { data: balanceData, isError, isLoading } = useBalance({
-    address: address,
-    chainId: config.chainId,
+  // Wagmi hooks for transactions
+  const { sendTransaction, data: txHash, isPending: isSending, reset: resetTransaction } = useSendTransaction();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
   });
 
   // Calculate total payroll amount from all employees
@@ -39,8 +37,8 @@ const DashboardPage: React.FC = () => {
 
   // Get numeric balance for calculations
   const getNumericBalance = () => {
-    if (isError || !balanceData) return 0;
-    return parseFloat(formatEther(balanceData.value));
+    if (!balance) return 0;
+    return parseFloat(formattedBalance);
   };
 
   const handleAddEmployee = (employeeData: Omit<Employee, 'id'>) => {
@@ -60,6 +58,7 @@ const DashboardPage: React.FC = () => {
 
     try {
       setPayingEmployeeId(employee.id);
+      resetTransaction(); // Reset previous transaction state
       
       await sendTransaction({
         to: employee.walletAddress as `0x${string}`,
@@ -71,102 +70,117 @@ const DashboardPage: React.FC = () => {
     } catch (error) {
       console.error('Payment failed:', error);
       alert(`Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
       setPayingEmployeeId(null);
     }
   };
 
-  // Handle bulk payment
-  const handleBulkPayment = async () => {
-    const totalPayroll = calculateTotalPayroll();
-    const availableBalance = getNumericBalance();
-    
-    if (availableBalance < totalPayroll) {
-      alert('Insufficient funds for bulk payment');
-      return;
+  // Handle successful payment - update balance
+  useEffect(() => {
+    if (isConfirmed && txHash) {
+      console.log('Payment confirmed:', txHash);
+      setPayingEmployeeId(null);
+      
+      // Update employee's last paid status (optional)
+      setEmployees(prev => prev.map(emp => 
+        emp.id === payingEmployeeId 
+          ? { ...emp, lastPaid: new Date() }
+          : emp
+      ));
+      
+      // Refetch balance after a short delay
+      setTimeout(() => {
+        refetchBalance();
+      }, 1000);
     }
+  }, [isConfirmed, txHash, payingEmployeeId, refetchBalance]);
 
-    const confirmPayment = window.confirm(
-      `Are you sure you want to pay all ${employees.length} employees a total of ${totalPayroll.toFixed(4)} ETH?`
-    );
-
-    if (!confirmPayment) return;
-
-    try {
-      for (const employee of employees) {
-        if (employee.walletAddress && employee.salary) {
-          await handlePayEmployee(employee);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-    } catch (error) {
-      console.error('Bulk payment failed:', error);
-      alert('Bulk payment failed. Some payments may have been processed.');
-    }
+  // Check if payment is in progress for a specific employee
+  const isPaymentInProgress = (employeeId: number) => {
+    return payingEmployeeId === employeeId && (isSending || isConfirming);
   };
-
-  // Pay cycle navigation
-  const handlePreviousCycle = () => {
-    setCycleOffset(prev => prev - 1);
-  };
-
-  const handleCurrentCycle = () => {
-    setCycleOffset(0);
-  };
-
-  const totalPayrollAmount = calculateTotalPayroll();
-  const availableBalance = getNumericBalance();
 
   return (
-    <div className="flex-1 p-6">
-      {/* Environment indicator */}
-      {!config.isProduction && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-amber-800">
-            <span className="text-sm font-medium">🧪 Test Mode - Using Sepolia Testnet</span>
-          </div>
-        </div>
-      )}
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-2">Manage your crypto payroll operations</p>
+      </div>
 
-      {/* Transaction Status */}
-      {(isSending || isConfirming) && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-blue-800">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm font-medium">
-              {isSending && 'Sending transaction...'}
-              {isConfirming && 'Confirming transaction...'}
-            </span>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Balance Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Wallet Balance</h3>
+            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Live</span>
           </div>
+          <p className="text-2xl font-bold text-gray-900">
+            {balanceLoading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              `${formattedBalance} ETH`
+            )}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Available for payroll</p>
         </div>
-      )}
 
-      {/* Main Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Total Payroll Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Total Payroll</h3>
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Monthly</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">
+            {calculateTotalPayroll().toFixed(4)} ETH
+          </p>
+          <p className="text-xs text-gray-500 mt-1">For {employees.length} employees</p>
+        </div>
+
+        {/* Employees Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Active Employees</h3>
+            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Team</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{employees.length}</p>
+          <p className="text-xs text-gray-500 mt-1">Across all departments</p>
+        </div>
+      </div>
+
+      {/* Pay Cycle and Cash Requirement Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <PayCycleCard 
+          employees={employees}
           cycleOffset={cycleOffset}
-          onPrevious={handlePreviousCycle}
-          onCurrent={handleCurrentCycle}
+          onCycleChange={setCycleOffset}
         />
-        
         <CashRequirementCard 
-          totalPayroll={totalPayrollAmount}
-          availableBalance={availableBalance}
-          balanceLoading={isLoading}
-          balanceError={isError}
-          isSending={isSending}
-          onBulkPayment={handleBulkPayment}
+          totalPayroll={calculateTotalPayroll()}
+          currentBalance={getNumericBalance()}
         />
       </div>
 
       {/* Employee Table */}
-      <EmployeeTable 
-        employees={employees}
-        payingEmployeeId={payingEmployeeId}
-        isSending={isSending}
-        onPayEmployee={handlePayEmployee}
-        onAddEmployee={() => setIsAddModalOpen(true)}
-      />
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Employee Payroll</h2>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add Employee
+            </button>
+          </div>
+        </div>
+        
+        <EmployeeTable 
+          employees={employees}
+          onPayEmployee={handlePayEmployee}
+          isPaymentInProgress={isPaymentInProgress}
+        />
+      </div>
 
       {/* Add Employee Modal */}
       <AddEmployeeModal

@@ -1,4 +1,5 @@
 import type { Employee } from "../models/EmployeeModel.ts";
+import type { Transaction } from "../models/TransactionModel.ts";
 
 export const mockEmployees: Employee[] = [
   {
@@ -10,7 +11,7 @@ export const mockEmployees: Employee[] = [
     department: 'Engineering',
     walletAddress: '0x5Db7DaEFaa39E7e3C14e9dC9e2d2Fdca3127E722',
     avatar: null,
-    salary: 0.5,
+    salary: 0.005,
     paymentFrequency: 'Bi-weekly',
     employmentType: 'Full-time',
     status: 'Active',

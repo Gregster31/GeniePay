@@ -1,24 +1,15 @@
-import { Calendar, CreditCard, DollarSign, FileText, HelpCircle, LogOut, Settings, TrendingUp, Users, History } from "lucide-react";
-import { useAccount, useBalance, useDisconnect } from 'wagmi';
-import { formatEther } from 'viem';
-import { config } from '../utils/Environment';
+// components/SidebarNavigationComponent.tsx
+import React from 'react';
+import { Calendar, CreditCard, DollarSign, FileText, HelpCircle, LogOut, Settings, TrendingUp, Users, History, RefreshCw } from "lucide-react";
+import { useAccount, useDisconnect } from 'wagmi';
+import { useGlobalBalance } from '../contexts/BalanceContext';
 
-// Sidebar Navigation Component
 const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void }> = ({ activeTab, onTabChange }) => {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
-
-  // Get real wallet balance
-  const { data: balanceData, isError, isLoading } = useBalance({
-    address: address,
-    chainId: config.chainId,
-  });
-
-  const getFormattedBalance = () => {
-    if (isLoading) return "Loading...";
-    if (isError || !balanceData) return "0.00 ETH";
-    return `${parseFloat(formatEther(balanceData.value)).toFixed(4)} ETH`;
-  };
+  
+  // Use global balance context instead of local hook
+  const { formattedBalance, isLoading, refetch, lastUpdated } = useGlobalBalance();
 
   const handleDisconnect = () => {
     disconnect();
@@ -52,6 +43,34 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
         <div className="mt-2 text-xs text-gray-400">Online Crypto Payroll</div>
       </div>
 
+      {/* Balance Display */}
+      <div className="px-6 py-4 border-b border-gray-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-xs text-gray-400 mb-1">Wallet Balance</div>
+            <div className="text-lg font-semibold">
+              {isLoading ? (
+                <span className="text-gray-400">Loading...</span>
+              ) : (
+                <span>{formattedBalance} ETH</span>
+              )}
+            </div>
+            {lastUpdated && (
+              <div className="text-xs text-gray-500 mt-1">
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            title="Refresh balance"
+          >
+            <RefreshCw className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-2">
@@ -66,14 +85,14 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                     isActive 
                       ? 'bg-blue-600 text-white' 
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      : 'text-gray-300 hover:bg-gray-800'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
+                  <span className="flex-1 text-left">{item.label}</span>
                   {item.badge && (
-                    <span className={`ml-auto text-xs px-2 py-1 rounded-full ${
-                      item.badgeColor || 'bg-blue-600'
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      item.badgeColor || 'bg-gray-700'
                     } text-white`}>
                       {item.badge}
                     </span>
@@ -85,27 +104,25 @@ const Sidebar: React.FC<{ activeTab: string; onTabChange: (tab: string) => void 
         </ul>
       </nav>
 
-      {/* Bottom Section */}
-      <div className="p-4 border-t border-gray-800 flex-shrink-0">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 text-center mb-4">
-          <div className="text-sm text-blue-100 mb-1">
-            WALLET BALANCE{!config.isProduction}
+      {/* User Section */}
+      <div className="p-4 border-t border-gray-800">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+            <span className="text-xs">👤</span>
           </div>
-          <div className="text-2xl font-bold text-white">{getFormattedBalance()}</div>
-          {!config.isProduction && (
-            <div className="text-xs text-yellow-200 mt-1">🧪 Test Network</div>
-          )}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm truncate">
+              {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected'}
+            </div>
+          </div>
         </div>
-        <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm w-full">
-          <HelpCircle className="w-4 h-4" />
-          Support
-        </button>
-        <button 
-          onClick={handleDisconnect} 
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm mt-2 w-full"
-          title="Disconnect Wallet">
+        
+        <button
+          onClick={handleDisconnect}
+          className="w-full flex items-center gap-2 px-3 py-2 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+        >
           <LogOut className="w-4 h-4" />
-          Log out
+          <span>Disconnect</span>
         </button>
       </div>
     </div>
