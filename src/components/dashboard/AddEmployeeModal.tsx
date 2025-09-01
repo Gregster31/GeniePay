@@ -50,7 +50,15 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onClose, on
       name: formData.name,
       walletAddress: formData.walletAddress,
       avatar: imageUrl,
-      salary: 0.05
+      salary: 0.05,
+      role: '',
+      status: 'Active',
+      email: '',
+      phone: '',
+      department: '',
+      paymentFrequency: 'Weekly',
+      employmentType: 'Full-time',
+      joinDate: new Date()
     });
     
     // Reset form
