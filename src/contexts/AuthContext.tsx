@@ -1,4 +1,4 @@
-// contexts/AuthContext.tsx - Complete auth with proper Supabase saving
+// contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAccount, useDisconnect } from 'wagmi'
 import { supabase, type UserProfile, type AuthSession } from '../lib/supabase'
@@ -15,11 +15,8 @@ interface AuthContextType {
   
   // Combined connection state
   isConnected: boolean
-  connectionType: 'none' | 'wallet' | 'google' | 'magic_link'
   
   // Auth methods
-  signInWithGoogle: () => Promise<void>
-  signInWithMagicLink: (email: string) => Promise<void>
   signInWithWallet: (address: string, signature: string) => Promise<void>
   signOut: () => Promise<void>
   disconnectWallet: () => void
@@ -49,12 +46,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { address: walletAddress, isConnected: isWalletConnected } = useAccount()
   const { disconnect } = useDisconnect()
 
-  // Combined state - Only connected if we have a Supabase session
-  const isConnected = !!session
-  const connectionType: AuthContextType['connectionType'] = 
-    session?.user ? 
-      (profile?.auth_provider || 'none') : 
-      'none'
+  // Combined state - connected when we have both wallet and session
+  const isConnected = !!session && isWalletConnected
 
   // Initialize auth state
   useEffect(() => {
@@ -88,56 +81,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else {
           setProfile(null)
         }
-        
-        setIsLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
-  // Fetch user profile from database
+  // Fetch user profile from Supabase
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log('👤 Fetching profile for user:', userId)
+      
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single()
-
-      if (error && error.code !== 'PGRST116') { // Not found error
+      
+      if (error) {
         console.error('❌ Error fetching profile:', error)
-        return
+        // If profile doesn't exist, that's okay for new users
+        if (error.code !== 'PGRST116') {
+          throw error
+        }
+      } else {
+        console.log('✅ Profile fetched:', data)
+        setProfile(data)
       }
-
-      console.log('✅ Profile fetched:', data)
-      setProfile(data)
     } catch (error) {
-      console.error('❌ Error fetching user profile:', error)
+      console.error('❌ Failed to fetch profile:', error)
     }
   }
 
-  // Create or update user profile
-  const upsertProfile = async (
-    userId: string, 
-    profileData: Partial<UserProfile>
-  ) => {
+  // Save or update user profile in Supabase
+  const upsertProfile = async (userId: string, profileData: Partial<UserProfile>) => {
     try {
-      console.log('💾 Creating/updating profile:', { userId, profileData })
+      console.log('💾 Upserting profile for user:', userId, profileData)
       
-      const profileToSave = {
-        id: userId,
-        ...profileData,
-        updated_at: new Date().toISOString()
-      }
-
       const { data, error } = await supabase
         .from('user_profiles')
-        .upsert(profileToSave)
+        .upsert({
+          id: userId,
+          ...profileData,
+          auth_provider: 'wallet', // Always wallet now
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single()
-
+      
       if (error) {
         console.error('❌ Profile upsert error:', error)
         throw error
@@ -148,58 +141,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return data
     } catch (error) {
       console.error('❌ Error saving profile:', error)
-      throw error
-    }
-  }
-
-  // Google OAuth sign in
-  const signInWithGoogle = async () => {
-    try {
-      console.log('🌐 Starting Google OAuth sign in...')
-      setIsLoading(true)
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-      
-      if (error) {
-        console.error('❌ Google OAuth error:', error)
-        throw error
-      }
-      
-      console.log('✅ Google OAuth initiated')
-    } catch (error) {
-      console.error('❌ Error with Google sign in:', error)
-      setIsLoading(false)
-      throw error
-    }
-  }
-
-  // Magic link sign in
-  const signInWithMagicLink = async (email: string) => {
-    try {
-      console.log('✉️ Starting magic link sign in for:', email)
-      setIsLoading(true)
-      
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-      
-      if (error) {
-        console.error('❌ Magic link error:', error)
-        throw error
-      }
-      
-      console.log('✅ Magic link sent successfully')
-    } catch (error) {
-      console.error('❌ Error with magic link:', error)
-      setIsLoading(false)
       throw error
     }
   }
@@ -231,45 +172,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await upsertProfile(authData.user.id, {
         wallet_address: address,
         display_name: `${address.slice(0, 6)}...${address.slice(-4)}`,
-        auth_provider: 'wallet',
         email: null // Wallet connections don't have email
       })
       
       console.log('🎉 Wallet sign in completed successfully!')
-      
     } catch (error) {
-      console.error('❌ Wallet sign in failed:', error)
-      setIsLoading(false)
+      console.error('❌ Error during wallet sign in:', error)
       throw error
-    }
-  }
-
-  // Sign out
-  const signOut = async () => {
-    try {
-      console.log('🚪 Starting sign out process...')
-      setIsLoading(true)
-      
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error('⚠️ Supabase signOut error (continuing anyway):', error)
-      }
-      
-      // Clear local state
-      setSession(null)
-      setProfile(null)
-      
-      console.log('✅ Sign out completed')
-    } catch (error) {
-      console.error('❌ Error during sign out:', error)
-      // Don't throw here, always complete the sign out
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Disconnect wallet
+  // Sign out - Clear session and disconnect wallet
+  const signOut = async () => {
+    try {
+      console.log('👋 Signing out...')
+      setIsLoading(true)
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('❌ Error signing out from Supabase:', error)
+        throw error
+      }
+      
+      // Disconnect wallet
+      disconnect()
+      
+      // Clear local state
+      setSession(null)
+      setProfile(null)
+      
+      console.log('✅ Successfully signed out')
+    } catch (error) {
+      console.error('❌ Error during sign out:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Disconnect wallet (without signing out from Supabase)
   const disconnectWallet = () => {
     console.log('🔌 Disconnecting wallet...')
     disconnect()
@@ -282,9 +226,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isWalletConnected,
     walletAddress,
     isConnected,
-    connectionType,
-    signInWithGoogle,
-    signInWithMagicLink,
     signInWithWallet,
     signOut,
     disconnectWallet

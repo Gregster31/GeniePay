@@ -16,14 +16,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// Database types
+// Database types - Updated to only support wallet auth
 export interface UserProfile {
   id: string
-  email?: string
-  wallet_address?: string
+  email?: string | null
+  wallet_address: string
   display_name?: string
-  avatar_url?: string
-  auth_provider: 'wallet' | 'google' | 'magic_link'
+  avatar_url?: string | null
+  auth_provider: 'wallet' // Only wallet now
   created_at: string
   updated_at: string
 }
