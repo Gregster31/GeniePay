@@ -1,20 +1,34 @@
-import { useAccount } from 'wagmi';
-import { WalletConnection } from './components/WalletConnectionComponent';
-import { MainLayout } from './components/MainLayout';
-import { BalanceProvider } from './contexts/BalanceContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider } from 'wagmi'
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import config from '../wagmi-config' // Your wagmi config
+import { AuthProvider } from './contexts/AuthContext'
+import { MainLayout } from './components/MainLayout' // Your existing layout
+import { BalanceProvider } from './contexts/BalanceContext' // Your existing balance context
 
-function App() {
-  const { isConnected } = useAccount();
+// Import RainbowKit styles
+import '@rainbow-me/rainbowkit/styles.css'
 
-  if (!isConnected) {
-    return <WalletConnection />;
-  }
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+    },
+  },
+})
 
+export default function App() {
   return (
-    <BalanceProvider>
-      <MainLayout />
-    </BalanceProvider>
-  );
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <AuthProvider>
+            <BalanceProvider>
+              <MainLayout />
+            </BalanceProvider>
+          </AuthProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
 }
-
-export default App;

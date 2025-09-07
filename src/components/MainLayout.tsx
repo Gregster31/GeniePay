@@ -1,7 +1,7 @@
+// components/MainLayout.tsx - Updated to work with authentication
 import React, { useState } from 'react';
 import { 
   Settings, 
-  TrendingUp,
   FileText,
   CreditCard,
 } from 'lucide-react';
