@@ -1,4 +1,4 @@
-import type { AccountHistoryTransaction } from "../models/AccountHistoryTransactionModel";
+import type { AccountHistoryTransaction } from "../types/AccountHistoryTransactionModel";
 
 // Invoice Modal Component
 export interface InvoiceModalProps {

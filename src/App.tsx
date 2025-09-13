@@ -1,13 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
-import config from '../wagmi-config' // Your wagmi config
+import config from './lib/wagmi'
 import { AuthProvider } from './contexts/AuthContext'
-import { MainLayout } from './components/MainLayout' // Your existing layout
-import { BalanceProvider } from './contexts/BalanceContext' // Your existing balance context
-
-// Import RainbowKit styles
-import '@rainbow-me/rainbowkit/styles.css'
+import { AppLayout } from './components/layout/AppLayout'
+import { BalanceProvider } from './contexts/BalanceContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,7 +21,7 @@ export default function App() {
         <RainbowKitProvider>
           <AuthProvider>
             <BalanceProvider>
-              <MainLayout />
+              <AppLayout />
             </BalanceProvider>
           </AuthProvider>
         </RainbowKitProvider>

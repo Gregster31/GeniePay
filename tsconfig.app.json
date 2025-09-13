@@ -17,6 +17,21 @@
     "noEmit": true,
     "jsx": "react-jsx",
     
+    /* Path Aliases - ADDED */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/pages/*": ["./src/pages/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/contexts/*": ["./src/contexts/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/data/*": ["./src/data/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/styles/*": ["./src/styles/*"]
+    },
+    
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -25,5 +40,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "tailwind.config.js", "wagmi-config.ts"]
+  "include": ["src", "tailwind.config.js"]
 }

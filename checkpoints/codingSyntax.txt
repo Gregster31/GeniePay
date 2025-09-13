@@ -1,0 +1,17 @@
+# GeniePay Coding Guidelines
+
+## Naming
+• Folders: 
+• camelCase
+• Booleans: isLoading, hasError, canEdit
+• Constants: SCREAMING_SNAKE_CASE
+
+## Files
+• PascalCase
+• One component per file
+• Use barrel exports: index.ts
+
+## Imports
+• Always use @/ paths
+• Named exports only
+• Group: external → @/ → relative

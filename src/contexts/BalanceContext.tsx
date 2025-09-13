@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useAccount, useBalance, useWatchBlockNumber } from 'wagmi';
 import { formatEther } from 'viem';
-import { config } from '../utils/Environment';
+import { config } from '../utils/environment';
 
 interface BalanceContextType {
   balance: bigint | undefined;
