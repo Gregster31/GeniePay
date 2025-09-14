@@ -14,7 +14,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import type { Employee } from '@/types/EmployeeModel';
-import { getStatusColor } from '@/utils/team/statusUtils';
+import { getStatusColor } from '@/utils/statusUtils';
 
 interface EmployeeDetailDrawerProps {
   employee: Employee;

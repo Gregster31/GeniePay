@@ -10,7 +10,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import type { Employee } from '@/types/EmployeeModel';
-import { getStatusColor } from '@/utils/team/statusUtils';
+import { getStatusColor } from '@/utils/statusUtils';
 
 interface TeamTableProps {
   employees: Employee[];

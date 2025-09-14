@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { mockEmployees } from '@/data/MockData';
 import type { Employee } from '@/types/EmployeeModel';
-import { getStatusColor } from '@/utils/team/statusUtils';
+import { getStatusColor } from '@/utils/statusUtils';
 
 export const useTeamManagement = () => {
   // State

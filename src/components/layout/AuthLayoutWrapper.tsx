@@ -1,14 +1,13 @@
 import React from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuthGuard } from '@/hooks/UseAuthGuard';
-import { WalletConnection } from '@/components/auth/WalletConnection';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { getPageTitle } from '@/router';
 
 /**
  * Centralized auth wrapper that handles all route protection logic
- * Actually uses the route configuration now!
+ * Redirects to dashboard instead of showing wallet connection for protected routes
  */
 export const AuthLayoutWrapper: React.FC = () => {
   const location = useLocation();
@@ -23,11 +22,7 @@ export const AuthLayoutWrapper: React.FC = () => {
     );
   }
 
-  if (shouldShowConnectWallet) {
-    return <WalletConnection />;
-  }
-
-  if (!isAllowed) {
+  if (shouldShowConnectWallet || !isAllowed) {
     return <Navigate to="/dashboard" replace />;
   }
 

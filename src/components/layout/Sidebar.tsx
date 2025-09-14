@@ -287,12 +287,6 @@ export const Sidebar: React.FC = () => {
                   Connect to access all features
                 </p>
               </div>
-              <button
-                onClick={() => setShowConnectionModal(true)}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium py-2 px-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
-              >
-                Connect Wallet
-              </button>
             </div>
           )}
         </div>
