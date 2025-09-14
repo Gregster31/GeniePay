@@ -1,4 +1,3 @@
-// Placeholder Page Component
 const PlaceholderPage: React.FC<{ title: string; description: string; icon: React.ReactNode }> = ({ 
   title, 
   description, 

@@ -1,4 +1,3 @@
-// components/HeaderComponent.tsx - Cleaned up (no account data)
 import React from 'react';
 
 interface HeaderProps {

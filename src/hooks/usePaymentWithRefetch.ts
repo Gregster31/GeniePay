@@ -1,4 +1,3 @@
-// hooks/usePaymentWithRefetch.ts
 import { useEffect, useCallback } from 'react';
 import { 
   useBalance, 

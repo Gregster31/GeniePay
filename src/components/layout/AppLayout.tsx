@@ -10,9 +10,7 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar activeTab={''} onTabChange={function (tab: string): void {
-        throw new Error('Function not implemented.');
-      } } />
+      <Sidebar />
       <div className="ml-64">
         <Header title={pageTitle} />
         <main className="min-h-screen">
