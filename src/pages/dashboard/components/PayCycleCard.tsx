@@ -1,4 +1,3 @@
-// components/dashboard/PayCycleCard.tsx
 import React from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import type { Employee } from '@/types/EmployeeModel';

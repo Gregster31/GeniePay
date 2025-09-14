@@ -3,7 +3,7 @@ import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuthGuard } from '@/hooks/UseAuthGuard';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { getPageTitle } from '@/router';
+import { getPageTitle } from '@/router/AppRouter';
 
 /**
  * Centralized auth wrapper that handles all route protection logic

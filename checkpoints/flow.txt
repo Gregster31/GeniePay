@@ -1,21 +1,23 @@
+GENIEPAY APP FLOW
+
 main.tsx:
-- Enables wagmi (React Lib that allows to interact with Eth) blockchain hooks
-- Enables QueryClient to cache data
-- Enables RainbowKit for wallet connection
-- Calls App to render app
+Imports global CSS styles and RainbowKit styles
+Creates React root and renders App component in StrictMode
+Entry point that bootstraps the entire application
 
 App.tsx:
-- Checks and displays WalletConnection view
-- Checks and displays MainLayout view
+Sets up QueryClient with 1-minute stale time for caching blockchain data
+Creates provider hierarchy: WagmiProvider → QueryClientProvider → RainbowKitProvider → AuthProvider → BalanceProvider
+Enables Wagmi (React hooks for Ethereum blockchain interactions)
+Enables RainbowKit for wallet connection UI
+Provides authentication and balance context to the app
+Renders AppRouter component which handles all application routing
 
-WalletConnectionComponent.tsx:
-- Has nice UI and calls ConnectButton which is handled by rainbowKit
 
-MainLayout.tsx:
-- Gets the active page and loads the content from it
 
-DashboardComponent.tsx:
-- To be continued...
+
+
+
 
 
 BULK PAY FLOW EXPLAINED:

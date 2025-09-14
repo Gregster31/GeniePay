@@ -37,8 +37,6 @@ const PAGE_TITLES: Record<string, string> = {
 * Main application router with nested routes under AuthLayoutWrapper
 * All routes require wallet connection through the layout wrapper
 */
-
-//TODO CHECK ALL THE PAGES NOW!
 const router = createBrowserRouter([
   {
     path: '/',

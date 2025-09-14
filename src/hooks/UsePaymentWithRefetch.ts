@@ -6,7 +6,7 @@ import {
   useAccount 
 } from 'wagmi';
 import { parseEther } from 'viem';
-import { config } from '../utils/environment';
+import { config } from '../utils/Environment';
 
 interface PaymentData {
   recipientAddress: string;

@@ -6,7 +6,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { formatEther, isAddress } from 'viem';
-import { config } from '@/utils/environment';
+import { config } from '@/utils/Environment';
 import { mockEmployees, mockTransactions } from '../../data/MockData';
 import { usePaymentWithRefetch } from '../../hooks/UsePaymentWithRefetch';
 import type { Transaction } from '../../types/TransactionModel';

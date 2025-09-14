@@ -4,8 +4,9 @@ import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import config from './lib/wagmi'
 import { AuthProvider } from './contexts/AuthContext'
 import { BalanceProvider } from './contexts/BalanceContext'
-import { AppRouter } from '@/router'
+import { AppRouter } from '@/router/AppRouter'
 
+// Required for wagmi hoooks
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

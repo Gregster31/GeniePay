@@ -9,30 +9,18 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     
-    /* Bundler mode */
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
     
-    /* Path Aliases - ADDED */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/pages/*": ["./src/pages/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/contexts/*": ["./src/contexts/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/utils/*": ["./src/utils/*"],
-      "@/data/*": ["./src/data/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/styles/*": ["./src/styles/*"]
+      "@/*": ["./src/*"]
     },
     
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -40,5 +28,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "tailwind.config.js"]
+  "include": ["src"]
 }

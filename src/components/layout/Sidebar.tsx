@@ -81,7 +81,9 @@ const navigationItems: NavigationItem[] = [
     id: 'settings', 
     label: 'Settings', 
     icon: Settings, 
-    path: '/settings'
+    path: '/settings',
+    badge: 'Soon',
+    badgeColor: 'bg-yellow-600'
   },
 ];
 

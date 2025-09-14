@@ -1,5 +1,5 @@
 import { useAccount } from 'wagmi';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks';
 
 export interface RouteConfig {
   requiresWallet: boolean;

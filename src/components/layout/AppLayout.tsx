@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from '@/components/layout';
 import { Header } from '@/components/layout';
-import { getPageTitle } from '@/router';
+import { getPageTitle } from '@/router/AppRouter';
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
