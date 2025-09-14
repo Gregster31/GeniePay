@@ -20,6 +20,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
 import { doesRouteRequireWallet, useAuth } from '@/hooks';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { sliceAddress } from '@/utils/WalletAddressSlicer'
 
 interface NavigationItem {
   id: string;
@@ -93,24 +94,19 @@ export const Sidebar: React.FC = () => {
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
-  // Wagmi wallet connection
   const { address, isConnected } = useAccount();
   const { data: balance, refetch } = useBalance({
     address: address,
   });
   
-  // Auth context
   const { 
     isAuthenticated,
-    displayName,
     displayAddress,
     disconnect: authDisconnect 
   } = useAuth();
   
-  // Check if user has wallet access
   const hasWalletAccess = isConnected || isAuthenticated;
   
-  // Handle navigation with auth check
   const handleNavigation = (path: string) => {
     const requiresWallet = doesRouteRequireWallet(path);
     
@@ -122,7 +118,6 @@ export const Sidebar: React.FC = () => {
     navigate(path);
   };
   
-  // Check if current path matches navigation item
   const isActiveRoute = (path: string) => {
     if (path === '/dashboard' && (location.pathname === '/' || location.pathname === '/dashboard')) {
       return true;
@@ -130,36 +125,23 @@ export const Sidebar: React.FC = () => {
     return location.pathname === path;
   };
   
-  // Handle connection click
-  const handleConnectionClick = () => {
-    if (hasWalletAccess) {
-      authDisconnect();
-    } else {
-      setShowConnectionModal(true);
-    }
-  };
-  
-  // Handle copy address
   const handleCopyAddress = async () => {
     const addressToCopy = address || displayAddress;
     if (addressToCopy) {
       try {
         await navigator.clipboard.writeText(addressToCopy);
-        // Toast notification could be added here
       } catch (err) {
         console.error('Failed to copy address:', err);
       }
     }
   };
   
-  // Update last updated time when balance changes
   useEffect(() => {
     if (balance) {
       setLastUpdated(new Date());
     }
   }, [balance]);
   
-  // Format balance for display
   const formattedBalance = balance ? 
   parseFloat(formatEther(balance.value)).toFixed(4) : 
   '0.0000';
@@ -176,49 +158,28 @@ export const Sidebar: React.FC = () => {
     <h1 className="text-xl font-bold">GeniePay</h1>
     </div>
     </div>
-    
-    {/* User Profile Section */}
+
+    {/* Wallet Info Section */}
     <div className="p-4 border-b border-gray-800">
     {hasWalletAccess ? (
       <div className="space-y-3">
-      {/* Profile Info */}
-      <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-      <span className="text-white font-medium text-sm">
-      {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
-      </span>
-      </div>
-      
-      <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-2">
-      <span className="text-xs px-2 py-0.5 rounded-full bg-green-600 text-white">
-      Wallet
-      </span>
-      </div>
-      
-      <h3 className="font-medium text-gray-200 truncate text-sm">
-      {displayName}
-      </h3>
-      </div>
-      </div>
-      
-      {/* Wallet Address (if available) */}
+      {/* Wallet Address */}
       {(address || displayAddress) && (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3">
+        <div className="bg-gray-800 rounded-lg p-3">
         <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-gray-400 mb-1">
         Wallet Address
         </p>
         <p className="text-sm font-mono text-gray-300 truncate">
-        {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : displayAddress}
+        {address ? `${sliceAddress(address)}` : displayAddress}
         </p>
         </div>
         
         <div className="flex items-center gap-1 flex-shrink-0">
         <button
         onClick={handleCopyAddress}
-        className="p-2 hover:bg-gray-800 rounded-lg transition-colors group"
+        className="p-2 hover:bg-gray-700 rounded-lg transition-colors group"
         title="Copy address"
         >
         <Copy className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
@@ -231,7 +192,7 @@ export const Sidebar: React.FC = () => {
             window.open(`https://etherscan.io/address/${addressToView}`, '_blank');
           }
         }}
-        className="p-2 hover:bg-gray-800 rounded-lg transition-colors group"
+        className="p-2 hover:bg-gray-700 rounded-lg transition-colors group"
         title="View on Etherscan"
         >
         <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
