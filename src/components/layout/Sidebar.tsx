@@ -18,9 +18,9 @@ import {
 } from 'lucide-react';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
-import { ConnectionModal } from '@/components/auth/ConnectionModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { doesRouteRequireWallet } from '@/hooks/UseAuthGuard';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 interface NavigationItem {
   id: string;
@@ -364,25 +364,29 @@ export const Sidebar: React.FC = () => {
 
         {/* Connection/Logout Button */}
         <div className="p-4 border-t border-gray-800">
-          <button
-            onClick={handleConnectionClick}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
-              hasWalletAccess ?
-                'bg-red-600 hover:bg-red-700 text-white' :
-                'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-            }`}
-          >
-            <Wallet className="w-4 h-4" />
-            {hasWalletAccess ? 'Disconnect' : 'Connect Wallet'}
-          </button>
+          {hasWalletAccess ? (
+            <button
+              onClick={authDisconnect}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200 bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Wallet className="w-4 h-4" />
+              Disconnect
+            </button>
+          ) : (
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <button
+                  onClick={openConnectModal}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                >
+                  <Wallet className="w-4 h-4" />
+                  Connect Wallet
+                </button>
+              )}
+            </ConnectButton.Custom>
+          )}
         </div>
       </div>
-
-      {/* Connection Modal */}
-      <ConnectionModal 
-        isOpen={showConnectionModal}
-        onClose={() => setShowConnectionModal(false)}
-      />
     </>
   );
 };
