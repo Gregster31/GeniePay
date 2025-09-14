@@ -3,8 +3,8 @@ import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import config from './lib/wagmi'
 import { AuthProvider } from './contexts/AuthContext'
-import { AppLayout } from './components/layout/AppLayout'
 import { BalanceProvider } from './contexts/BalanceContext'
+import { AppRouter } from '@/router'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +21,7 @@ export default function App() {
         <RainbowKitProvider>
           <AuthProvider>
             <BalanceProvider>
-              <AppLayout />
+              <AppRouter />
             </BalanceProvider>
           </AuthProvider>
         </RainbowKitProvider>

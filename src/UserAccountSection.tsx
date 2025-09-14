@@ -1,7 +1,7 @@
 // components/auth/UserAccountSection.tsx
 import React from 'react'
 import { Copy, ExternalLink, User, Wallet, Mail, Chrome } from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface UserAccountSectionProps {
   onCopyAddress?: () => void

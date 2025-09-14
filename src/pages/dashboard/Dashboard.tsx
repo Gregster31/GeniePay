@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Loader2 } from "lucide-react";
-import { useDashboard } from './hooks/useDashboard';
+import { useDashboard } from './hooks/UseDashboard';
 import { PayCycleCard } from './components/PayCycleCard';
 import { CashRequirementCard } from './components/CashRequirementCard';
 import { EmployeeTable } from './components/EmployeeTable';
