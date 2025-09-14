@@ -1,4 +1,3 @@
-// src/config/environment.ts
 export const isProduction = import.meta.env.VITE_ENV === 'PRODUCTION';
 
 export const config = {

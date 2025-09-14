@@ -1,4 +1,4 @@
-import PlaceholderPage from "@/components/shared/PlaceholderComponent";
+import { PlaceholderPage } from "@/components/shared";
 import { CreditCard } from "lucide-react";
 
 const Deposit: React.FC = () => {

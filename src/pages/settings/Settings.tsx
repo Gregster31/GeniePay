@@ -1,4 +1,4 @@
-import PlaceholderPage from "@/components/shared/PlaceholderComponent";
+import { PlaceholderPage } from "@/components/shared";
 import { Settings } from "lucide-react";
 
 const SettingsPage: React.FC = () => {

@@ -1,4 +1,4 @@
-import PlaceholderPage from "@/components/shared/PlaceholderComponent";
+import { PlaceholderPage } from "@/components/shared";
 import { FileText } from "lucide-react";
 
 const Documents: React.FC = () => {

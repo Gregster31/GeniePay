@@ -9,7 +9,8 @@ import AccountHistory from '@/pages/accountHistory';
 import Documents from '@/pages/documents';
 import Deposit from '@/pages/deposit';
 import SettingsPage from '@/pages/settings';
-import ErrorPage from '@/components/shared/ErrorPage';
+import { ErrorPage } from '@/components/shared';
+
 
 /**
  * Router that uses AuthLayoutWrapper for all route protection

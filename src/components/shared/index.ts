@@ -1,2 +1,2 @@
-import './ErrorPage'
-import './PlaceholderComponent'
+export { ErrorPage } from './ErrorPage'
+export { PlaceholderPage } from './PlaceholderComponent'

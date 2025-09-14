@@ -2,7 +2,7 @@ import React from 'react';
 import { useRouteError, Link } from 'react-router-dom';
 import { AlertTriangle, Home } from 'lucide-react';
 
-const ErrorPage: React.FC = () => {
+export const ErrorPage: React.FC = () => {
   const error = useRouteError() as any;
 
   return (
@@ -44,5 +44,3 @@ const ErrorPage: React.FC = () => {
     </div>
   );
 };
-
-export default ErrorPage;

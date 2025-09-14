@@ -1,4 +1,4 @@
-const PlaceholderPage: React.FC<{ title: string; description: string; icon: React.ReactNode }> = ({ 
+export const PlaceholderPage: React.FC<{ title: string; description: string; icon: React.ReactNode }> = ({ 
   title, 
   description, 
   icon 
@@ -18,5 +18,3 @@ const PlaceholderPage: React.FC<{ title: string; description: string; icon: Reac
     </div>
   );
 };
-
-export default PlaceholderPage;
