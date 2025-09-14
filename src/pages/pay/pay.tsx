@@ -8,7 +8,7 @@ import {
 import { formatEther, isAddress } from 'viem';
 import { config } from '@/utils/environment';
 import { mockEmployees, mockTransactions } from '../../data/MockData';
-import { usePaymentWithRefetch } from '../../hooks/usePaymentWithRefetch';
+import { usePaymentWithRefetch } from '../../hooks/UsePaymentWithRefetch';
 import type { Transaction } from '../../types/TransactionModel';
 
 const Pay: React.FC = () => {

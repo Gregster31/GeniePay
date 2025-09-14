@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { AuthLayoutWrapper } from '@/components/layout/AuthLayoutWrapper';
 import Dashboard from '@/pages/dashboard';
 import Team from '@/pages/team';
 import Pay from '@/pages/pay';
@@ -11,20 +11,27 @@ import Deposit from '@/pages/deposit';
 import SettingsPage from '@/pages/settings';
 import ErrorPage from '@/components/shared/ErrorPage';
 
-// Create the router configuration
+/**
+ * Router that uses AuthLayoutWrapper for all route protection
+ * Auth logic is centralized in the layout wrapper
+ */
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppLayout />,
+    element: <AuthLayoutWrapper />,
     errorElement: <ErrorPage />,
     children: [
       {
-        index: true, // This makes it the default route at "/"
+        index: true,
         element: <Dashboard />,
       },
       {
         path: 'dashboard',
         element: <Dashboard />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
       },
       {
         path: 'team',
@@ -50,20 +57,15 @@ const router = createBrowserRouter([
         path: 'deposit',
         element: <Deposit />,
       },
-      {
-        path: 'settings',
-        element: <SettingsPage />,
-      },
     ],
   },
 ]);
 
-// Router Provider Component
 export const AppRouter: React.FC = () => {
   return <RouterProvider router={router} />;
 };
 
-// Export individual route titles for use in components
+// Page titles mapping
 export const getPageTitle = (pathname: string): string => {
   const titles: Record<string, string> = {
     '/': 'Dashboard',
