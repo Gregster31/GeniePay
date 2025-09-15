@@ -149,15 +149,20 @@ export const Sidebar: React.FC = () => {
   return (
     <>
     <div className="fixed left-0 top-0 h-full w-64 bg-gray-900 text-white flex flex-col shadow-lg">
-    {/* Logo/Brand */}
-    <div className="p-6 border-b border-gray-800">
-    <div className="flex items-center gap-3">
-    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-    <span className="text-white font-bold text-sm">GP</span>
-    </div>
-    <h1 className="text-xl font-bold">GeniePay</h1>
-    </div>
-    </div>
+      {/* Logo/Brand */}
+      <div className="p-6 border-b border-gray-800">
+        <button 
+          onClick={() => window.location.href = '/dashboard'}
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        >
+          <img 
+            src="/geniepay_logov3.png" 
+            alt="GeniePay Logo" 
+            className="h-8 w-8 object-contain"
+          />
+          <h1 className="text-xl font-bold">GeniePay</h1>
+        </button>
+      </div>
 
     {/* Wallet Info Section */}
     <div className="p-4 border-b border-gray-800">
