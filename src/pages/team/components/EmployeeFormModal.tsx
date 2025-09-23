@@ -143,10 +143,20 @@ export const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
     setIsSubmitting(true);
 
     try {
+      console.log('🔄 Calling onSave with:', formData);
+      console.log('🔍 onSave type:', typeof onSave);
+      
+      // Check if onSave is actually a function
+      if (typeof onSave !== 'function') {
+        throw new Error('onSave is not a function');
+      }
+      
       await onSave(formData);
+      console.log('✅ onSave completed successfully');
+      
       // Modal will be closed by the parent component on successful save
     } catch (error) {
-      console.error('Error saving employee:', error);
+      console.error('❌ Error saving employee:', error);
       setErrors({ submit: 'Failed to save employee. Please try again.' });
     } finally {
       setIsSubmitting(false);

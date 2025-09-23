@@ -174,11 +174,16 @@ export const useTeamManagement = () => {
   const statuses = Array.from(new Set(allEmployees.map(emp => emp.status))).sort();
 
   // Employee management functions
-  const handleAddEmployee = async (employeeData: Omit<Employee, 'id'>) => {
+  const handleAddEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<void> => {
+    console.log('🔄 handleAddEmployee called with:', employeeData);
+    
     try {
       await addEmployeeMutation.mutateAsync(employeeData);
+      console.log('✅ Employee added successfully');
     } catch (error) {
-      // Error is already handled in mutation
+      console.error('❌ Failed to add employee:', error);
+      // Re-throw the error so the modal can catch it
+      throw error;
     }
   };
 
@@ -358,6 +363,10 @@ export const useTeamManagement = () => {
     // File handling
     fileInputRef,
     
+    // Employee management functions - ADD THESE!
+    handleAddEmployee,      // ✅ ADD THIS LINE
+    handleUpdateEmployee,   // ✅ ADD THIS LINE  
+    handleDeleteEmployee,   // ✅ ADD THIS LINE
     handleViewEmployee,
     handleEditEmployee,
     handleCloseDetail,
