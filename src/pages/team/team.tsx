@@ -1,11 +1,11 @@
-
 import React from 'react';
 import { 
   Plus, 
   Search, 
   Download, 
   Upload, 
-  Filter
+  Filter,
+  AlertCircle
 } from 'lucide-react';
 import { useTeamManagement } from './hooks/useTeamManagement';
 import { TeamTable } from './components/TeamTable';
@@ -15,6 +15,7 @@ import { EmployeeFormModal } from './components/EmployeeFormModal';
 const Team: React.FC = () => {
   const {
     employees,
+    allEmployees,
     selectedEmployee,
     showAddModal,
     showEditModal,
@@ -28,6 +29,11 @@ const Team: React.FC = () => {
     departments,
     statuses,
     fileInputRef,
+    isLoading,
+    isAddingEmployee,
+    isUpdatingEmployee,
+    isDeletingEmployee,
+    error,
     setSearchTerm,
     setFilterDepartment,
     setFilterStatus,
@@ -59,7 +65,8 @@ const Team: React.FC = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <Upload className="w-4 h-4" />
             Import CSV
@@ -67,7 +74,8 @@ const Team: React.FC = () => {
           
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={isLoading || allEmployees.length === 0}
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             Export CSV
@@ -75,7 +83,8 @@ const Team: React.FC = () => {
           
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             Add Employee
@@ -83,50 +92,91 @@ const Team: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-red-800">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-medium">Error Loading Team Data</span>
+          </div>
+          <p className="text-red-700 mt-1">{error.message}</p>
+        </div>
+      )}
+
+      {/* Filters and Search */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search employees..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search Employees
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search by name, email, or role..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
 
           {/* Department Filter */}
-          <select
-            value={filterDepartment}
-            onChange={(e) => setFilterDepartment(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Departments</option>
-            {departments.map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Department
+            </label>
+            <select
+              value={filterDepartment}
+              onChange={(e) => setFilterDepartment(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Departments</option>
+              {departments.map((department: string) => (
+                <option key={department} value={department}>{department}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Status Filter */}
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Status</option>
-            {statuses.map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Statuses</option>
+              {statuses.map((status: string) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-          {/* Results Count */}
+        {/* Results Count */}
+        <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center text-sm text-gray-600">
             <Filter className="w-4 h-4 mr-2" />
-            {totalEmployees} employees found
+            {totalEmployees} employee{totalEmployees !== 1 ? 's' : ''} found
           </div>
+          
+          {(searchTerm || filterDepartment || filterStatus) && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setFilterDepartment('');
+                setFilterStatus('');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       </div>
 
@@ -142,6 +192,9 @@ const Team: React.FC = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+        isLoading={isLoading}
+        isDeleting={isDeletingEmployee}
+        error={error}
       />
 
       {/* Employee Detail Drawer */}
