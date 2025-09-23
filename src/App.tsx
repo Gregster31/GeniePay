@@ -5,6 +5,7 @@ import config from './lib/wagmi'
 import { AuthProvider } from './contexts/AuthContext'
 import { BalanceProvider } from './contexts/BalanceContext'
 import { AppRouter } from '@/router/AppRouter'
+import { AuthenticationWrapper } from '@/components/auth/AuthenticationWrapper'
 
 // Required for wagmi hoooks
 const queryClient = new QueryClient({
@@ -22,7 +23,9 @@ export default function App() {
         <RainbowKitProvider>
           <AuthProvider>
             <BalanceProvider>
-              <AppRouter />
+              <AuthenticationWrapper>
+                <AppRouter />
+              </AuthenticationWrapper>
             </BalanceProvider>
           </AuthProvider>
         </RainbowKitProvider>

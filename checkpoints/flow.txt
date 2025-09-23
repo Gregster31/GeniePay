@@ -14,12 +14,6 @@ Provides authentication and balance context to the app
 Renders AppRouter component which handles all application routing
 
 
-
-
-
-
-
-
 BULK PAY FLOW EXPLAINED:
 - Contract: Singleton, no employee data stored.
 - Employer: Prepares list off-chain, approves tokens, calls bulkPayERC20(token, addresses[], amounts[]).
