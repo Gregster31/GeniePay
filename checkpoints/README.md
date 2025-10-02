@@ -50,9 +50,10 @@ GeniePay enables:
 |-------|------|-------------|
 | [**1**](https://www.youtube.com/watch?v=w4mI5J88Kbg) | Basic wallet-to-wallet payment | ✅ Connect wallet via MetaMask<br>✅ Send USDC/ETH to employee wallets<br>✅ Add employees in dashboard<br>✅ Display wallet balance |
 | [**2**](https://www.youtube.com/watch?v=srOUt_pADQg) | New Website UI & Environment Setup | 🛠️ Implement new website UI<br>🛠️ Start flow diagrams<br>🛠️ Create new company logo<br>🛠️ Setup separate test & production environments<br>🛠️ Implement new wallet connection using RainbowKit UI |
-| **3** | Prepare for Public Deployment | 🔄 Implement mass payouts via smart contracts<br>🔄 Settings to switch between USD, CAD, ETH, or other crypto<br>🔄 Support account & no-account workflows<br>🔄 Implement all required pages |
-| **4** | Touch-up & Security | 🛡 Security review<br>🛡 Finish flow diagrams/documentation<br>🛡 Improve website design (less AI-looking)<br>🧾 Generate professional invoices and accountant-friendly files after transactions |
-| **5** | Product Presentation | 📄 Prepare product presentation for investors, or demos |
+| **3** | Prepare for Public Deployment | 🔄 Support account & no-account workflows<br>🔄 Implement all required pages |
+| **3.5** | Blockchain dev | 🔄 Implement mass payouts via smart contracts<br>🔄 Settings to switch between USD, CAD, ETH, or other crypto<br>
+| **4** | Touch-up & Security | 🛡 Security review<br>🛡 Finish flow diagrams/documentation<br>🛡 Improve website graphic design<br>🧾 Generate professional invoices and accountant-friendly files after transactions |
+| **5** | Product Presentation | 📄 Prepare product for demos |
 
 ---
 
