@@ -146,5 +146,5 @@ After each payroll run, the employer should have:
 | API Licensing           | Payroll API integrations |
 
 ## 9️⃣ Flows
-Making the app decentralized: Transactions are onchain. Ex: for payment history, check onchain to get all transactions (no saving). Centralized user data (preferences, employee list)
-Making the app cross platform: To have users be able to pay in different currency, you need to have cross plateform support. It also means that smart contracts will need to live on all the blockchains used.
+**Making the app decentralized:** Transactions are onchain. Ex: for payment history, check onchain to get all transactions (no saving). Centralized user data (preferences, employee list) <br>
+**Making the app cross platform:** To have users be able to pay in different currency, you need to have cross plateform support. It also means that smart contracts will need to live on all the blockchains used.
