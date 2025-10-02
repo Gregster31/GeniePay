@@ -144,3 +144,6 @@ After each payroll run, the employer should have:
 | Conversion Fees         | Crypto ↔ Fiat spread |
 | Compliance-as-a-Service | Compliance engine for 3rd parties |
 | API Licensing           | Payroll API integrations |
+
+## 9️⃣ Flows
+Making the app decentralized
