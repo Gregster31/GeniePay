@@ -51,7 +51,7 @@ GeniePay enables:
 | [**1**](https://www.youtube.com/watch?v=w4mI5J88Kbg) | Basic wallet-to-wallet payment | ✅ Connect wallet via MetaMask<br>✅ Send USDC/ETH to employee wallets<br>✅ Add employees in dashboard<br>✅ Display wallet balance |
 | [**2**](https://www.youtube.com/watch?v=srOUt_pADQg) | New Website UI & Environment Setup | 🛠️ Implement new website UI<br>🛠️ Start flow diagrams<br>🛠️ Create new company logo<br>🛠️ Setup separate test & production environments<br>🛠️ Implement new wallet connection using RainbowKit UI |
 | **3** | Prepare for Public Deployment | 🔄 Support account & no-account workflows<br>🔄 Implement all required pages |
-| **3.5** | Blockchain dev | 🔄 Implement mass payouts via smart contracts<br>🔄 Cross plateform suppport<br>
+| **3.5** | Decentralization | 🔄 Implement mass payouts via smart contracts<br>🔄 Cross plateform suppport<br>
 | **4** | Touch-up & Security | 🛡 Security review<br>🛡 Finish flow diagrams/documentation<br>🛡 Improve website graphic design<br>🧾 Generate professional invoices and accountant-friendly files after transactions<br> 🧾 Decentralized storage replacing current db |
 | **5** | Product Presentation | 📄 Prepare product for demos |
 
@@ -146,4 +146,5 @@ After each payroll run, the employer should have:
 | API Licensing           | Payroll API integrations |
 
 ## 9️⃣ Flows
-Making the app decentralized
+Making the app decentralized: Transactions are onchain. Ex: for payment history, check onchain to get all transactions (no saving). Centralized user data (preferences, employee list)
+Making the app cross platform: To have users be able to pay in different currency, you need to have cross plateform support. It also means that smart contracts will need to live on all the blockchains used.
