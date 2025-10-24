@@ -22,12 +22,12 @@ const Team: React.FC = () => {
     showEmployeeDetail,
     searchTerm,
     filterDepartment,
-    filterStatus,
+    filterEmploymentType,
     currentPage,
     totalPages,
     totalEmployees,
     departments,
-    statuses,
+    employmentTypes,
     fileInputRef,
     isLoading,
     isAddingEmployee,
@@ -36,7 +36,7 @@ const Team: React.FC = () => {
     error,
     setSearchTerm,
     setFilterDepartment,
-    setFilterStatus,
+    setFilterEmploymentType,
     setCurrentPage,
     handleAddEmployee,
     handleUpdateEmployee,
@@ -59,7 +59,7 @@ const Team: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Team Management</h1>
-          <p className="text-gray-600">Manage your employees and team members</p>
+          <p className="text-gray-600">Manage your employees and contractors</p>
         </div>
         
         <div className="flex items-center gap-4">
@@ -140,19 +140,21 @@ const Team: React.FC = () => {
             </select>
           </div>
 
-          {/* Status Filter */}
+          {/* Employment Type Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
+              Employment Type
             </label>
             <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              value={filterEmploymentType}
+              onChange={(e) => setFilterEmploymentType(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">All Statuses</option>
-              {statuses.map((status: string) => (
-                <option key={status} value={status}>{status}</option>
+              <option value="">All Types</option>
+              {employmentTypes.map((type: string) => (
+                <option key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </option>
               ))}
             </select>
           </div>
@@ -162,15 +164,15 @@ const Team: React.FC = () => {
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center text-sm text-gray-600">
             <Filter className="w-4 h-4 mr-2" />
-            {totalEmployees} employee{totalEmployees !== 1 ? 's' : ''} found
+            {totalEmployees} team member{totalEmployees !== 1 ? 's' : ''} found
           </div>
           
-          {(searchTerm || filterDepartment || filterStatus) && (
+          {(searchTerm || filterDepartment || filterEmploymentType) && (
             <button
               onClick={() => {
                 setSearchTerm('');
                 setFilterDepartment('');
-                setFilterStatus('');
+                setFilterEmploymentType('');
               }}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
@@ -212,7 +214,8 @@ const Team: React.FC = () => {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSave={handleAddEmployee}
-        title="Add New Employee"
+        title="Add New Team Member"
+        isLoading={isAddingEmployee}
       />
 
       {/* Edit Employee Modal */}
@@ -221,11 +224,11 @@ const Team: React.FC = () => {
           isOpen={showEditModal}
           onClose={() => {
             setShowEditModal(false);
-            // Don't clear selectedEmployee here in case detail drawer is still open
           }}
           onSave={handleUpdateEmployee}
           employee={selectedEmployee}
-          title="Edit Employee"
+          title="Edit Team Member"
+          isLoading={isUpdatingEmployee}
         />
       )}
 

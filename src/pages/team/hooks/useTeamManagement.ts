@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EmployeeService } from '@/services/EmployeeService';
 import type { Employee } from '@/types/EmployeeModel';
-import { useAuth } from '@/hooks/UseAuth';
+import { useAccount } from 'wagmi';
 
 export const useTeamManagement = () => {
   // Auth
-  const { isAuthenticated, walletAddress } = useAuth();
+  const { address: walletAddress, isConnected } = useAccount();
   
   // UI state
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -17,7 +17,7 @@ export const useTeamManagement = () => {
   // Filters and pagination
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+  const [filterEmploymentType, setFilterEmploymentType] = useState('');
   const [sortBy, setSortBy] = useState<keyof Employee>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,26 +37,25 @@ export const useTeamManagement = () => {
   } = useQuery({
     queryKey: ['employees', walletAddress],
     queryFn: () => walletAddress ? EmployeeService.getUserEmployees(walletAddress) : Promise.resolve([]),
-    enabled: !!walletAddress && isAuthenticated,
+    enabled: !!walletAddress && isConnected,
     staleTime: 30 * 1000, // 30 seconds
   });
 
   // Mutation for adding employee
   const addEmployeeMutation = useMutation({
-    mutationFn: (employeeData: Omit<Employee, 'id'>) => {
+    mutationFn: (employeeData: Omit<Employee, 'id' | 'user_id'>) => {
       if (!walletAddress) throw new Error('No wallet connected');
       
       return EmployeeService.createEmployee({
         name: employeeData.name,
         email: employeeData.email,
-        phone: employeeData.phone,
+        phone: employeeData.phone || undefined,
         role: employeeData.role,
         department: employeeData.department,
-        wallet_address: employeeData.walletAddress,
+        wallet_address: employeeData.wallet_address,
         salary: employeeData.salary,
-        payment_frequency: employeeData.paymentFrequency,
-        employment_type: employeeData.employmentType,
-        join_date: employeeData.joinDate?.toISOString().split('T')[0]
+        employment_type: employeeData.employment_type,
+        avatar_url: employeeData.avatar_url || undefined
       }, walletAddress);
     },
     onSuccess: () => {
@@ -72,24 +71,20 @@ export const useTeamManagement = () => {
 
   // Mutation for updating employee
   const updateEmployeeMutation = useMutation({
-    mutationFn: ({ employee, updates }: { employee: Employee, updates: Partial<Employee> }) => {
+    mutationFn: (updatedEmployee: Employee) => {
       if (!walletAddress) throw new Error('No wallet connected');
       
-      // Convert Employee updates to database format
-      const dbUpdates: any = {};
-      if (updates.name) dbUpdates.name = updates.name;
-      if (updates.email) dbUpdates.email = updates.email;
-      if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
-      if (updates.role) dbUpdates.role = updates.role;
-      if (updates.department) dbUpdates.department = updates.department;
-      if (updates.walletAddress) dbUpdates.wallet_address = updates.walletAddress;
-      if (updates.salary !== undefined) dbUpdates.salary = updates.salary;
-      if (updates.paymentFrequency) dbUpdates.payment_frequency = updates.paymentFrequency;
-      if (updates.employmentType) dbUpdates.employment_type = updates.employmentType;
-      if (updates.status) dbUpdates.status = updates.status;
-      if (updates.joinDate) dbUpdates.join_date = updates.joinDate.toISOString().split('T')[0];
-      
-      return EmployeeService.updateEmployee(employee.id.toString(), dbUpdates, walletAddress);
+      return EmployeeService.updateEmployee(updatedEmployee.id, {
+        name: updatedEmployee.name,
+        email: updatedEmployee.email,
+        phone: updatedEmployee.phone || undefined,
+        role: updatedEmployee.role,
+        department: updatedEmployee.department,
+        wallet_address: updatedEmployee.wallet_address,
+        salary: updatedEmployee.salary,
+        employment_type: updatedEmployee.employment_type,
+        avatar_url: updatedEmployee.avatar_url || undefined
+      }, walletAddress);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
@@ -128,9 +123,9 @@ export const useTeamManagement = () => {
                            employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            employee.role.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesDepartment = !filterDepartment || employee.department === filterDepartment;
-      const matchesStatus = !filterStatus || employee.status === filterStatus;
+      const matchesEmploymentType = !filterEmploymentType || employee.employment_type === filterEmploymentType;
       
-      return matchesSearch && matchesDepartment && matchesStatus;
+      return matchesSearch && matchesDepartment && matchesEmploymentType;
     })
     .sort((a, b) => {
       const aValue = a[sortBy];
@@ -140,11 +135,6 @@ export const useTeamManagement = () => {
       if (aValue == null && bValue == null) return 0;
       if (aValue == null) return sortOrder === 'asc' ? -1 : 1;
       if (bValue == null) return sortOrder === 'asc' ? 1 : -1;
-      
-      // Handle dates
-      if (aValue instanceof Date && bValue instanceof Date) {
-        return sortOrder === 'asc' ? aValue.getTime() - bValue.getTime() : bValue.getTime() - aValue.getTime();
-      }
       
       // Handle strings and numbers
       let normalizedA = aValue;
@@ -167,14 +157,14 @@ export const useTeamManagement = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterDepartment, filterStatus, sortBy, sortOrder]);
+  }, [searchTerm, filterDepartment, filterEmploymentType, sortBy, sortOrder]);
 
-  // Get unique departments and statuses for filters
+  // Get unique departments and employment types for filters
   const departments = Array.from(new Set(allEmployees.map(emp => emp.department))).sort();
-  const statuses = Array.from(new Set(allEmployees.map(emp => emp.status))).sort();
+  const employmentTypes = Array.from(new Set(allEmployees.map(emp => emp.employment_type))).sort();
 
   // Employee management functions
-  const handleAddEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<void> => {
+  const handleAddEmployee = async (employeeData: Omit<Employee, 'id' | 'user_id'>): Promise<void> => {
     console.log('🔄 handleAddEmployee called with:', employeeData);
     
     try {
@@ -182,28 +172,22 @@ export const useTeamManagement = () => {
       console.log('✅ Employee added successfully');
     } catch (error) {
       console.error('❌ Failed to add employee:', error);
-      // Re-throw the error so the modal can catch it
       throw error;
     }
   };
 
   const handleUpdateEmployee = async (updatedEmployee: Employee) => {
-    if (!selectedEmployee) return;
-    
     try {
-      await updateEmployeeMutation.mutateAsync({
-        employee: selectedEmployee,
-        updates: updatedEmployee
-      });
+      await updateEmployeeMutation.mutateAsync(updatedEmployee);
     } catch (error) {
       // Error is already handled in mutation
     }
   };
 
-  const handleDeleteEmployee = async (employeeId: number) => {
-    if (window.confirm('Are you sure you want to delete this employee?')) {
+  const handleDeleteEmployee = async (employeeId: string) => {
+    if (window.confirm('Are you sure you want to delete this team member? This action cannot be undone.')) {
       try {
-        await deleteEmployeeMutation.mutateAsync(employeeId.toString());
+        await deleteEmployeeMutation.mutateAsync(employeeId);
       } catch (error) {
         // Error is already handled in mutation
       }
@@ -240,7 +224,7 @@ export const useTeamManagement = () => {
     try {
       const headers = [
         'Name', 'Email', 'Phone', 'Role', 'Department', 'Wallet Address',
-        'Salary', 'Payment Frequency', 'Employment Type', 'Status', 'Join Date', 'Total Paid'
+        'Salary', 'Employment Type'
       ];
       
       const csvData = filteredEmployees.map(emp => [
@@ -249,13 +233,9 @@ export const useTeamManagement = () => {
         emp.phone || '',
         emp.role,
         emp.department,
-        emp.walletAddress,
+        emp.wallet_address,
         emp.salary,
-        emp.paymentFrequency,
-        emp.employmentType,
-        emp.status,
-        emp.joinDate.toISOString().split('T')[0],
-        emp.totalPaid || 0
+        emp.employment_type
       ]);
       
       const csvContent = [headers, ...csvData]
@@ -266,7 +246,7 @@ export const useTeamManagement = () => {
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `employees_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `team_members_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -278,43 +258,56 @@ export const useTeamManagement = () => {
   };
 
   // CSV Import
-  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const text = e.target?.result as string;
-        const lines = text.split('\n');
-        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+        const lines = text.split('\n').filter(line => line.trim());
         
-        // Parse CSV and add employees
-        for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
-          if (values.length < headers.length) continue;
-          
-          const employeeData: Omit<Employee, 'id'> = {
-            name: values[0],
-            email: values[1],
-            phone: values[2],
-            role: values[3],
-            department: values[4],
-            walletAddress: values[5],
-            salary: parseFloat(values[6]) || 0,
-            paymentFrequency: values[7] as any || 'Monthly',
-            employmentType: values[8] as any || 'Full-time',
-            status: values[9] as any || 'Active',
-            joinDate: new Date(values[10]) || new Date(),
-            totalPaid: 0,
-            paymentHistory: []
-          };
-          
-          // Add employee (this will trigger the mutation)
-          handleAddEmployee(employeeData);
+        if (lines.length < 2) {
+          alert('CSV file is empty or invalid');
+          return;
         }
         
-        alert(`Successfully imported ${lines.length - 1} employees`);
+        let successCount = 0;
+        let errorCount = 0;
+        
+        // Skip header row, start from index 1
+        for (let i = 1; i < lines.length; i++) {
+          try {
+            const values = lines[i].split(',').map(v => v.replace(/^"|"$/g, '').trim());
+            
+            if (values.length < 8) continue;
+            
+            const employeeData: Omit<Employee, 'id' | 'user_id'> = {
+              name: values[0],
+              email: values[1],
+              phone: values[2] || null,
+              role: values[3],
+              department: values[4],
+              wallet_address: values[5],
+              salary: parseFloat(values[6]) || 0,
+              employment_type: values[7] as 'employee' | 'contractor',
+              avatar_url: null
+            };
+            
+            await handleAddEmployee(employeeData);
+            successCount++;
+          } catch (error) {
+            console.error(`Error importing row ${i}:`, error);
+            errorCount++;
+          }
+        }
+        
+        if (successCount > 0) {
+          alert(`Successfully imported ${successCount} team member${successCount !== 1 ? 's' : ''}${errorCount > 0 ? `. ${errorCount} failed.` : ''}`);
+        } else {
+          alert('Failed to import any team members. Please check the CSV format.');
+        }
       } catch (error) {
         console.error('Error importing CSV:', error);
         alert('Failed to import CSV file. Please check the format.');
@@ -351,22 +344,22 @@ export const useTeamManagement = () => {
     // Filters and pagination
     searchTerm,
     filterDepartment,
-    filterStatus,
+    filterEmploymentType,
     currentPage,
     totalPages,
     totalEmployees: filteredEmployees.length,
     departments,
-    statuses,
+    employmentTypes,
     sortBy,
     sortOrder,
     
     // File handling
     fileInputRef,
     
-    // Employee management functions - ADD THESE!
-    handleAddEmployee,      // ✅ ADD THIS LINE
-    handleUpdateEmployee,   // ✅ ADD THIS LINE  
-    handleDeleteEmployee,   // ✅ ADD THIS LINE
+    // Employee management functions
+    handleAddEmployee,
+    handleUpdateEmployee,
+    handleDeleteEmployee,
     handleViewEmployee,
     handleEditEmployee,
     handleCloseDetail,
@@ -378,7 +371,7 @@ export const useTeamManagement = () => {
     // UI setters
     setSearchTerm,
     setFilterDepartment,
-    setFilterStatus,
+    setFilterEmploymentType,
     setCurrentPage,
     setShowAddModal,
     setShowEditModal,

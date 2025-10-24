@@ -1,4 +1,4 @@
-import React, { JSX } from 'react';
+import React, { type JSX } from 'react';
 import { 
   Eye, 
   Edit2, 
@@ -11,13 +11,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import type { Employee } from '@/types/EmployeeModel';
-import { getStatusColor } from '@/utils/statusUtils';
 
 interface TeamTableProps {
   employees: Employee[];
   onViewEmployee: (employee: Employee) => void;
   onEditEmployee: (employee: Employee) => void;
-  onDeleteEmployee: (employeeId: number) => void;
+  onDeleteEmployee: (employeeId: string) => void;
   onSort: (field: keyof Employee) => void;
   sortBy: keyof Employee;
   sortOrder: 'asc' | 'desc';
@@ -49,6 +48,23 @@ export const TeamTable: React.FC<TeamTableProps> = ({
     return sortOrder === 'asc' ? 
       <ChevronUp className="w-4 h-4" /> : 
       <ChevronDown className="w-4 h-4" />;
+  };
+
+  const formatSalary = (salary: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(salary);
+  };
+
+  const getEmploymentTypeBadge = (type: string) => {
+    const colors = {
+      employee: 'bg-blue-100 text-blue-800',
+      contractor: 'bg-purple-100 text-purple-800'
+    };
+    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
   const renderPagination = (): JSX.Element[] => {
@@ -108,7 +124,7 @@ export const TeamTable: React.FC<TeamTableProps> = ({
         <div className="flex items-center justify-center py-12">
           <div className="flex items-center gap-3 text-gray-600">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Loading employees...</span>
+            <span>Loading team members...</span>
           </div>
         </div>
       </div>
@@ -122,7 +138,7 @@ export const TeamTable: React.FC<TeamTableProps> = ({
         <div className="flex items-center justify-center py-12">
           <div className="flex items-center gap-3 text-red-600">
             <AlertCircle className="w-5 h-5" />
-            <span>Failed to load employees: {error.message}</span>
+            <span>Failed to load team members: {error.message}</span>
           </div>
         </div>
       </div>
@@ -139,8 +155,8 @@ export const TeamTable: React.FC<TeamTableProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
-          <p className="text-gray-500 mb-6">Try adjusting your search filters or add your first employee</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No team members found</h3>
+          <p className="text-gray-500 mb-6">Try adjusting your search filters or add your first team member</p>
         </div>
       </div>
     );
@@ -158,7 +174,7 @@ export const TeamTable: React.FC<TeamTableProps> = ({
                 onClick={() => onSort('name')}
               >
                 <div className="flex items-center gap-1">
-                  Employee
+                  Team Member
                   {getSortIcon('name')}
                 </div>
               </th>
@@ -185,17 +201,17 @@ export const TeamTable: React.FC<TeamTableProps> = ({
                 onClick={() => onSort('salary')}
               >
                 <div className="flex items-center gap-1">
-                  Salary
+                  Compensation
                   {getSortIcon('salary')}
                 </div>
               </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => onSort('status')}
+                onClick={() => onSort('employment_type')}
               >
                 <div className="flex items-center gap-1">
-                  Status
-                  {getSortIcon('status')}
+                  Type
+                  {getSortIcon('employment_type')}
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -212,10 +228,10 @@ export const TeamTable: React.FC<TeamTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10">
-                      {employee.avatar ? (
+                      {employee.avatar_url ? (
                         <img
                           className="h-10 w-10 rounded-full object-cover"
-                          src={employee.avatar}
+                          src={employee.avatar_url}
                           alt={employee.name}
                         />
                       ) : (
@@ -243,11 +259,11 @@ export const TeamTable: React.FC<TeamTableProps> = ({
                   {employee.department}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {employee.salary} ETH
+                  {formatSalary(employee.salary)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(employee.status)}`}>
-                    {employee.status}
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getEmploymentTypeBadge(employee.employment_type)}`}>
+                    {employee.employment_type.charAt(0).toUpperCase() + employee.employment_type.slice(1)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -264,7 +280,7 @@ export const TeamTable: React.FC<TeamTableProps> = ({
                       onClick={() => onEditEmployee(employee)}
                       disabled={isDeleting}
                       className="text-gray-600 hover:text-gray-800 p-1 rounded hover:bg-gray-50 disabled:opacity-50"
-                      title="Edit Employee"
+                      title="Edit"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -272,7 +288,7 @@ export const TeamTable: React.FC<TeamTableProps> = ({
                       onClick={() => onDeleteEmployee(employee.id)}
                       disabled={isDeleting}
                       className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 disabled:opacity-50"
-                      title="Delete Employee"
+                      title="Delete"
                     >
                       {isDeleting ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

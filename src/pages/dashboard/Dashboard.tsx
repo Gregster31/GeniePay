@@ -11,7 +11,6 @@ const Dashboard: React.FC = () => {
     quickActions,
     isLoading,
     error,
-    balance,
     formattedBalance,
     refetchStats,
   } = useDashboard();

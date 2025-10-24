@@ -1,26 +1,13 @@
 export interface Employee {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  department: string;
-  walletAddress: string;
-  avatar?: string | null;
-  salary: number;
-  paymentFrequency: 'Weekly' | 'Bi-weekly' | 'Monthly';
-  employmentType: 'Full-time' | 'Part-time' | 'Contract' | 'Intern';
-  status: 'Active' | 'Inactive' | 'Terminated';
-  joinDate: Date;
-  lastPayment?: Date;
-  totalPaid?: number;
-  paymentHistory?: PaymentRecord[];
-}
-
-interface PaymentRecord {
-  id: string;
-  date: Date;
-  amount: number;
-  txHash: string;
-  status: 'Completed' | 'Pending' | 'Failed';
+  id: string
+  user_id: string
+  name: string
+  email: string
+  phone: string | null
+  role: string
+  department: string
+  wallet_address: string
+  avatar_url: string | null
+  salary: number
+  employment_type: string //Either employee or contractor 
 }

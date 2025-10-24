@@ -1,30 +1,6 @@
 import { supabase } from '@/lib/Supabase'
 import type { Employee } from '@/types/EmployeeModel'
 
-export interface DatabaseEmployee {
-  id: string
-  user_id: string
-  name: string
-  email: string
-  phone: string | null
-  role: string
-  department: string
-  wallet_address: string
-  avatar_url: string | null
-  salary: number
-  salary_currency: string
-  payment_frequency: string
-  employment_type: string
-  status: string
-  join_date: string
-  termination_date: string | null
-  last_payment_date: string | null
-  total_paid: number
-  created_at: string
-  updated_at: string
-  payment_count?: number
-}
-
 export interface CreateEmployeeData {
   name: string
   email: string
@@ -33,48 +9,26 @@ export interface CreateEmployeeData {
   department: string
   wallet_address: string
   salary: number
-  salary_currency?: string
-  payment_frequency?: string
-  employment_type?: string
-  join_date?: string
+  employment_type: string // 'employee' or 'contractor'
+  avatar_url?: string
 }
 
-export interface UpdateEmployeeData extends Partial<CreateEmployeeData> {
-  status?: string
-  termination_date?: string
-}
-
-export interface PaymentRecord {
-  id: string
-  employee_id: string
-  amount: number
-  currency: string
-  tx_hash: string | null
-  status: string
-  payment_date: string
-  gas_used: number | null
-  notes: string | null
-}
+export interface UpdateEmployeeData extends Partial<CreateEmployeeData> {}
 
 // Transform database employee to frontend Employee type
-function transformDbEmployee(dbEmployee: DatabaseEmployee): Employee {
+function transformDbEmployee(dbEmployee: any): Employee {
   return {
-    id: parseInt(dbEmployee.id.replace(/-/g, '').slice(0, 8), 16), // Convert UUID to number for compatibility
+    id: dbEmployee.id,
+    user_id: dbEmployee.user_id,
     name: dbEmployee.name,
     email: dbEmployee.email,
-    phone: dbEmployee.phone || '',
+    phone: dbEmployee.phone || null,
     role: dbEmployee.role,
     department: dbEmployee.department,
-    walletAddress: dbEmployee.wallet_address,
-    avatar: dbEmployee.avatar_url,
+    wallet_address: dbEmployee.wallet_address,
+    avatar_url: dbEmployee.avatar_url || null,
     salary: dbEmployee.salary,
-    paymentFrequency: dbEmployee.payment_frequency as any,
-    employmentType: dbEmployee.employment_type as any,
-    status: dbEmployee.status as any,
-    joinDate: new Date(dbEmployee.join_date),
-    lastPayment: dbEmployee.last_payment_date ? new Date(dbEmployee.last_payment_date) : undefined,
-    totalPaid: dbEmployee.total_paid,
-    paymentHistory: [] // Will be loaded separately if needed
+    employment_type: dbEmployee.employment_type
   }
 }
 
@@ -85,9 +39,10 @@ export class EmployeeService {
   static async getUserEmployees(userWalletAddress: string): Promise<Employee[]> {
     try {
       const { data, error } = await supabase
-        .rpc('get_user_employees', { 
-          user_wallet_address: userWalletAddress.toLowerCase() 
-        })
+        .from('employees')
+        .select('*')
+        .eq('user_id', userWalletAddress.toLowerCase())
+        .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Error fetching employees:', error)
@@ -109,33 +64,19 @@ export class EmployeeService {
     userWalletAddress: string
   ): Promise<Employee> {
     try {
-      // First get the user ID
-      const { data: userData, error: userError } = await supabase
-        .from('wallet_users')
-        .select('id')
-        .eq('wallet_address', userWalletAddress.toLowerCase())
-        .single()
-
-      if (userError || !userData) {
-        throw new Error('User not found')
-      }
-
-      // Create the employee
       const { data, error } = await supabase
         .from('employees')
         .insert({
-          user_id: userData.id,
+          user_id: userWalletAddress.toLowerCase(),
           name: employeeData.name,
           email: employeeData.email,
-          phone: employeeData.phone,
+          phone: employeeData.phone || null,
           role: employeeData.role,
           department: employeeData.department,
           wallet_address: employeeData.wallet_address.toLowerCase(),
           salary: employeeData.salary,
-          salary_currency: employeeData.salary_currency || 'ETH',
-          payment_frequency: employeeData.payment_frequency || 'Monthly',
-          employment_type: employeeData.employment_type || 'Full-time',
-          join_date: employeeData.join_date || new Date().toISOString().split('T')[0]
+          employment_type: employeeData.employment_type,
+          avatar_url: employeeData.avatar_url || null
         })
         .select()
         .single()
@@ -161,38 +102,25 @@ export class EmployeeService {
     userWalletAddress: string
   ): Promise<Employee> {
     try {
-      // Get user ID for security
-      const { data: userData, error: userError } = await supabase
-        .from('wallet_users')
-        .select('id')
-        .eq('wallet_address', userWalletAddress.toLowerCase())
-        .single()
-
-      if (userError || !userData) {
-        throw new Error('User not found')
-      }
-
-      // Prepare update data
+      // Prepare update data - only include fields that were provided
       const updateData: any = {}
-      if (updates.name) updateData.name = updates.name
-      if (updates.email) updateData.email = updates.email
+      if (updates.name !== undefined) updateData.name = updates.name
+      if (updates.email !== undefined) updateData.email = updates.email
       if (updates.phone !== undefined) updateData.phone = updates.phone
-      if (updates.role) updateData.role = updates.role
-      if (updates.department) updateData.department = updates.department
-      if (updates.wallet_address) updateData.wallet_address = updates.wallet_address.toLowerCase()
+      if (updates.role !== undefined) updateData.role = updates.role
+      if (updates.department !== undefined) updateData.department = updates.department
+      if (updates.wallet_address !== undefined) updateData.wallet_address = updates.wallet_address.toLowerCase()
       if (updates.salary !== undefined) updateData.salary = updates.salary
-      if (updates.salary_currency) updateData.salary_currency = updates.salary_currency
-      if (updates.payment_frequency) updateData.payment_frequency = updates.payment_frequency
-      if (updates.employment_type) updateData.employment_type = updates.employment_type
-      if (updates.status) updateData.status = updates.status
-      if (updates.join_date) updateData.join_date = updates.join_date
-      if (updates.termination_date) updateData.termination_date = updates.termination_date
+      if (updates.employment_type !== undefined) updateData.employment_type = updates.employment_type
+      if (updates.avatar_url !== undefined) updateData.avatar_url = updates.avatar_url
+
+      updateData.updated_at = new Date().toISOString()
 
       const { data, error } = await supabase
         .from('employees')
         .update(updateData)
         .eq('id', employeeId)
-        .eq('user_id', userData.id) // Ensure user owns this employee
+        .eq('user_id', userWalletAddress.toLowerCase()) // Ensure user owns this employee
         .select()
         .single()
 
@@ -217,22 +145,11 @@ export class EmployeeService {
    */
   static async deleteEmployee(employeeId: string, userWalletAddress: string): Promise<void> {
     try {
-      // Get user ID for security
-      const { data: userData, error: userError } = await supabase
-        .from('wallet_users')
-        .select('id')
-        .eq('wallet_address', userWalletAddress.toLowerCase())
-        .single()
-
-      if (userError || !userData) {
-        throw new Error('User not found')
-      }
-
       const { error } = await supabase
         .from('employees')
         .delete()
         .eq('id', employeeId)
-        .eq('user_id', userData.id) // Ensure user owns this employee
+        .eq('user_id', userWalletAddress.toLowerCase()) // Ensure user owns this employee
 
       if (error) {
         console.error('Error deleting employee:', error)
@@ -249,22 +166,11 @@ export class EmployeeService {
    */
   static async getEmployeeById(employeeId: string, userWalletAddress: string): Promise<Employee | null> {
     try {
-      // Get user ID for security
-      const { data: userData, error: userError } = await supabase
-        .from('wallet_users')
-        .select('id')
-        .eq('wallet_address', userWalletAddress.toLowerCase())
-        .single()
-
-      if (userError || !userData) {
-        throw new Error('User not found')
-      }
-
       const { data, error } = await supabase
         .from('employees')
         .select('*')
         .eq('id', employeeId)
-        .eq('user_id', userData.id)
+        .eq('user_id', userWalletAddress.toLowerCase())
         .single()
 
       if (error) {
@@ -282,75 +188,6 @@ export class EmployeeService {
   }
 
   /**
-   * Record a payment for an employee
-   */
-  static async recordPayment(
-    employeeId: string,
-    amount: number,
-    currency: string = 'ETH',
-    txHash?: string,
-    userWalletAddress?: string
-  ): Promise<string> {
-    try {
-      const { data, error } = await supabase
-        .rpc('record_payment', {
-          employee_id_param: employeeId,
-          amount_param: amount,
-          currency_param: currency,
-          tx_hash_param: txHash,
-          user_wallet_address: userWalletAddress?.toLowerCase()
-        })
-
-      if (error) {
-        console.error('Error recording payment:', error)
-        throw new Error(`Failed to record payment: ${error.message}`)
-      }
-
-      return data // Returns payment ID
-    } catch (error) {
-      console.error('Error in recordPayment:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Get payment history for an employee
-   */
-  static async getEmployeePaymentHistory(
-    employeeId: string,
-    userWalletAddress: string
-  ): Promise<PaymentRecord[]> {
-    try {
-      // Get user ID for security
-      const { data: userData, error: userError } = await supabase
-        .from('wallet_users')
-        .select('id')
-        .eq('wallet_address', userWalletAddress.toLowerCase())
-        .single()
-
-      if (userError || !userData) {
-        throw new Error('User not found')
-      }
-
-      const { data, error } = await supabase
-        .from('payment_history')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .eq('user_id', userData.id)
-        .order('payment_date', { ascending: false })
-
-      if (error) {
-        throw new Error(`Failed to fetch payment history: ${error.message}`)
-      }
-
-      return data || []
-    } catch (error) {
-      console.error('Error in getEmployeePaymentHistory:', error)
-      throw error
-    }
-  }
-
-  /**
    * Get dashboard statistics
    */
   static async getDashboardStats(userWalletAddress: string) {
@@ -358,19 +195,67 @@ export class EmployeeService {
       const employees = await this.getUserEmployees(userWalletAddress)
       
       const totalEmployees = employees.length
-      const activeEmployees = employees.filter(emp => emp.status === 'Active').length
+      const employeeCount = employees.filter(emp => emp.employment_type === 'employee').length
+      const contractorCount = employees.filter(emp => emp.employment_type === 'contractor').length
       const totalPayroll = employees.reduce((sum, emp) => sum + emp.salary, 0)
-      const totalPaid = employees.reduce((sum, emp) => sum + (emp.totalPaid || 0), 0)
 
       return {
         totalEmployees,
-        activeEmployees,
+        employeeCount,
+        contractorCount,
         totalPayroll,
-        totalPaid,
         employees
       }
     } catch (error) {
       console.error('Error in getDashboardStats:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Bulk delete employees
+   */
+  static async bulkDeleteEmployees(employeeIds: string[], userWalletAddress: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .in('id', employeeIds)
+        .eq('user_id', userWalletAddress.toLowerCase())
+
+      if (error) {
+        console.error('Error bulk deleting employees:', error)
+        throw new Error(`Failed to delete employees: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error in bulkDeleteEmployees:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Search employees by name, email, or wallet address
+   */
+  static async searchEmployees(
+    searchTerm: string,
+    userWalletAddress: string
+  ): Promise<Employee[]> {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('user_id', userWalletAddress.toLowerCase())
+        .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,wallet_address.ilike.%${searchTerm}%`)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error searching employees:', error)
+        throw new Error(`Failed to search employees: ${error.message}`)
+      }
+
+      return (data || []).map(transformDbEmployee)
+    } catch (error) {
+      console.error('Error in searchEmployees:', error)
       throw error
     }
   }
