@@ -8,12 +8,11 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "composite": true,
     
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
     "jsx": "react-jsx",
     
     "baseUrl": ".",

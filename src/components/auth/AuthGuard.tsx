@@ -5,7 +5,7 @@ import { useAccount } from 'wagmi'
 import { useAuth } from '@/hooks/UseAuth'
 import { SignatureRequestModal } from './SignatureRequestModal'
 import { TermsOfServiceModal } from './TermsOfServiceModal'
-import { Wallet, Shield, FileText, AlertCircle, CheckCircle } from 'lucide-react'
+import { Wallet, Shield, FileText, AlertCircle } from 'lucide-react'
 
 interface AuthGuardProps {
   children: React.ReactNode
