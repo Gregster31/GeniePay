@@ -13,7 +13,6 @@ export interface AuthContextType {
   isLoading: boolean
   session: AuthSession | null
   
-  // New authentication methods
   requestSignature: () => Promise<void>
   acceptTerms: () => Promise<void>
   declineTerms: () => void

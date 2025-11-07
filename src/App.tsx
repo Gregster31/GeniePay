@@ -11,7 +11,7 @@ import { AuthenticationWrapper } from '@/components/auth/AuthenticationWrapper'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
+      staleTime: 60 * 1000, // Queries become stale after 1m
     },
   },
 })

@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Zap, 
-  Calendar, 
-  History, 
-  FileText,
-  CreditCard,
-  Settings,
-  Copy,
-  ExternalLink,
-  RefreshCw,
-  Wallet,
-  Lock,
-  AlertCircle
-} from 'lucide-react';
+import { LayoutDashboard, Users, Zap, Calendar, History, FileText, CreditCard, Settings, Copy, ExternalLink, RefreshCw, Wallet, Lock, AlertCircle} from 'lucide-react';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
 import { doesRouteRequireWallet, useAuth } from '@/hooks';
@@ -98,6 +83,11 @@ export const Sidebar: React.FC = () => {
   const { data: balance, refetch } = useBalance({
     address: address,
   });
+
+  const handleRefreshBalance = async () => {
+  await refetch();
+  setLastUpdated(new Date());
+  };
   
   const { 
     isAuthenticated,
@@ -137,10 +127,10 @@ export const Sidebar: React.FC = () => {
   };
   
   useEffect(() => {
-    if (balance) {
+    if (balance && !lastUpdated) {
       setLastUpdated(new Date());
     }
-  }, [balance]);
+  }, [balance, lastUpdated]);
   
   const formattedBalance = balance ? 
   parseFloat(formatEther(balance.value)).toFixed(4) : 
@@ -231,7 +221,7 @@ export const Sidebar: React.FC = () => {
         </div>
         
         <button
-        onClick={() => refetch()}
+        onClick={handleRefreshBalance}
         className="p-2 hover:bg-gray-700 rounded-lg transition-colors group"
         title="Refresh balance"
         >
