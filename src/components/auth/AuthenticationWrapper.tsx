@@ -45,12 +45,12 @@ export const AuthenticationWrapper: React.FC<AuthenticationWrapperProps> = ({ ch
             error={error}
           />
           
-          <TermsOfServiceModal
+          {/* <TermsOfServiceModal
             isOpen={authState === 'pending_terms'}
             onAccept={acceptTerms}
             onDecline={declineTerms}
             isLoading={isLoading}
-          />
+          /> */}
         </>
       )}
       

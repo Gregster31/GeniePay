@@ -123,8 +123,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Request signature from user
   const requestSignature = useCallback(async () => {
+    if (authStateData.isLoading || isSigningPending) {
+      return
+    }
+
     if (!walletAddress) {
       setError('No wallet connected')
       return
@@ -140,46 +143,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       dispatch({ type: 'SET_PENDING_NONCE', payload: nonce })
       
-      // Request signature
+      // Request signature - if this succeeds, the user owns the wallet
       const signature = await signMessageAsync({ message })
       
-      // Verify signature with Supabase
-      const { data, error } = await supabase
-        .rpc('verify_signature', {
-          wallet_address: normalizeWalletAddress(walletAddress),
-          message,
-          signature,
-          nonce
-        })
+      // Signature is valid if we got here - now check if user exists
+      const { data: existingUserData, error: userError } = await supabase
+        .from('wallet_users')
+        .select('id')
+        .eq('wallet_address', normalizeWalletAddress(walletAddress))
+        .maybeSingle() // Use maybeSingle instead of single to avoid error on no rows
       
-      if (error) {
-        throw new Error(`Signature verification failed: ${error.message}`)
-      }
-      
-      if (!data.success) {
-        throw new Error('Invalid signature')
-      }
+      const isNewUser = !existingUserData
       
       // Create session
       const session: AuthSession = {
-        userId: data.user_id || '',
+        userId: existingUserData?.id || '',
         walletAddress: normalizeWalletAddress(walletAddress),
         nonce,
         expiresAt: getSessionExpiry(),
-        isNewUser: data.is_new_user || false
+        isNewUser
       }
       
       dispatch({ type: 'SET_SESSION', payload: session })
       
       // Route to appropriate state
-      if (data.is_new_user) {
+      if (isNewUser) {
         dispatch({ type: 'SET_AUTH_STATE', payload: 'pending_terms' })
       } else {
         // Update last login for existing users
         await supabase
           .from('wallet_users')
-          .update({ last_login: new Date().toISOString() })
-          .eq('id', data.user_id)
+          .update({ 
+            last_login: new Date().toISOString(),
+            signature_nonce: nonce // Store the latest nonce
+          })
+          .eq('id', existingUserData.id)
         
         dispatch({ type: 'SET_AUTH_STATE', payload: 'authenticated' })
       }
@@ -187,9 +185,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error('Signature request failed:', error)
       
-      if (error.message?.includes('User rejected')) {
+      if (error.message?.includes('User rejected') || error.message?.includes('User denied')) {
         setError('Signature request was rejected. Please sign the message to continue.')
-        // Auto-disconnect on rejection
         wagmiDisconnect()
       } else {
         setError(error.message || 'Failed to verify signature')
@@ -201,7 +198,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false)
       dispatch({ type: 'SET_PENDING_NONCE', payload: null })
     }
-  }, [walletAddress, signMessageAsync, wagmiDisconnect, setError, setLoading])
+  }, [walletAddress, signMessageAsync, wagmiDisconnect, setError, setLoading, authStateData.isLoading, isSigningPending])
 
   // Accept terms of service
   const acceptTerms = useCallback(async () => {
@@ -294,18 +291,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       dispatch({ type: 'SET_AUTH_STATE', payload: 'pending_signature' })
     }
   }, [isWalletConnected, walletAddress, authStateData.authState])
-
-  // Auto-request signature when in pending state
-  useEffect(() => {
-    if (authStateData.authState === 'pending_signature' && walletAddress && !authStateData.isLoading && !isSigningPending) {
-      // Small delay to ensure UI is ready
-      const timer = setTimeout(() => {
-        requestSignature()
-      }, 500)
-      
-      return () => clearTimeout(timer)
-    }
-  }, [authStateData.authState, walletAddress, authStateData.isLoading, isSigningPending, requestSignature])
 
   // Check for existing session on mount
   useEffect(() => {
