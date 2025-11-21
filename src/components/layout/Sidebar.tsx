@@ -146,7 +146,7 @@ export const Sidebar: React.FC = () => {
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
           <img 
-            src="/geniepay_logov3.png" 
+            src="/geniepay_logov4.png" 
             alt="GeniePay Logo" 
             className="h-8 w-8 object-contain"
           />
