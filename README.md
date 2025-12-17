@@ -1,4 +1,5 @@
-# GeniePay – Online Crypto Payroll Service
+
+<img width="1431" height="458" alt="banner" src="https://github.com/user-attachments/assets/aead3c05-90d4-4f77-aed9-2dd47fb82d3f" />
 
 <p align="center">
   <a href="#">
