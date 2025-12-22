@@ -318,7 +318,7 @@ export const Dashboard: React.FC = () => {
             icon={Users}
             trend="2 added this month"
             trendUp={true}
-            onClick={() => navigate('/team')}
+            onClick={() => navigate('/payroll')}
           />
           
           <StatCard

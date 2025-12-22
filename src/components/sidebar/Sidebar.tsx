@@ -2,13 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Users, 
   Zap, 
   Calendar, 
   History, 
-  FileText, 
-  CreditCard, 
-  Settings, 
   Copy, 
   ExternalLink, 
   RefreshCw, 
@@ -39,13 +35,9 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { id: 'team', label: 'Team', icon: Users, path: '/team' },
   { id: 'pay', label: 'Quick Pay', icon: Zap, path: '/pay' },
   { id: 'payroll', label: 'Payroll', icon: Calendar, path: '/payroll' },
-  { id: 'account-history', label: 'History', icon: History, path: '/account-history' },
-  { id: 'documents', label: 'Documents', icon: FileText, path: '/documents', badge: 'Soon', badgeColor: 'bg-yellow-600' },
-  { id: 'deposit', label: 'Deposit', icon: CreditCard, path: '/deposit', badge: 'Soon', badgeColor: 'bg-yellow-600' },
-  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', badge: 'Soon', badgeColor: 'bg-yellow-600' },
+  { id: 'history', label: 'History', icon: History, path: '/history' },
 ];
 
 // Sidebar width constants

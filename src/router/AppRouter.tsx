@@ -5,13 +5,9 @@ import { Sidebar } from '@/components/sidebar/Sidebar';
 import { ErrorPage } from '@/components/shared';
 // Pages
 import Dashboard from '@/pages/dashboard';
-import Team from '@/pages/team';
 import Pay from '@/pages/pay';
 import Payroll from '@/pages/payroll';
 import AccountHistory from '@/pages/accountHistory';
-import Documents from '@/pages/documents';
-import Deposit from '@/pages/deposit';
-import SettingsPage from '@/pages/settings';
 
 /**
  * STRUCTURE:
@@ -44,10 +40,6 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        path: 'team',
-        element: <Team />,
-      },
-      {
         path: 'pay',
         element: <Pay />,
       },
@@ -56,21 +48,9 @@ const router = createBrowserRouter([
         element: <Payroll />,
       },
       {
-        path: 'account-history',
+        path: 'history',
         element: <AccountHistory />,
-      },
-      {
-        path: 'documents',
-        element: <Documents />,
-      },
-      {
-        path: 'deposit',
-        element: <Deposit />,
-      },
-      {
-        path: 'settings',
-        element: <SettingsPage />,
-      },
+      }
     ],
   },
 ]);
