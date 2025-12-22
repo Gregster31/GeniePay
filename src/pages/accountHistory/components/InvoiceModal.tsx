@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, Copy, ExternalLink, Download, X } from "lucide-react";
 import { Modal } from '@/components/ui/Modal';
-import type { AccountHistoryTransaction } from '@/types/AccountHistoryTransactionModel';
+import type { AccountHistoryTransaction } from '@/models/AccountHistoryTransactionModel';
 
 export const InvoiceModal: React.FC<{
   transaction: AccountHistoryTransaction | null;

@@ -12,7 +12,7 @@ import {
   ExternalLink,
   User
 } from 'lucide-react';
-import type { Employee } from '@/types/EmployeeModel';
+import type { Employee } from '@/models/EmployeeModel';
 
 interface EmployeeDetailDrawerProps {
   employee: Employee;

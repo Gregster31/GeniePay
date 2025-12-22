@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, Upload, X } from "lucide-react";
-import { Modal } from '@/components/ui/Modal';
-import type { Employee } from '@/types/EmployeeModel';
+import type { Employee } from '@/models/EmployeeModel';
 import { useImageUpload } from '@/hooks/UploadImageHook';
 
 export const AddEmployeeModal: React.FC<{

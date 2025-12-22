@@ -1,5 +1,5 @@
-import type { AccountHistoryTransaction } from "../types/AccountHistoryTransactionModel.ts";
-import type { Employee } from "../types/EmployeeModel.ts";
+import type { AccountHistoryTransaction } from "../models/AccountHistoryTransactionModel.js";
+import type { Employee } from "../models/EmployeeModel.js";
 
 export const mockEmployees: Employee[] = [
   {

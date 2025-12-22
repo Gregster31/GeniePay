@@ -19,3 +19,40 @@ BULK PAY FLOW EXPLAINED:
 - Employer: Prepares list off-chain, approves tokens, calls bulkPayERC20(token, addresses[], amounts[]).
 - Employees: Receive tokens automatically; no interaction needed.
 - Notes: Gas grows with employee count; employer pays all fees.
+
+
+Improve AuthContext.tsx
+
+
+
+🎨 Color Theme Changes:
+
+Main Background: #181522 (deep purple-black)
+Card Backgrounds: #221e2e (lighter purple for wallet/balance cards)
+Borders: #2a2438 (subtle purple borders)
+Tooltip Background: #0f0d16 (even darker for tooltips)
+Active Highlight: #7c3aed → #a855f7 (vibrant purple gradient)
+Connect Button: Purple gradient (#7c3aed to #a855f7)
+Hover States: rgba(255, 255, 255, 0.05) for subtle interaction
+
+✍️ Typography Improvements:
+
+Font Family: 'Inter', 'SF Pro Display', -apple-system, sans-serif
+
+Inter is a professional, clean sans-serif designed for UI
+Falls back to SF Pro Display on Apple devices
+System fonts as final fallback
+
+
+Letter Spacing:
+
+Brand name: 0.02em for elegant spacing
+Navigation items: 0.01em for clarity
+
+
+Font Styles: Applied consistently across:
+
+Section headers (Balance, Wallet Address)
+Navigation items
+Buttons
+Warning messages

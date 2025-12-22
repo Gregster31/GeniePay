@@ -1,95 +1,85 @@
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { EmployeeService } from '@/services/EmployeeService';
-import { useGlobalBalance } from '@/contexts/BalanceContext';
-import { useAuth } from '@/hooks/UseAuth';
+import { useGlobalBalance } from '@/hooks/useGlobalBalance';
+import { useAuth } from '@/contexts/AuthContext';
 
+/**
+ * Dashboard Hook - No Database Version
+ * 
+ * For MVP without backend:
+ * - Shows wallet balance
+ * - All employee/payroll data will come from local state or blockchain later
+ * - Quick actions based on wallet state
+ */
 export const useDashboard = () => {
   // State
   const [cycleOffset, setCycleOffset] = useState(0);
   
   // Hooks
   const { address } = useAccount();
-  const { isAuthenticated, walletAddress } = useAuth();
-  const { balance, formattedBalance, isLoading: balanceLoading, refetch: refetchBalance } = useGlobalBalance();
-  
-  const queryClient = useQueryClient();
-
-  // Query for dashboard statistics only
+  const { isAuthenticated } = useAuth();
   const { 
-    data: dashboardStats,
-    isLoading: statsLoading,
-    error: statsError 
-  } = useQuery({
-    queryKey: ['dashboard-stats', walletAddress],
-    queryFn: () => walletAddress ? EmployeeService.getDashboardStats(walletAddress) : Promise.resolve(null),
-    enabled: !!walletAddress && isAuthenticated,
-    staleTime: 60 * 1000, // 1 minute
-  });
+    balance, 
+    formattedBalance, 
+    isLoading: balanceLoading, 
+    refetch: refetchBalance 
+  } = useGlobalBalance();
 
-  // Calculations from stats
-  const calculateTotalPayroll = () => {
-    return dashboardStats?.totalPayroll || 0;
-  };
-
+  // Get numeric balance for calculations
   const getNumericBalance = () => {
     if (!balance) return 0;
     return parseFloat(formattedBalance);
   };
 
-  // Get stats with defaults
-  const stats = dashboardStats || {
+  // Mock stats for now - will be replaced with real data later
+  // TODO: Replace with actual employee data when you add it
+  const stats = {
     totalEmployees: 0,
     activeEmployees: 0,
     totalPayroll: 0,
     totalPaid: 0,
-    employees: []
+    averageSalary: 0,
+    payrollCoverage: 0,
+    inactiveEmployees: 0,
   };
 
-  // Dashboard-specific calculations
-  const dashboardMetrics = {
-    totalEmployees: stats.totalEmployees,
-    activeEmployees: stats.activeEmployees,
-    totalPayroll: stats.totalPayroll,
-    totalPaid: stats.totalPaid,
-    averageSalary: stats.totalEmployees > 0 ? stats.totalPayroll / stats.totalEmployees : 0,
-    payrollCoverage: getNumericBalance() > 0 ? (getNumericBalance() / stats.totalPayroll * 100) : 0,
-    inactiveEmployees: stats.totalEmployees - stats.activeEmployees,
-  };
-
-  // Quick actions for dashboard
+  // Quick actions based on current state
   const quickActions = {
-    canRunPayroll: getNumericBalance() >= stats.totalPayroll && stats.activeEmployees > 0,
-    needsFunding: getNumericBalance() < stats.totalPayroll,
-    hasEmployees: stats.totalEmployees > 0,
+    canRunPayroll: false, // Will be true when you have employees
+    needsFunding: getNumericBalance() === 0,
+    hasEmployees: false, // Will be true when you add employees
+    hasBalance: getNumericBalance() > 0,
   };
 
   return {
-    // Dashboard metrics
-    stats: dashboardMetrics,
+    // Dashboard metrics (all zeros for now)
+    stats,
     quickActions,
     
     // Loading states
-    isLoading: statsLoading,
+    isLoading: balanceLoading,
     
-    // Error states
-    error: statsError,
+    // No errors for now
+    error: null,
     
     // UI state
     cycleOffset,
     
-    // Balance
+    // Balance info
     balance,
     formattedBalance,
     balanceLoading,
+    walletAddress: address,
+    isAuthenticated,
     
     // Actions
     refetchBalance,
-    refetchStats: () => queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] }),
+    refetchStats: () => {
+      // No stats to refetch yet - just refresh balance
+      refetchBalance();
+    },
     
     // Calculations
-    calculateTotalPayroll,
     getNumericBalance,
     
     // UI actions

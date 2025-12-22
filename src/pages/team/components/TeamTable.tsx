@@ -10,7 +10,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import type { Employee } from '@/types/EmployeeModel';
+import type { Employee } from '@/models/EmployeeModel';
 
 interface TeamTableProps {
   employees: Employee[];

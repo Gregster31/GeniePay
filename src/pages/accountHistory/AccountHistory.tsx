@@ -10,7 +10,7 @@ import {
   FileText,
   ChevronDown,
 } from 'lucide-react';
-import type { AccountHistoryTransaction } from '@/types/AccountHistoryTransactionModel';
+import type { AccountHistoryTransaction } from '@/models/AccountHistoryTransactionModel';
 import { mockTransactions } from '@/data/MockData';
 import { InvoiceModal } from './components/InvoiceModal';
 

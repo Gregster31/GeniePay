@@ -1,5 +1,4 @@
-// mockPayrollData.ts
-import type { Employee } from '../types/EmployeeModel';
+import type { Employee } from '../models/EmployeeModel';
 
 export interface PayrollEmployee extends Employee {
   taxRate: number;
