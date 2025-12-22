@@ -56,20 +56,24 @@ const SidebarHeader: React.FC<{ isCollapsed: boolean; isMobile: boolean; onToggl
   isMobile, 
   onToggle 
 }) => (
-  <div className={`p-6 border-b border-gray-800 ${isCollapsed && !isMobile ? 'px-3' : ''}`}>
+  <div className={`p-6 border-b ${isCollapsed && !isMobile ? 'px-3' : ''}`} style={{ borderColor: '#2a2438' }}>
     <div className="flex items-center justify-between">
       <button 
         onClick={() => window.location.href = '/'}
         className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
       >
         <img src="/geniepay_logov4.png" alt="GeniePay Logo" className="h-8 w-8 object-contain flex-shrink-0" />
-        {(!isCollapsed || isMobile) && <h1 className="text-xl font-bold whitespace-nowrap">GeniePay</h1>}
+        {(!isCollapsed || isMobile) && (
+          <h1 className="text-xl font-bold whitespace-nowrap tracking-wide" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>
+            GeniePay
+          </h1>
+        )}
       </button>
       
       {!isMobile && (
         <button
           onClick={onToggle}
-          className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors ml-auto"
+          className="p-1.5 hover:bg-white/5 rounded-lg transition-colors ml-auto"
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? <ChevronRight className="w-5 h-5 text-gray-400" /> : <ChevronLeft className="w-5 h-5 text-gray-400" />}
@@ -98,7 +102,7 @@ const WalletAddressCard: React.FC<{ address: string; isCollapsed: boolean; isMob
       <div className="flex justify-center">
         <div className="relative group">
           <Wallet className="w-6 h-6 text-gray-400" />
-          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-950 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[100] shadow-xl hidden group-hover:block">
+          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[100] shadow-xl hidden group-hover:block" style={{ backgroundColor: '#0f0d16' }}>
             {sliceAddress(address)}
           </div>
         </div>
@@ -109,17 +113,17 @@ const WalletAddressCard: React.FC<{ address: string; isCollapsed: boolean; isMob
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-gray-400 mb-1">Wallet Address</p>
+        <p className="text-xs font-medium text-gray-400 mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>Wallet Address</p>
         <p className="text-sm font-mono text-gray-300 truncate">{sliceAddress(address)}</p>
       </div>
       
       <div className="flex items-center gap-1 flex-shrink-0">
-        <button onClick={handleCopy} className="p-2 hover:bg-gray-700 rounded-lg transition-colors group" title="Copy address">
+        <button onClick={handleCopy} className="p-2 hover:bg-white/5 rounded-lg transition-colors group" title="Copy address">
           <Copy className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
         </button>
         <button
           onClick={() => window.open(`https://etherscan.io/address/${address}`, '_blank')}
-          className="p-2 hover:bg-gray-700 rounded-lg transition-colors group"
+          className="p-2 hover:bg-white/5 rounded-lg transition-colors group"
           title="View on Etherscan"
         >
           <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
@@ -144,11 +148,11 @@ const BalanceCard: React.FC<{
       <div className="flex flex-col items-center gap-1">
         <div className="relative group">
           <p className="text-xs font-mono text-gray-200 text-center">{formattedBalance.split('.')[0]}</p>
-          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-950 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[100] shadow-xl hidden group-hover:block">
+          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[100] shadow-xl hidden group-hover:block" style={{ backgroundColor: '#0f0d16' }}>
             {formattedBalance} ETH
           </div>
         </div>
-        <button onClick={onRefresh} className="p-1 hover:bg-gray-700 rounded transition-colors" title="Refresh balance">
+        <button onClick={onRefresh} className="p-1 hover:bg-white/5 rounded transition-colors" title="Refresh balance">
           <RefreshCw className="w-3 h-3 text-gray-500" />
         </button>
       </div>
@@ -158,7 +162,7 @@ const BalanceCard: React.FC<{
   return (
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        <p className="text-xs font-medium text-gray-400 mb-1">Balance</p>
+        <p className="text-xs font-medium text-gray-400 mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>Balance</p>
         <div className="text-sm font-mono text-gray-200">
           {balance === undefined ? (
             <div className="flex items-center gap-2">
@@ -173,7 +177,7 @@ const BalanceCard: React.FC<{
           <p className="text-xs text-gray-500 mt-1">Updated {lastUpdated.toLocaleTimeString()}</p>
         )}
       </div>
-      <button onClick={onRefresh} className="p-2 hover:bg-gray-700 rounded-lg transition-colors group" title="Refresh balance">
+      <button onClick={onRefresh} className="p-2 hover:bg-white/5 rounded-lg transition-colors group" title="Refresh balance">
         <RefreshCw className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
       </button>
     </div>
@@ -194,12 +198,15 @@ const WalletInfoSection: React.FC<{
   if (!hasFullAccess) {
     return (
       <div className={`text-center ${isCollapsed && !isMobile ? 'space-y-2' : 'space-y-3'}`}>
-        <div className={`bg-gray-800 rounded-full flex items-center justify-center mx-auto ${isCollapsed && !isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}>
+        <div 
+          className={`rounded-full flex items-center justify-center mx-auto ${isCollapsed && !isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}
+          style={{ backgroundColor: '#221e2e' }}
+        >
           <Wallet className={`text-gray-400 ${isCollapsed && !isMobile ? 'w-5 h-5' : 'w-6 h-6'}`} />
         </div>
         {(!isCollapsed || isMobile) && (
           <div>
-            <p className="text-sm font-medium text-gray-300">Connect Wallet</p>
+            <p className="text-sm font-medium text-gray-300" style={{ fontFamily: "'Inter', sans-serif" }}>Connect Wallet</p>
             <p className="text-xs text-gray-500">Connect to access all features</p>
           </div>
         )}
@@ -210,13 +217,13 @@ const WalletInfoSection: React.FC<{
   return (
     <div className="space-y-3">
       {address && (
-        <div className={`bg-gray-800 rounded-lg ${isCollapsed && !isMobile ? 'p-2' : 'p-3'}`}>
+        <div className={`rounded-lg ${isCollapsed && !isMobile ? 'p-2' : 'p-3'}`} style={{ backgroundColor: '#221e2e' }}>
           <WalletAddressCard address={address} isCollapsed={isCollapsed} isMobile={isMobile} />
         </div>
       )}
       
       {isConnected && (
-        <div className={`bg-gray-800 rounded-lg ${isCollapsed && !isMobile ? 'p-2' : 'p-3'}`}>
+        <div className={`rounded-lg ${isCollapsed && !isMobile ? 'p-2' : 'p-3'}`} style={{ backgroundColor: '#221e2e' }}>
           <BalanceCard 
             balance={balance} 
             lastUpdated={lastUpdated} 
@@ -246,10 +253,25 @@ const NavButton: React.FC<{
       className={`
         w-full flex items-center gap-3 rounded-lg text-left transition-all duration-200 relative
         ${isCollapsed && !isMobile ? 'px-3 py-3 justify-center' : 'px-4 py-3'}
-        ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 
+        ${isActive ? 'text-white shadow-lg' : 
           isDisabled ? 'text-gray-500 cursor-not-allowed' : 
-          'text-gray-300 hover:bg-gray-800 hover:text-white'}
+          'text-gray-300 hover:text-white'}
       `}
+      style={{
+        backgroundColor: isActive ? '#7c3aed' : isDisabled ? 'transparent' : undefined,
+        boxShadow: isActive ? '0 10px 25px -5px rgba(124, 58, 237, 0.3)' : undefined,
+        fontFamily: "'Inter', sans-serif"
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive && !isDisabled) {
+          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive && !isDisabled) {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }
+      }}
       title={isDisabled ? 'Connect wallet and sign message to access this feature' : undefined}
     >
       <item.icon className={`flex-shrink-0 ${isCollapsed && !isMobile ? 'w-6 h-6' : 'w-5 h-5'} ${
@@ -258,7 +280,7 @@ const NavButton: React.FC<{
       
       {(!isCollapsed || isMobile) && (
         <>
-          <span className="font-medium flex-1">{item.label}</span>
+          <span className="font-medium flex-1" style={{ letterSpacing: '0.01em' }}>{item.label}</span>
           {isDisabled && <Lock className="w-4 h-4 text-gray-600 ml-auto flex-shrink-0" />}
           {item.badge && !isDisabled && (
             <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${item.badgeColor || 'bg-gray-600'} text-white`}>
@@ -271,7 +293,7 @@ const NavButton: React.FC<{
     
     {/* Tooltip for collapsed state */}
     {isCollapsed && !isMobile && (
-      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-950 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[100] shadow-xl hidden group-hover:block">
+      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[100] shadow-xl hidden group-hover:block" style={{ backgroundColor: '#0f0d16' }}>
         {item.label}
         {item.badge && <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${item.badgeColor || 'bg-gray-600'}`}>{item.badge}</span>}
       </div>
@@ -281,13 +303,13 @@ const NavButton: React.FC<{
 
 /** Limited Access Warning Banner */
 const LimitedAccessBanner: React.FC = () => (
-  <div className="p-4 border-t border-gray-800">
-    <div className="bg-orange-600/20 border border-orange-600/30 rounded-lg p-3">
+  <div className="p-4 border-t" style={{ borderColor: '#2a2438' }}>
+    <div className="border rounded-lg p-3" style={{ backgroundColor: 'rgba(251, 146, 60, 0.1)', borderColor: 'rgba(251, 146, 60, 0.3)' }}>
       <div className="flex items-start gap-2">
-        <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#fb923c' }} />
         <div>
-          <p className="text-xs font-medium text-orange-300">Limited Access</p>
-          <p className="text-xs text-orange-400 mt-1">Connect your wallet to unlock all GeniePay features</p>
+          <p className="text-xs font-medium" style={{ color: '#fdba74', fontFamily: "'Inter', sans-serif" }}>Limited Access</p>
+          <p className="text-xs mt-1" style={{ color: '#fb923c' }}>Connect your wallet to unlock all GeniePay features</p>
         </div>
       </div>
     </div>
@@ -305,11 +327,14 @@ const ConnectionButton: React.FC<{
     isCollapsed && !isMobile ? 'justify-center px-3 py-3' : 'justify-center px-4 py-3'
   }`;
 
+  const fontStyle = { fontFamily: "'Inter', sans-serif", letterSpacing: '0.01em' };
+
   if (hasFullAccess) {
     return (
       <button
         onClick={onLogout}
-        className={`${buttonClasses} bg-red-600 hover:bg-red-700 text-white`}
+        className={`${buttonClasses} bg-red-800 hover:bg-red-700 text-white`}
+        style={fontStyle}
         title={isCollapsed && !isMobile ? 'Disconnect' : undefined}
       >
         <Wallet className="w-4 h-4 flex-shrink-0" />
@@ -323,7 +348,17 @@ const ConnectionButton: React.FC<{
       {({ openConnectModal }) => (
         <button
           onClick={openConnectModal}
-          className={`${buttonClasses} bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white`}
+          className={`${buttonClasses} text-white`}
+          style={{
+            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+            ...fontStyle
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, #6d28d9 0%, #9333ea 100%)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
+          }}
           title={isCollapsed && !isMobile ? 'Connect Wallet' : undefined}
         >
           <Wallet className="w-4 h-4 flex-shrink-0" />
@@ -400,7 +435,8 @@ export const Sidebar: React.FC = () => {
       {isMobile && (
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="fixed top-4 left-4 z-50 p-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors lg:hidden"
+          className="fixed top-4 left-4 z-50 p-2 text-white rounded-lg hover:bg-white/10 transition-colors lg:hidden"
+          style={{ backgroundColor: '#181522' }}
           aria-label="Toggle menu"
         >
           {isMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -415,16 +451,17 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar Container */}
       <div
         className={`
-          fixed bg-gray-900 text-white flex flex-col shadow-2xl z-40 transition-all duration-300 ease-in-out
+          fixed text-white flex flex-col shadow-2xl z-40 transition-all duration-300 ease-in-out
           ${isMobile ? 
             `left-0 top-0 h-full w-72 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}` :
             `left-4 top-4 bottom-4 h-[calc(100vh-2rem)] rounded-2xl ${isCollapsed ? 'w-20' : 'w-72'}`
           }
         `}
+        style={{ backgroundColor: '#181522' }}
       >
         <SidebarHeader isCollapsed={isCollapsed} isMobile={isMobile} onToggle={() => setIsCollapsed(!isCollapsed)} />
 
-        <div className={`p-4 border-b border-gray-800 ${isCollapsed && !isMobile ? 'px-2' : ''}`}>
+        <div className={`p-4 ${isCollapsed && !isMobile ? 'px-2' : ''}`} style={{ borderBottom: '1px solid #2a2438' }}>
           <WalletInfoSection
             hasFullAccess={hasFullAccess}
             address={address}
@@ -460,7 +497,7 @@ export const Sidebar: React.FC = () => {
         
         {!hasFullAccess && (!isCollapsed || isMobile) && <LimitedAccessBanner />}
         
-        <div className={`p-4 border-t border-gray-800 ${isCollapsed && !isMobile ? 'px-2' : ''}`}>
+        <div className={`p-4 ${isCollapsed && !isMobile ? 'px-2' : ''}`} style={{ borderTop: '1px solid #2a2438' }}>
           <ConnectionButton 
             hasFullAccess={hasFullAccess} 
             isCollapsed={isCollapsed} 
