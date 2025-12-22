@@ -1,12 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { EmployeeService } from '@/services/EmployeeService';
-import type { Employee } from '@/types/EmployeeModel';
 import { useAccount } from 'wagmi';
+import type { Employee } from '@/types/EmployeeModel';
+
+/**
+ * Team Management Hook - No Database Version
+ * 
+ * For MVP without backend:
+ * - Stores employees in localStorage (per wallet address)
+ * - All CRUD operations work locally
+ * - Data persists in browser
+ * - Can export/import CSV
+ */
+
+// localStorage key helper
+const getStorageKey = (walletAddress: string) => `geniepay_employees_${walletAddress.toLowerCase()}`;
 
 export const useTeamManagement = () => {
   // Auth
   const { address: walletAddress, isConnected } = useAccount();
+  
+  // Employee data (loaded from localStorage)
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // UI state
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -25,96 +40,46 @@ export const useTeamManagement = () => {
   
   // File input ref for CSV import
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const queryClient = useQueryClient();
 
-  // Query for employees from database
-  const { 
-    data: allEmployees = [], 
-    isLoading: employeesLoading, 
-    error: employeesError,
-    refetch: refetchEmployees 
-  } = useQuery({
-    queryKey: ['employees', walletAddress],
-    queryFn: () => walletAddress ? EmployeeService.getUserEmployees(walletAddress) : Promise.resolve([]),
-    enabled: !!walletAddress && isConnected,
-    staleTime: 30 * 1000, // 30 seconds
-  });
+  // Load employees from localStorage when wallet connects
+  useEffect(() => {
+    if (!walletAddress || !isConnected) {
+      setAllEmployees([]);
+      setIsLoading(false);
+      return;
+    }
 
-  // Mutation for adding employee
-  const addEmployeeMutation = useMutation({
-    mutationFn: (employeeData: Omit<Employee, 'id' | 'user_id'>) => {
-      if (!walletAddress) throw new Error('No wallet connected');
+    try {
+      const storageKey = getStorageKey(walletAddress);
+      const stored = localStorage.getItem(storageKey);
       
-      return EmployeeService.createEmployee({
-        name: employeeData.name,
-        email: employeeData.email,
-        phone: employeeData.phone || undefined,
-        role: employeeData.role,
-        department: employeeData.department,
-        wallet_address: employeeData.wallet_address,
-        salary: employeeData.salary,
-        employment_type: employeeData.employment_type,
-        avatar_url: employeeData.avatar_url || undefined
-      }, walletAddress);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      setShowAddModal(false);
-    },
-    onError: (error) => {
-      console.error('Failed to add employee:', error);
-      alert(`Failed to add employee: ${error.message}`);
+      if (stored) {
+        const employees = JSON.parse(stored) as Employee[];
+        setAllEmployees(employees);
+      } else {
+        setAllEmployees([]);
+      }
+    } catch (error) {
+      console.error('Failed to load employees from localStorage:', error);
+      setAllEmployees([]);
+    } finally {
+      setIsLoading(false);
     }
-  });
+  }, [walletAddress, isConnected]);
 
-  // Mutation for updating employee
-  const updateEmployeeMutation = useMutation({
-    mutationFn: (updatedEmployee: Employee) => {
-      if (!walletAddress) throw new Error('No wallet connected');
-      
-      return EmployeeService.updateEmployee(updatedEmployee.id, {
-        name: updatedEmployee.name,
-        email: updatedEmployee.email,
-        phone: updatedEmployee.phone || undefined,
-        role: updatedEmployee.role,
-        department: updatedEmployee.department,
-        wallet_address: updatedEmployee.wallet_address,
-        salary: updatedEmployee.salary,
-        employment_type: updatedEmployee.employment_type,
-        avatar_url: updatedEmployee.avatar_url || undefined
-      }, walletAddress);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      setShowEditModal(false);
-      setSelectedEmployee(null);
-    },
-    onError: (error) => {
-      console.error('Failed to update employee:', error);
-      alert(`Failed to update employee: ${error.message}`);
-    }
-  });
+  // Save employees to localStorage whenever they change
+  const saveEmployees = (employees: Employee[]) => {
+    if (!walletAddress) return;
 
-  // Mutation for deleting employee
-  const deleteEmployeeMutation = useMutation({
-    mutationFn: (employeeId: string) => {
-      if (!walletAddress) throw new Error('No wallet connected');
-      return EmployeeService.deleteEmployee(employeeId, walletAddress);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      setShowEmployeeDetail(false);
-      setSelectedEmployee(null);
-    },
-    onError: (error) => {
-      console.error('Failed to delete employee:', error);
-      alert(`Failed to delete employee: ${error.message}`);
+    try {
+      const storageKey = getStorageKey(walletAddress);
+      localStorage.setItem(storageKey, JSON.stringify(employees));
+      setAllEmployees(employees);
+    } catch (error) {
+      console.error('Failed to save employees to localStorage:', error);
+      alert('Failed to save data. Please try again.');
     }
-  });
+  };
 
   // Filter and sort employees
   const filteredEmployees = allEmployees
@@ -167,8 +132,23 @@ export const useTeamManagement = () => {
   const handleAddEmployee = async (employeeData: Omit<Employee, 'id' | 'user_id'>): Promise<void> => {
     console.log('🔄 handleAddEmployee called with:', employeeData);
     
+    if (!walletAddress) {
+      throw new Error('No wallet connected');
+    }
+
     try {
-      await addEmployeeMutation.mutateAsync(employeeData);
+      // Create new employee with generated ID
+      const newEmployee: Employee = {
+        ...employeeData,
+        id: `emp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        user_id: walletAddress,
+      };
+
+      // Add to array and save
+      const updatedEmployees = [...allEmployees, newEmployee];
+      saveEmployees(updatedEmployees);
+      
+      setShowAddModal(false);
       console.log('✅ Employee added successfully');
     } catch (error) {
       console.error('❌ Failed to add employee:', error);
@@ -177,20 +157,42 @@ export const useTeamManagement = () => {
   };
 
   const handleUpdateEmployee = async (updatedEmployee: Employee) => {
+    if (!walletAddress) {
+      throw new Error('No wallet connected');
+    }
+
     try {
-      await updateEmployeeMutation.mutateAsync(updatedEmployee);
+      const updatedEmployees = allEmployees.map(emp =>
+        emp.id === updatedEmployee.id ? updatedEmployee : emp
+      );
+      
+      saveEmployees(updatedEmployees);
+      setShowEditModal(false);
+      setSelectedEmployee(null);
     } catch (error) {
-      // Error is already handled in mutation
+      console.error('Failed to update employee:', error);
+      alert(`Failed to update employee: ${error}`);
     }
   };
 
   const handleDeleteEmployee = async (employeeId: string) => {
-    if (window.confirm('Are you sure you want to delete this team member? This action cannot be undone.')) {
-      try {
-        await deleteEmployeeMutation.mutateAsync(employeeId);
-      } catch (error) {
-        // Error is already handled in mutation
-      }
+    if (!walletAddress) {
+      throw new Error('No wallet connected');
+    }
+
+    if (!window.confirm('Are you sure you want to delete this team member? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const updatedEmployees = allEmployees.filter(emp => emp.id !== employeeId);
+      saveEmployees(updatedEmployees);
+      
+      setShowEmployeeDetail(false);
+      setSelectedEmployee(null);
+    } catch (error) {
+      console.error('Failed to delete employee:', error);
+      alert(`Failed to delete employee: ${error}`);
     }
   };
 
@@ -216,6 +218,23 @@ export const useTeamManagement = () => {
     } else {
       setSortBy(field);
       setSortOrder('asc');
+    }
+  };
+
+  // Refetch function (just reloads from localStorage)
+  const refetchEmployees = () => {
+    if (!walletAddress) return;
+    
+    try {
+      const storageKey = getStorageKey(walletAddress);
+      const stored = localStorage.getItem(storageKey);
+      
+      if (stored) {
+        const employees = JSON.parse(stored) as Employee[];
+        setAllEmployees(employees);
+      }
+    } catch (error) {
+      console.error('Failed to reload employees:', error);
     }
   };
 
@@ -328,13 +347,13 @@ export const useTeamManagement = () => {
     selectedEmployee,
     
     // Loading states
-    isLoading: employeesLoading,
-    isAddingEmployee: addEmployeeMutation.isPending,
-    isUpdatingEmployee: updateEmployeeMutation.isPending,
-    isDeletingEmployee: deleteEmployeeMutation.isPending,
+    isLoading,
+    isAddingEmployee: false, // No async operations with localStorage
+    isUpdatingEmployee: false,
+    isDeletingEmployee: false,
     
     // Error states
-    error: employeesError,
+    error: null, // No async errors with localStorage
     
     // UI state
     showAddModal,

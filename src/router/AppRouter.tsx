@@ -1,6 +1,15 @@
+/**
+ * STRUCTURE:
+ * - All routes are wrapped in ProtectedRoute
+ * - ProtectedRoute checks: wallet connected + signature verified
+ * - Users can't access ANY route without both
+ */
 import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { AuthLayoutWrapper } from '@/components/layout/AuthLayoutWrapper';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { Sidebar } from '@/components/sidebar/Sidebar';
+import { ErrorPage } from '@/components/shared';
+// Pages
 import Dashboard from '@/pages/dashboard';
 import Team from '@/pages/team';
 import Pay from '@/pages/pay';
@@ -9,46 +18,36 @@ import AccountHistory from '@/pages/accountHistory';
 import Documents from '@/pages/documents';
 import Deposit from '@/pages/deposit';
 import SettingsPage from '@/pages/settings';
-import { ErrorPage } from '@/components/shared';
-
-export const ROUTES = {
-  DASHBOARD: '/',
-  TEAM: '/team',
-  PAY: '/pay',
-  PAYROLL: '/payroll',
-  ACCOUNT_HISTORY: '/account-history',
-  DOCUMENTS: '/documents',
-  DEPOSIT: '/deposit',
-  SETTINGS: '/settings',
-} as const;
-
-const PAGE_TITLES: Record<string, string> = {
-  [ROUTES.DASHBOARD]: 'Dashboard',
-  [ROUTES.TEAM]: 'Team Management',
-  [ROUTES.PAY]: 'Quick Pay',
-  [ROUTES.PAYROLL]: 'Payroll',
-  [ROUTES.ACCOUNT_HISTORY]: 'Account History',
-  [ROUTES.DOCUMENTS]: 'Documents',
-  [ROUTES.DEPOSIT]: 'Deposit Funds',
-  [ROUTES.SETTINGS]: 'Settings',
-} as const;
 
 /**
-* Main application router with nested routes under AuthLayoutWrapper
-* All routes require wallet connection through the layout wrapper
-*/
+ * Protected Layout
+ * All routes use this layout - forces authentication
+ */
+const ProtectedLayout: React.FC = () => {
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Sidebar />
+          <main className="min-h-screen">
+            <Outlet />
+          </main>
+      </div>
+    </ProtectedRoute>
+  );
+};
+
+/**
+ * Router Configuration
+ * Every single route requires authentication
+ */
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <AuthLayoutWrapper />,
+    element: <ProtectedLayout />,
     errorElement: <ErrorPage />,
     children: [
       {
         index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: 'dashboard',
         element: <Dashboard />,
       },
       {
@@ -85,12 +84,4 @@ const router = createBrowserRouter([
 
 export const AppRouter: React.FC = () => {
   return <RouterProvider router={router} />;
-};
-
-/**
-* Get page title for current pathname
-* Defaults to 'Dashboard' if path not found
-*/
-export const getPageTitle = (pathname: string): string => {
-  return PAGE_TITLES[pathname] || 'Dashboard';
 };

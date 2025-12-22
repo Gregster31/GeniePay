@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Camera, Upload, X } from "lucide-react";
-import { Modal } from '@/components/ui/Modal';
 import type { Employee } from '@/types/EmployeeModel';
 import { useImageUpload } from '@/hooks/UploadImageHook';
 
