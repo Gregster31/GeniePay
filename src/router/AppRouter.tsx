@@ -13,21 +13,21 @@ import Documents from '@/pages/documents';
 import Deposit from '@/pages/deposit';
 import SettingsPage from '@/pages/settings';
 
-
 /**
  * STRUCTURE:
  * - All routes are wrapped in ProtectedRoute
  * - ProtectedRoute checks: wallet connected + signature verified
  * - Users can't access private routes without both verifications
+ * - Uses CSS Grid for responsive layout that automatically adjusts to sidebar state
  */
 const ProtectedLayout: React.FC = () => {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="app-layout">
         <Sidebar />
-          <main className="min-h-screen">
-            <Outlet />
-          </main>
+        <main className="main-content">
+          <Outlet />
+        </main>
       </div>
     </ProtectedRoute>
   );
