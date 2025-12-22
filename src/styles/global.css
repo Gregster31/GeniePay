@@ -1,8 +1,15 @@
+/* Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Global Styles */
+/* ========================= ROOT CSS VARIABLES ========================= */
+:root {
+  /* Sidebar width - controlled by Sidebar component */
+  --sidebar-width: 19rem; /* 304px expanded, 6rem (96px) collapsed */
+}
+
+/* ========================= BASE STYLES ========================= */
 * {
   margin: 0;
   padding: 0;
@@ -10,86 +17,136 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0f0d16;
+  color: #ffffff;
+  overflow-x: hidden;
 }
 
-/* Component Styles */
-.gradient-bg {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+/* ========================= APP LAYOUT WITH CSS GRID ========================= */
+.app-layout {
+  display: grid;
+  /* Add extra 2rem (1rem margin on each side of sidebar) to sidebar width */
+  grid-template-columns: calc(var(--sidebar-width) + 2rem) 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns 300ms ease-in-out;
 }
 
-.card {
-  @apply bg-white rounded-xl shadow-sm border border-gray-200;
+/* Sidebar takes first column */
+.sidebar {
+  grid-column: 1;
 }
 
-.card-hover {
-  @apply hover:shadow-md transition-shadow;
+/* Main content takes second column and automatically adjusts */
+.main-content {
+  grid-column: 2;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
-.btn-primary {
-  @apply bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors;
+/* ========================= MOBILE RESPONSIVE ========================= */
+@media (max-width: 1023px) {
+  .app-layout {
+    /* On mobile, sidebar is overlaid, content takes full width */
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    /* Sidebar is positioned fixed on mobile, not part of grid */
+    position: fixed;
+    z-index: 40;
+  }
+  
+  .main-content {
+    grid-column: 1;
+    padding-top: 4rem; /* Space for mobile hamburger menu */
+  }
 }
 
-.btn-secondary {
-  @apply border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors;
+/* ========================= SCROLLBAR STYLING ========================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.btn-icon {
-  @apply flex items-center justify-center gap-2;
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
 }
 
-.input-field {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
 }
 
-.modal-overlay {
-  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.5);
 }
 
-.modal-content {
-  @apply bg-white rounded-xl shadow-xl max-w-md w-full p-6;
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.3) rgba(255, 255, 255, 0.05);
 }
 
-.status-connected {
-  @apply flex items-center gap-2 bg-green-100 px-3 py-1 rounded-full;
+/* ========================= UTILITY CLASSES ========================= */
+.glass-effect {
+  background: rgba(26, 27, 34, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
 }
 
-.status-dot {
-  @apply w-2 h-2 bg-green-500 rounded-full;
+.gradient-border {
+  border: 1px solid;
+  border-image: linear-gradient(135deg, rgba(124, 58, 237, 0.5), rgba(168, 85, 247, 0.3)) 1;
 }
 
-.avatar-placeholder {
-  @apply w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center;
+/* ========================= ANIMATIONS ========================= */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
-.balance-card {
-  @apply card p-6;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.employee-card {
-  @apply bg-gray-50 rounded-lg p-6 border border-gray-200 card-hover;
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
 }
 
-.section-header {
-  @apply p-6 border-b border-gray-200;
+/* ========================= FOCUS STYLES ========================= */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(124, 58, 237, 0.6);
+  outline-offset: 2px;
 }
 
-.truncate-address {
-  @apply text-sm text-gray-500;
+/* ========================= SELECTION ========================= */
+::selection {
+  background-color: rgba(124, 58, 237, 0.3);
+  color: #ffffff;
 }
 
-.copy-button {
-  @apply text-gray-400 hover:text-gray-600 transition-colors;
-}
-
-.fee-info {
-  @apply bg-yellow-50 border border-yellow-200 rounded-lg p-4;
-}
-
-.empty-state {
-  @apply text-center py-12;
+::-moz-selection {
+  background-color: rgba(124, 58, 237, 0.3);
+  color: #ffffff;
 }
