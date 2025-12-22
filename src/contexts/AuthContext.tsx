@@ -1,12 +1,7 @@
-/**
- * Simple Authentication Context
- * Auto-requests signature when wallet connects
- */
-
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
-import type { AuthState } from '@/types/auth';
-import { createSignatureMessage } from '@/types/auth';
+import type { AuthState } from '@/components/auth/auth';
+import { createSignatureMessage } from '@/components/auth/auth';
 
 interface AuthContextType extends AuthState {
   authenticate: () => Promise<void>;
@@ -37,7 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const message = createSignatureMessage(address);
       await signMessageAsync({ message });
       
-      // Signature successful = user owns the wallet
       setAuthState({ isAuthenticated: true, isLoading: false });
     } catch (error) {
       setAuthState({ isAuthenticated: false, isLoading: false });
@@ -53,7 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthState({ isAuthenticated: false, isLoading: false });
   }, [disconnect]);
 
-  // Reset auth when wallet disconnects
   useEffect(() => {
     if (!isConnected) {
       setAuthState({ isAuthenticated: false, isLoading: false });
@@ -66,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Small delay to let wallet connection UI settle
       const timer = setTimeout(() => {
         authenticate().catch((error) => {
-          // User rejected signature - that's ok, they can try again later
           console.log('Signature rejected:', error);
         });
       }, 500);

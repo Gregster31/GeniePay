@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Users } from 'lucide-react';
-import type { Employee } from '@/types/EmployeeModel';
+import type { Employee } from '@/models/EmployeeModel';
 
 interface PayCycleCardProps {
   employees: Employee[];

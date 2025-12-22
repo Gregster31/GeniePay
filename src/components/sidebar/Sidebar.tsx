@@ -88,18 +88,13 @@ export const Sidebar: React.FC = () => {
     setLastUpdated(new Date());
   };
   
-  // NEW: Simple auth from new context
   const { isAuthenticated, logout } = useAuth();
-  
-  // User has full access if wallet is connected AND authenticated
-  const hasFullAccess = isConnected && isAuthenticated;
+    const hasFullAccess = isConnected && isAuthenticated;
   
   const handleNavigation = (path: string) => {
-    // Check if route is protected
-    const isProtected = !['/dashboard', '/'].includes(path);
+    const isProtected = !['/'].includes(path);
     
     if (isProtected && !hasFullAccess) {
-      // Show a toast or alert that they need to connect wallet
       alert('Please connect your wallet and sign the message to access this feature.');
       return;
     }
@@ -108,7 +103,7 @@ export const Sidebar: React.FC = () => {
   };
   
   const isActiveRoute = (path: string) => {
-    if (path === '/' && (location.pathname === '/' || location.pathname === '/dashboard')) {
+    if (path === '/' && location.pathname === '/') {
       return true;
     }
     return location.pathname === path;
@@ -140,7 +135,7 @@ export const Sidebar: React.FC = () => {
         {/* Logo/Brand */}
         <div className="p-6 border-b border-gray-800">
           <button 
-            onClick={() => window.location.href = '/dashboard'}
+            onClick={() => window.location.href = '/'}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
             <img 

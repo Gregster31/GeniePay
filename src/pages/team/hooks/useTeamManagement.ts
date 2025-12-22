@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
-import type { Employee } from '@/types/EmployeeModel';
+import type { Employee } from '@/models/EmployeeModel';
 
 /**
  * Team Management Hook - No Database Version

@@ -1,9 +1,3 @@
-/**
- * STRUCTURE:
- * - All routes are wrapped in ProtectedRoute
- * - ProtectedRoute checks: wallet connected + signature verified
- * - Users can't access ANY route without both
- */
 import React from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -19,9 +13,12 @@ import Documents from '@/pages/documents';
 import Deposit from '@/pages/deposit';
 import SettingsPage from '@/pages/settings';
 
+
 /**
- * Protected Layout
- * All routes use this layout - forces authentication
+ * STRUCTURE:
+ * - All routes are wrapped in ProtectedRoute
+ * - ProtectedRoute checks: wallet connected + signature verified
+ * - Users can't access private routes without both verifications
  */
 const ProtectedLayout: React.FC = () => {
   return (
@@ -36,10 +33,6 @@ const ProtectedLayout: React.FC = () => {
   );
 };
 
-/**
- * Router Configuration
- * Every single route requires authentication
- */
 const router = createBrowserRouter([
   {
     path: '/',

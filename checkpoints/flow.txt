@@ -19,3 +19,6 @@ BULK PAY FLOW EXPLAINED:
 - Employer: Prepares list off-chain, approves tokens, calls bulkPayERC20(token, addresses[], amounts[]).
 - Employees: Receive tokens automatically; no interaction needed.
 - Notes: Gas grows with employee count; employer pays all fees.
+
+
+Improve AuthContext.tsx
