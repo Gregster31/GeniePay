@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ArrowUpRight,
   Calendar,
+  Clock,
 } from 'lucide-react';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
@@ -332,7 +333,7 @@ export const Dashboard: React.FC = () => {
             title="Next Payment"
             value="5 days"
             subtitle="December 27, 2025"
-            icon={Calendar}
+            icon={Clock}
             trend="12 employees scheduled"
           />
         </div>
