@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAccount, useBalance, useSwitchChain } from 'wagmi';
 import { formatEther, isAddress } from 'viem';
 import { sepolia, mainnet } from 'wagmi/chains';
-import { usePaymentWithRefetch } from '@/hooks/UsePaymentWithRefetch';
+import { usePayment } from '@/hooks/usePayment';
 import { fetchEthPrice, ethToUsd, usdToEth, isDevelopment } from '@/utils/ethUtils';
 
 type Currency = 'ETH' | 'USD';
@@ -15,7 +15,7 @@ export const QuickPayCard: React.FC = () => {
     address,
     chainId: isDevelopment ? sepolia.id : mainnet.id
   });
-  const { sendPayment, isProcessing } = usePaymentWithRefetch();
+  const { sendPayment, isProcessing } = usePayment();
 
   const [currency, setCurrency] = useState<Currency>('ETH');
   const [amount, setAmount] = useState('');
