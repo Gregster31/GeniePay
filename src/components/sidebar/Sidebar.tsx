@@ -158,11 +158,11 @@ const ConnectedWalletDisplay: React.FC<{
 
 /** Limited Access Banner */
 const LimitedAccessBanner: React.FC = () => (
-  <div className="px-4 py-3 mx-4 mb-4 rounded-lg" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+  <div className="px-4 py-3 mx-4 mb-4 rounded-lg" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
     <div className="flex items-start gap-2">
-      <Lock className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+      <Lock className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
       <div>
-        <p className="text-xs font-medium text-orange-500 mb-1">Limited Access</p>
+        <p className="text-xs font-medium text-yellow-500 mb-1">Limited Access</p>
         <p className="text-xs text-gray-400">Connect wallet and sign to unlock all features</p>
       </div>
     </div>
