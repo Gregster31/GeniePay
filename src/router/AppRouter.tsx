@@ -7,7 +7,7 @@ import { ErrorPage } from '@/components/shared';
 import Dashboard from '@/pages/dashboard';
 import Pay from '@/pages/pay';
 import Payroll from '@/pages/payroll';
-import AccountHistory from '@/pages/accountHistory';
+import History from '@/pages/history';
 
 /**
  * STRUCTURE:
@@ -49,7 +49,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'history',
-        element: <AccountHistory />,
+        element: <History />,
       }
     ],
   },

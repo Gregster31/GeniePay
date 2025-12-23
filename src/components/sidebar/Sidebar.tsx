@@ -21,6 +21,7 @@ import { formatEther } from 'viem';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
+import { copyToClipboard } from '@/utils/ClipboardCopy';
 
 // ========================= TYPES & CONSTANTS =========================
 
@@ -141,9 +142,11 @@ const ConnectedWalletDisplay: React.FC<{
   const shortenedAddress = sliceAddress(address);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const success = await copyToClipboard(address);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   if (isCollapsed && !isMobile) {

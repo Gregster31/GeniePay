@@ -61,7 +61,7 @@ const Pay: React.FC = () => {
   const getRecipientAddress = () => {
     if (useCustomAddress) return customAddress;
     const employee = mockEmployees.find(emp => emp.id.toString() === selectedEmployee);
-    return employee?.walletAddress || '';
+    return employee?.wallet_address || '';
   };
 
   // Get recipient name
