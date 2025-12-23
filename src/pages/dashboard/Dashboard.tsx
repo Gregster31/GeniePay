@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';
+import { WalletBalanceCard } from './WalletBalanceCard';
 
 // ========================= TYPES =========================
 
@@ -114,43 +115,6 @@ const StatCard: React.FC<StatCardProps> = ({
           </span>
         </div>
       )}
-    </div>
-  </div>
-);
-
-// ========================= WALLET BALANCE CARD (Portfolio Value) =========================
-
-const WalletBalanceCard: React.FC<{ balance: string; balanceUSD: string }> = ({ balance, balanceUSD }) => (
-  <div 
-    className="rounded-2xl p-6 transition-all duration-300 relative overflow-hidden"
-    style={{ 
-      backgroundColor: '#1A1B22',
-      border: '1px solid rgba(124, 58, 237, 0.2)',
-      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
-    }}
-  >
-    {/* Gradient overlay */}
-    <div 
-      className="absolute inset-0 opacity-10"
-      style={{
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%)'
-      }}
-    />
-    
-    <div className="relative z-10">
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-400" style={{ fontFamily: "'Inter', sans-serif" }}>
-          Portfolio value
-        </h3>
-      </div>
-      
-      <div className="mb-2">
-        <p className="text-4xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>
-          CA${balanceUSD}
-        </p>
-      </div>
-      
-      <p className="text-sm text-gray-500">{balance} ETH</p>
     </div>
   </div>
 );
@@ -270,27 +234,17 @@ const QuickPayCard: React.FC = () => {
 };
 
 // ========================= MAIN DASHBOARD =========================
-
-export const Dashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { address } = useAccount();
-  const { data: balance } = useBalance({ address });
 
-  // Mock data - replace with actual data from your backend
   const stats = {
-    totalPayments: '45.8 ETH',
-    totalPaymentsUSD: '$137,400',
-    totalEmployees: 12,
-    activeEmployees: 10,
-    monthlyPayroll: '15.2 ETH',
-    monthlyPayrollUSD: '$45,600',
+    totalPayments: '15.4 ETH',
+    totalPaymentsUSD: '$46,200',
+    totalEmployees: '12',
+    activeEmployees: '10',
+    monthlyPayroll: '2.8 ETH',
+    monthlyPayrollUSD: '$8,400'
   };
-
-  const currentBalance = balance 
-    ? parseFloat(formatEther(balance.value)).toFixed(4)
-    : '0.0000';
-    
-  const currentBalanceUSD = (parseFloat(currentBalance) * 3000).toFixed(2);
 
   return (
     <div 
@@ -300,7 +254,7 @@ export const Dashboard: React.FC = () => {
       }}
     >
       <div className="p-6 lg:p-8">
-        {/* First Row - Stats Grid (with more top spacing) */}
+        {/* First Row - Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-8">
           <StatCard
             title="Total Payments This Year"
@@ -318,7 +272,7 @@ export const Dashboard: React.FC = () => {
             icon={Users}
             trend="2 added this month"
             trendUp={true}
-            onClick={() => navigate('/payroll')}
+            onClick={() => navigate('/team')}
           />
           
           <StatCard
@@ -342,7 +296,7 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Wallet Balance - Takes 1 column */}
           <div className="lg:col-span-1">
-            <WalletBalanceCard balance={currentBalance} balanceUSD={currentBalanceUSD} />
+            <WalletBalanceCard />
           </div>
 
           {/* Quick Pay - Takes 2 columns */}

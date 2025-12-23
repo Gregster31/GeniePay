@@ -80,58 +80,6 @@ const SidebarHeader: React.FC<{ isCollapsed: boolean; isMobile: boolean; onToggl
   </div>
 );
 
-/** Wallet Balance Display */
-const WalletBalance: React.FC<{ 
-  balance: string; 
-  balanceUSD: string; 
-  lastUpdated: Date | null; 
-  onRefresh: () => void;
-  isCollapsed: boolean;
-  isMobile: boolean;
-}> = ({ balance, balanceUSD, lastUpdated, onRefresh, isCollapsed, isMobile }) => (
-  <div className={`p-4 ${isCollapsed && !isMobile ? 'px-2' : ''}`}>
-    <div 
-      className="rounded-xl p-4 relative overflow-hidden"
-      style={{ 
-        backgroundColor: 'rgba(26, 27, 34, 0.6)',
-        border: '1px solid rgba(124, 58, 237, 0.2)',
-      }}
-    >
-      {(!isCollapsed || isMobile) && (
-        <>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-gray-400">Wallet Balance</span>
-            <button
-              onClick={onRefresh}
-              className="p-1 hover:bg-white/5 rounded transition-colors"
-              title="Refresh balance"
-            >
-              <RefreshCw className="w-3 h-3 text-gray-400" />
-            </button>
-          </div>
-          <div className="mb-1">
-            <p className="text-lg font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-              CA${balanceUSD}
-            </p>
-          </div>
-          <p className="text-xs text-gray-500">{balance} ETH</p>
-          {lastUpdated && (
-            <p className="text-xs text-gray-600 mt-2">
-              Updated {lastUpdated.toLocaleTimeString()}
-            </p>
-          )}
-        </>
-      )}
-      {isCollapsed && !isMobile && (
-        <div className="flex flex-col items-center">
-          <Wallet className="w-5 h-5 text-purple-400 mb-2" />
-          <p className="text-xs font-bold text-white">{balance.slice(0, 5)}</p>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
 /** Connected Wallet Display */
 const ConnectedWalletDisplay: React.FC<{ 
   address: string; 
@@ -369,11 +317,6 @@ export const Sidebar: React.FC = () => {
   useEffect(() => {
     if (balance && !lastUpdated) setLastUpdated(new Date());
   }, [balance, lastUpdated]);
-
-  const handleRefreshBalance = async () => {
-    await refetch();
-    setLastUpdated(new Date());
-  };
   
   const handleNavigation = (path: string) => {
     const isProtected = !['/dashboard', '/'].includes(path);
@@ -431,17 +374,6 @@ export const Sidebar: React.FC = () => {
           
           {hasFullAccess && address && (
             <ConnectedWalletDisplay address={address} isCollapsed={isCollapsed} isMobile={isMobile} />
-          )}
-          
-          {hasFullAccess && (
-            <WalletBalance 
-              balance={currentBalance}
-              balanceUSD={currentBalanceUSD}
-              lastUpdated={lastUpdated}
-              onRefresh={handleRefreshBalance}
-              isCollapsed={isCollapsed}
-              isMobile={isMobile}
-            />
           )}
 
           <nav className={`flex-1 py-4 overflow-y-auto ${isCollapsed && !isMobile ? 'px-2' : 'px-4'}`}>
