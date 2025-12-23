@@ -2,7 +2,6 @@
  * Blockscout API Service
  * Handles fetching transaction history from Blockscout across multiple networks
  */
-
 export interface Transaction {
   hash: string;
   from: string;
@@ -25,18 +24,12 @@ const BLOCKSCOUT_ENDPOINTS: Record<number, { url: string; name: string }> = {
   42161: { url: 'https://arbitrum.blockscout.com/api', name: 'Arbitrum' },
 };
 
-/**
- * Get Blockscout explorer URL for transaction
- */
 export function getExplorerUrl(txHash: string, chainId: number): string {
   const endpoint = BLOCKSCOUT_ENDPOINTS[chainId] || BLOCKSCOUT_ENDPOINTS[11155111];
   const baseUrl = endpoint.url.replace('/api', '');
   return `${baseUrl}/tx/${txHash}`;
 }
 
-/**
- * Fetch transactions from a specific network
- */
 async function fetchFromNetwork(
   address: string,
   chainId: number,
@@ -79,7 +72,6 @@ async function fetchFromNetwork(
       timestamp: new Date(parseInt(tx.timeStamp) * 1000),
       gasFee: tx.gasUsed, // Keep in Wei
       network: endpoint.name,
-      usdValue: '0', // Blockscout doesn't provide USD values in API
       chainId: chainId,
     }));
   } catch (error) {
@@ -88,9 +80,6 @@ async function fetchFromNetwork(
   }
 }
 
-/**
- * Fetch transaction history from all supported networks
- */
 export async function fetchTransactions(
   address: string,
   page: number = 1,
@@ -102,14 +91,8 @@ export async function fetchTransactions(
   const results = await Promise.all(
     chainIds.map(chainId => fetchFromNetwork(address, chainId, page, limit))
   );
-
-  // Flatten all results
   const allTransactions = results.flat();
-
-  // Sort by timestamp (newest first)
   allTransactions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-  // Return only the requested limit
   return allTransactions.slice(0, limit);
 }
 
