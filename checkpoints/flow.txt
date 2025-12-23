@@ -20,8 +20,15 @@ BULK PAY FLOW EXPLAINED:
 - Employees: Receive tokens automatically; no interaction needed.
 - Notes: Gas grows with employee count; employer pays all fees.
 
+HISTORY FLOW EXPLAINED:
+- Using Block Explorer API to fetch transaction history of the wallet (5 calls/second) (Only works on EVM chains)
 
-Improve AuthContext.tsx
+SETTINGS IDEAS:
+- Change black/white
+- Change USD/CAD/AUS/...
+
+
+**Improve AuthContext.tsx
 
 
 

@@ -2,16 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Users, 
   Zap, 
   Calendar, 
   History, 
-  FileText, 
-  CreditCard, 
-  Settings, 
   Copy, 
   ExternalLink, 
-  RefreshCw, 
   Wallet, 
   Lock, 
   ChevronLeft,
@@ -20,11 +15,11 @@ import {
   X,
   Check
 } from 'lucide-react';
-import { useAccount, useBalance } from 'wagmi';
-import { formatEther } from 'viem';
+import { useAccount } from 'wagmi';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
+import { copyToClipboard } from '@/utils/ClipboardCopy';
 
 // ========================= TYPES & CONSTANTS =========================
 
@@ -39,18 +34,13 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { id: 'team', label: 'Team', icon: Users, path: '/team' },
   { id: 'pay', label: 'Quick Pay', icon: Zap, path: '/pay' },
   { id: 'payroll', label: 'Payroll', icon: Calendar, path: '/payroll' },
-  { id: 'account-history', label: 'History', icon: History, path: '/account-history' },
-  { id: 'documents', label: 'Documents', icon: FileText, path: '/documents', badge: 'Soon', badgeColor: 'bg-yellow-600' },
-  { id: 'deposit', label: 'Deposit', icon: CreditCard, path: '/deposit', badge: 'Soon', badgeColor: 'bg-yellow-600' },
-  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', badge: 'Soon', badgeColor: 'bg-yellow-600' },
+  { id: 'history', label: 'History', icon: History, path: '/history' },
 ];
 
-// Sidebar width constants
-const SIDEBAR_WIDTH_EXPANDED = '19rem'; // 304px
-const SIDEBAR_WIDTH_COLLAPSED = '6rem';  // 96px
+const SIDEBAR_WIDTH_EXPANDED = '19rem';
+const SIDEBAR_WIDTH_COLLAPSED = '6rem';  
 
 // ========================= CHILD COMPONENTS =========================
 
@@ -87,58 +77,6 @@ const SidebarHeader: React.FC<{ isCollapsed: boolean; isMobile: boolean; onToggl
   </div>
 );
 
-/** Wallet Balance Display */
-const WalletBalance: React.FC<{ 
-  balance: string; 
-  balanceUSD: string; 
-  lastUpdated: Date | null; 
-  onRefresh: () => void;
-  isCollapsed: boolean;
-  isMobile: boolean;
-}> = ({ balance, balanceUSD, lastUpdated, onRefresh, isCollapsed, isMobile }) => (
-  <div className={`p-4 ${isCollapsed && !isMobile ? 'px-2' : ''}`}>
-    <div 
-      className="rounded-xl p-4 relative overflow-hidden"
-      style={{ 
-        backgroundColor: 'rgba(26, 27, 34, 0.6)',
-        border: '1px solid rgba(124, 58, 237, 0.2)',
-      }}
-    >
-      {(!isCollapsed || isMobile) && (
-        <>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-gray-400">Wallet Balance</span>
-            <button
-              onClick={onRefresh}
-              className="p-1 hover:bg-white/5 rounded transition-colors"
-              title="Refresh balance"
-            >
-              <RefreshCw className="w-3 h-3 text-gray-400" />
-            </button>
-          </div>
-          <div className="mb-1">
-            <p className="text-lg font-bold text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-              CA${balanceUSD}
-            </p>
-          </div>
-          <p className="text-xs text-gray-500">{balance} ETH</p>
-          {lastUpdated && (
-            <p className="text-xs text-gray-600 mt-2">
-              Updated {lastUpdated.toLocaleTimeString()}
-            </p>
-          )}
-        </>
-      )}
-      {isCollapsed && !isMobile && (
-        <div className="flex flex-col items-center">
-          <Wallet className="w-5 h-5 text-purple-400 mb-2" />
-          <p className="text-xs font-bold text-white">{balance.slice(0, 5)}</p>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
 /** Connected Wallet Display */
 const ConnectedWalletDisplay: React.FC<{ 
   address: string; 
@@ -149,9 +87,11 @@ const ConnectedWalletDisplay: React.FC<{
   const shortenedAddress = sliceAddress(address);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const success = await copyToClipboard(address);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   if (isCollapsed && !isMobile) {
@@ -215,11 +155,11 @@ const ConnectedWalletDisplay: React.FC<{
 
 /** Limited Access Banner */
 const LimitedAccessBanner: React.FC = () => (
-  <div className="px-4 py-3 mx-4 mb-4 rounded-lg" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+  <div className="px-4 py-3 mx-4 mb-4 rounded-lg" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
     <div className="flex items-start gap-2">
-      <Lock className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+      <Lock className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
       <div>
-        <p className="text-xs font-medium text-orange-500 mb-1">Limited Access</p>
+        <p className="text-xs font-medium text-yellow-500 mb-1">Limited Access</p>
         <p className="text-xs text-gray-400">Connect wallet and sign to unlock all features</p>
       </div>
     </div>
@@ -334,10 +274,7 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { address, isConnected } = useAccount();
-  const { data: balance, refetch } = useBalance({ address });
   const { isAuthenticated, logout } = useAuth();
-
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -362,24 +299,6 @@ export const Sidebar: React.FC = () => {
     document.documentElement.style.setProperty('--sidebar-width', sidebarWidth);
   }, [isCollapsed]);
 
-  // Prevent horizontal overflow on desktop
-  useEffect(() => {
-    if (!isMobile) {
-      document.body.style.overflowX = 'hidden';
-      return () => { document.body.style.overflowX = ''; };
-    }
-  }, [isMobile]);
-
-  // Set initial balance timestamp
-  useEffect(() => {
-    if (balance && !lastUpdated) setLastUpdated(new Date());
-  }, [balance, lastUpdated]);
-
-  const handleRefreshBalance = async () => {
-    await refetch();
-    setLastUpdated(new Date());
-  };
-  
   const handleNavigation = (path: string) => {
     const isProtected = !['/dashboard', '/'].includes(path);
     if (isProtected && !hasFullAccess) {
@@ -394,12 +313,6 @@ export const Sidebar: React.FC = () => {
     // Exact match or match with trailing slash to prevent /pay from matching /payroll
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
-
-  const currentBalance = balance 
-    ? parseFloat(formatEther(balance.value)).toFixed(4)
-    : '0.0000';
-  
-  const currentBalanceUSD = (parseFloat(currentBalance) * 3000).toFixed(2);
 
   return (
     <>
@@ -436,17 +349,6 @@ export const Sidebar: React.FC = () => {
           
           {hasFullAccess && address && (
             <ConnectedWalletDisplay address={address} isCollapsed={isCollapsed} isMobile={isMobile} />
-          )}
-          
-          {hasFullAccess && (
-            <WalletBalance 
-              balance={currentBalance}
-              balanceUSD={currentBalanceUSD}
-              lastUpdated={lastUpdated}
-              onRefresh={handleRefreshBalance}
-              isCollapsed={isCollapsed}
-              isMobile={isMobile}
-            />
           )}
 
           <nav className={`flex-1 py-4 overflow-y-auto ${isCollapsed && !isMobile ? 'px-2' : 'px-4'}`}>

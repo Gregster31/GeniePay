@@ -2,10 +2,10 @@ const getEnv = (key: string, fallback = ''): string => {
   return import.meta.env[key] || fallback;
 };
 
-// App environment
-export const isProduction = getEnv('VITE_ENV') === 'PRODUCTION';
+const envKey = getEnv('VITE_ENV_KEY', 'production');
+export const isDevelopment = envKey.toLowerCase() === 'test';
+export const isProduction = envKey.toLowerCase() === 'production';
 
-// Blockchain config
 export const chainId = isProduction ? 1 : 11155111; // Mainnet : Sepolia
 
 // WalletConnect (required for RainbowKit)
@@ -17,9 +17,10 @@ if (!walletConnectProjectId) {
 
 // Export simple config object
 export const config = {
+  isDevelopment,
   isProduction,
   chainId,
   walletConnectProjectId,
   appName: 'GeniePay',
-  appVersion: '2.0.0',
+  appVersion: '4.0.0',
 };
