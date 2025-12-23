@@ -13,7 +13,7 @@
 </p>
 
 ## Overview
-
+### No demo, no sales call, no BS
 **GeniePay** is a crypto-based payroll platform that lets businesses pay employees and contractors globally using any kind of cryptocurrency, while staying **tax and compliance ready**. And what differenciates us from the rest is that we're entirely free, you don't even need an account to use us!  
 
 **Our goals:** Remove the **cost, delays, and friction** of international payments and managing your team.  
