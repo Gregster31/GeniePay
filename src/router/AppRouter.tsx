@@ -2,7 +2,7 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Sidebar } from '@/components/sidebar/Sidebar';
-import { ErrorPage } from '@/components/shared';
+import { ErrorPage } from '@/pages/ErrorPage';
 // Pages
 import Dashboard from '@/pages/dashboard';
 import Pay from '@/pages/pay';

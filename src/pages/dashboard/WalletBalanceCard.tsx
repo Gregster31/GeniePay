@@ -1,93 +1,98 @@
-// ========================= WALLET BALANCE CARD WITH REAL-TIME PRICE =========================
-
 import { RefreshCw, Wallet } from "lucide-react";
 import { useState, useEffect } from "react";
 import { formatEther } from "viem";
 import { useAccount, useBalance } from "wagmi";
+import { sepolia } from "wagmi/chains";
+
+const isDev = import.meta.env.VITE_ENV_KEY === 'TEST';
 
 export const WalletBalanceCard: React.FC = () => {
   const { address } = useAccount();
-  const { data: balance, refetch } = useBalance({ address });
-  const [ethPrice, setEthPrice] = useState<number>(0);
+  const { data: balance, refetch } = useBalance({ 
+    address,
+    chainId: isDev ? sepolia.id : undefined
+  });
+  
+  const [ethPrice, setEthPrice] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Fetch ETH price from CoinGecko
-  const fetchEthPrice = async () => {
+  const fetchPrice = async () => {
+    if (isDev) {
+      setLastUpdated(new Date());
+      return;
+    }
     try {
-      const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-      );
-      const data = await response.json();
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+      const data = await res.json();
       setEthPrice(data.ethereum?.usd || 0);
       setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error fetching ETH price:', error);
+    } catch (e) {
+      console.error('Price fetch failed:', e);
     }
   };
 
-  // Fetch price on mount
-  useEffect(() => {
-    fetchEthPrice();
-  }, []);
+  useEffect(() => { fetchPrice(); }, []);
 
-  // Handle manual refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([refetch(), fetchEthPrice()]);
+    await Promise.all([refetch(), fetchPrice()]);
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const ethBalance = balance 
-    ? parseFloat(formatEther(balance.value)).toFixed(4)
-    : '0.0000';
-  
-  const usdBalance = (parseFloat(ethBalance) * ethPrice).toFixed(2);
+  const ethBal = balance ? parseFloat(formatEther(balance.value)).toFixed(4) : '0.0000';
+  const usdBal = isDev ? '0.00' : (parseFloat(ethBal) * ethPrice).toFixed(2);
 
   return (
     <div 
-      className="rounded-2xl p-6 transition-all duration-300 relative overflow-hidden"
+      className="rounded-2xl p-6 relative overflow-hidden"
       style={{ 
         backgroundColor: '#1A1B22',
-        border: '1px solid rgba(124, 58, 237, 0.2)',
+        border: `1px solid ${isDev ? 'rgba(251, 191, 36, 0.3)' : 'rgba(124, 58, 237, 0.2)'}`,
         boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
       }}
     >
+      {/* Gradient */}
       <div 
         className="absolute inset-0 opacity-10"
         style={{
-          background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%)'
+          background: isDev
+            ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)'
+            : 'linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%)'
         }}
       />
       
       <div className="relative z-10">
-        {/* Header with refresh button */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-sm font-medium text-gray-400" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Wallet Balance
-          </h3>
+          <div>
+            <h3 className="text-sm font-medium text-gray-400">Wallet Balance</h3>
+            {isDev && <span className="text-xs font-semibold text-yellow-500 mt-1 block">Sepolia Testnet</span>}
+          </div>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
+            className="p-2 hover:bg-white/5 rounded-lg transition-all"
             title="Refresh balance"
           >
-            <RefreshCw className={`w-4 h-4 text-purple-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isDev ? 'text-yellow-400' : 'text-purple-400'} ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
         
         {/* USD Balance */}
-        <div className="mb-2">
-          <p className="text-4xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>
-            ${usdBalance}
-          </p>
-        </div>
+        <p className="text-4xl font-bold text-white mb-2" style={{ letterSpacing: '-0.02em' }}>
+          ${usdBal}
+        </p>
         
         {/* ETH Balance */}
-        <p className="text-sm text-gray-500 mb-4">{ethBalance} ETH</p>
+        <p className="text-sm text-gray-500 mb-4">{ethBal} ETH</p>
 
-        {/* ETH Price */}
-        {ethPrice > 0 && (
+        {/* ETH Price or Test Badge */}
+        {isDev ? (
+          <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+            <p className="text-xs text-yellow-500">Test Mode</p>
+          </div>
+        ) : ethPrice > 0 && (
           <p className="text-xs text-gray-600">
             1 ETH = ${ethPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
           </p>
@@ -100,9 +105,9 @@ export const WalletBalanceCard: React.FC = () => {
           </p>
         )}
 
-        {/* Decorative wallet icon */}
+        {/* Icon */}
         <div className="absolute bottom-4 right-4 opacity-5">
-          <Wallet className="w-24 h-24 text-purple-400" />
+          <Wallet className={`w-24 h-24 ${isDev ? 'text-yellow-400' : 'text-purple-400'}`} />
         </div>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { Copy, ExternalLink, Loader2, CheckCircle2 } from 'lucide-react';
 import { fetchTransactions, getExplorerUrl, type Transaction } from '@/utils/Blockscout';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { copyToClipboard } from '@/utils/ClipboardCopy';
-import { ErrorPage } from '@/components/shared';
+import { ErrorPage } from '@/pages/ErrorPage';
 
 const INITIAL_LIMIT = 10;
 
