@@ -15,7 +15,14 @@ export const QuickPayCard: React.FC = () => {
     address,
     chainId: isDevelopment ? sepolia.id : mainnet.id
   });
-  const { sendPayment, isProcessing } = usePayment();
+  
+  const { 
+    sendPayment, 
+    isProcessing, 
+    isConfirmed, 
+    txHash,
+    sendError 
+  } = usePayment();
 
   const [currency, setCurrency] = useState<Currency>('ETH');
   const [amount, setAmount] = useState('');
@@ -27,16 +34,33 @@ export const QuickPayCard: React.FC = () => {
     fetchEthPrice().then(setEthPrice);
   }, []);
 
+  // Handle successful transaction
+  useEffect(() => {
+    if (isConfirmed && txHash) {
+      setShowSuccess(true);
+      setAmount('');
+      setRecipient('');
+      setTimeout(() => setShowSuccess(false), 3000);
+    }
+  }, [isConfirmed, txHash]);
+
+  // Handle transaction errors
+  useEffect(() => {
+    if (sendError) {
+      alert(`Failed: ${sendError}`);
+    }
+  }, [sendError]);
+
   const maxBal = balance ? parseFloat(formatEther(balance.value)) : 0;
   const numAmount = parseFloat(amount) || 0;
   
-  const ethAmt = currency === 'ETH' ? numAmount : usdToEth(numAmount, ethPrice);
-  const usdAmt = currency === 'USD' ? numAmount : ethToUsd(numAmount, ethPrice);
+  const ethAmount = currency === 'ETH' ? numAmount : usdToEth(numAmount, ethPrice);
+  const usdAmount = currency === 'USD' ? numAmount : ethToUsd(numAmount, ethPrice);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isAddress(recipient) || ethAmt <= 0 || ethAmt > maxBal) {
+    if (!isAddress(recipient) || ethAmount <= 0 || ethAmount > maxBal) {
       alert('Invalid address or amount');
       return;
     }
@@ -52,17 +76,9 @@ export const QuickPayCard: React.FC = () => {
       }
     }
 
-    // Send the payment
-    await sendPayment({
+    sendPayment({
       recipientAddress: recipient,
-      amount: ethAmt.toString(),
-      onSuccess: () => {
-        setShowSuccess(true);
-        setAmount('');
-        setRecipient('');
-        setTimeout(() => setShowSuccess(false), 3000);
-      },
-      onError: (e) => alert(`Failed: ${e.message}`)
+      amount: ethAmount.toString(),
     });
   };
 
@@ -163,7 +179,7 @@ export const QuickPayCard: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
-                <span>{currency === 'ETH' ? `$${usdAmt.toFixed(2)}` : `${ethAmt.toFixed(4)} ETH`}</span>
+                <span>{currency === 'ETH' ? `$${usdAmount.toFixed(2)}` : `${ethAmount.toFixed(4)} ETH`}</span>
                 <button
                   type="button"
                   onClick={() => setAmount(currency === 'ETH' ? maxBal.toFixed(4) : ethToUsd(maxBal, ethPrice).toFixed(2))}
@@ -187,7 +203,6 @@ export const QuickPayCard: React.FC = () => {
               style={{ 
                 backgroundColor: 'rgba(31, 29, 46, 0.6)',
                 border: `1px solid ${borderColor}`,
-                boxShadow: 'none'
               }}
             />
             {recipient && !isAddress(recipient) && (
@@ -198,7 +213,7 @@ export const QuickPayCard: React.FC = () => {
           {/* Send Button */}
           <button
             type="submit"
-            disabled={isProcessing || !recipient || !amount || ethAmt > maxBal}
+            disabled={isProcessing || !recipient || !amount || ethAmount > maxBal}
             className="w-full py-3 px-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             style={{ background: buttonBg, color: 'white' }}
           >

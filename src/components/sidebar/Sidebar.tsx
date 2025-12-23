@@ -7,7 +7,6 @@ import {
   History, 
   Copy, 
   ExternalLink, 
-  RefreshCw, 
   Wallet, 
   Lock, 
   ChevronLeft,
@@ -16,8 +15,7 @@ import {
   X,
   Check
 } from 'lucide-react';
-import { useAccount, useBalance } from 'wagmi';
-import { formatEther } from 'viem';
+import { useAccount } from 'wagmi';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
@@ -41,9 +39,8 @@ const navigationItems: NavigationItem[] = [
   { id: 'history', label: 'History', icon: History, path: '/history' },
 ];
 
-// Sidebar width constants
-const SIDEBAR_WIDTH_EXPANDED = '19rem'; // 304px
-const SIDEBAR_WIDTH_COLLAPSED = '6rem';  // 96px
+const SIDEBAR_WIDTH_EXPANDED = '19rem';
+const SIDEBAR_WIDTH_COLLAPSED = '6rem';  
 
 // ========================= CHILD COMPONENTS =========================
 
@@ -277,10 +274,7 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { address, isConnected } = useAccount();
-  const { data: balance, refetch } = useBalance({ address });
   const { isAuthenticated, logout } = useAuth();
-
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -305,19 +299,6 @@ export const Sidebar: React.FC = () => {
     document.documentElement.style.setProperty('--sidebar-width', sidebarWidth);
   }, [isCollapsed]);
 
-  // Prevent horizontal overflow on desktop
-  useEffect(() => {
-    if (!isMobile) {
-      document.body.style.overflowX = 'hidden';
-      return () => { document.body.style.overflowX = ''; };
-    }
-  }, [isMobile]);
-
-  // Set initial balance timestamp
-  useEffect(() => {
-    if (balance && !lastUpdated) setLastUpdated(new Date());
-  }, [balance, lastUpdated]);
-  
   const handleNavigation = (path: string) => {
     const isProtected = !['/dashboard', '/'].includes(path);
     if (isProtected && !hasFullAccess) {
@@ -332,12 +313,6 @@ export const Sidebar: React.FC = () => {
     // Exact match or match with trailing slash to prevent /pay from matching /payroll
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
-
-  const currentBalance = balance 
-    ? parseFloat(formatEther(balance.value)).toFixed(4)
-    : '0.0000';
-  
-  const currentBalanceUSD = (parseFloat(currentBalance) * 3000).toFixed(2);
 
   return (
     <>

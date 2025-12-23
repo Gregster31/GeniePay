@@ -39,7 +39,6 @@ export const WalletBalanceCard: React.FC = () => {
       style={{ 
         backgroundColor: '#1A1B22',
         border: isDevelopment ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(124, 58, 237, 0.2)',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
       }}
     >
       <div 
@@ -68,7 +67,7 @@ export const WalletBalanceCard: React.FC = () => {
         </div>
         
         <p className="text-4xl font-bold text-white mb-2" style={{ letterSpacing: '-0.02em' }}>
-          ${usdBal}
+          <span className="text-sm text-gray-500 font-normal mr-1">USD</span>${usdBal}
         </p>
         
         <p className="text-sm text-gray-500 mb-4">{ethBal} ETH</p>

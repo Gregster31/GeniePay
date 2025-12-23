@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -8,8 +8,6 @@ import {
   Calendar,
   Clock,
 } from 'lucide-react';
-import { useAccount, useBalance } from 'wagmi';
-import { formatEther } from 'viem';
 import { WalletBalanceCard } from './WalletBalanceCard';
 import { QuickPayCard } from './QuickpayCard';
 
@@ -23,11 +21,6 @@ interface StatCardProps {
   trend?: string;
   trendUp?: boolean;
   onClick?: () => void;
-}
-
-interface QuickPayFormData {
-  payee: string;
-  amount: string;
 }
 
 // ========================= STAT CARD COMPONENT =========================
@@ -81,7 +74,7 @@ const StatCard: React.FC<StatCardProps> = ({
             boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)'
           }}
         >
-          <Icon className="w-6 h-6" style={{ color: '#a855f7' }} />
+          <Icon className="w-6 h-6" color="#a855f7" />
         </div>
         {onClick && <ChevronRight className="w-5 h-5 text-gray-500 hover:text-purple-400 transition-colors" />}
       </div>
