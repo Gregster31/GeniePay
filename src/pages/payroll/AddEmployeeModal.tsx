@@ -28,6 +28,50 @@ const INITIAL_FORM: FormData = {
 
 const isValidEthAddress = (address: string): boolean => /^0x[a-fA-F0-9]{40}$/.test(address);
 
+interface InputFieldProps {
+  label: string;
+  name: keyof FormData;
+  value: string;
+  error?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  min?: string;
+  step?: string;
+}
+
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  name,
+  value,
+  error,
+  onChange,
+  type = 'text',
+  required = false,
+  placeholder,
+  ...props
+}) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-300 mb-2">
+      {label} {required && <span className="text-red-400">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`w-full px-4 py-2 rounded-lg bg-white/5 border text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+        name === 'walletAddress' ? 'font-mono text-sm' : ''
+      }`}
+      style={{ borderColor: error ? '#ef4444' : 'rgba(124, 58, 237, 0.3)' }}
+      {...props}
+    />
+    {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
+  </div>
+);
+
 export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onClose, onAdd }) => {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<FormData>>({});
@@ -83,40 +127,6 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onCl
     onClose();
   };
 
-  const InputField = ({
-    label,
-    name,
-    type = 'text',
-    required = false,
-    placeholder,
-    ...props
-  }: {
-    label: string;
-    name: keyof FormData;
-    type?: string;
-    required?: boolean;
-    placeholder?: string;
-  }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-300 mb-2">
-        {label} {required && <span className="text-red-400">*</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={form[name]}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className={`w-full px-4 py-2 rounded-lg bg-white/5 border text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-          name === 'walletAddress' ? 'font-mono text-sm' : ''
-        }`}
-        style={{ borderColor: errors[name] ? '#ef4444' : 'rgba(124, 58, 237, 0.3)' }}
-        {...props}
-      />
-      {errors[name] && <p className="mt-1 text-sm text-red-400">{errors[name]}</p>}
-    </div>
-  );
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div
@@ -139,21 +149,63 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onCl
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <InputField label="Name" name="name" required placeholder="Genie Pay" />
-          <InputField label="Email" name="email" type="email" placeholder="genie.pay@genie.com" />
-          <InputField label="Wallet Address" name="walletAddress" required placeholder="0x..." />
-          
+          <InputField
+            label="Name"
+            name="name"
+            value={form.name}
+            error={errors.name}
+            onChange={handleChange}
+            required
+            placeholder="Genie Pay"
+          />
+          <InputField
+            label="Email"
+            name="email"
+            value={form.email}
+            error={errors.email}
+            onChange={handleChange}
+            type="email"
+            placeholder="genie.pay@genie.com"
+          />
+          <InputField
+            label="Wallet Address"
+            name="walletAddress"
+            value={form.walletAddress}
+            error={errors.walletAddress}
+            onChange={handleChange}
+            required
+            placeholder="0x..."
+          />
+
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="Role" name="role" required placeholder="Developer" />
-            <InputField label="Department" name="department" placeholder="Engineering" />
+            <InputField
+              label="Role"
+              name="role"
+              value={form.role}
+              error={errors.role}
+              onChange={handleChange}
+              required
+              placeholder="Developer"
+            />
+            <InputField
+              label="Department"
+              name="department"
+              value={form.department}
+              error={errors.department}
+              onChange={handleChange}
+              placeholder="Engineering"
+            />
           </div>
 
           <InputField
             label="Monthly Pay (USD)"
             name="payUsd"
+            value={form.payUsd}
+            error={errors.payUsd}
+            onChange={handleChange}
             type="number"
             required
-            placeholder="100"
+            placeholder="1000"
             min="0"
             step="0.01"
           />
