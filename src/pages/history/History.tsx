@@ -62,8 +62,8 @@ export const History: React.FC = () => {
   const displayTransactions = allTransactions.length > 0 ? allTransactions : transactions;
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen p-6 flex items-center justify-center">
+      <div className="w-full max-w-7xl space-y-6">
         {/* Table */}
         <div
           className="rounded-2xl overflow-hidden"
