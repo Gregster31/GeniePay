@@ -192,31 +192,20 @@ export const Payroll: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <code className="text-sm text-gray-300 font-mono">
+                        <button
+                          onClick={() => handleCopy(employee.walletAddress)}
+                          className="flex items-center gap-1 group"
+                          title="Click to copy address"
+                        >
+                          <code className="text-sm text-gray-300 font-mono group-hover:text-purple-400 transition-colors">
                             {sliceAddress(employee.walletAddress)}
                           </code>
-                          <button
-                            onClick={() => handleCopy(employee.walletAddress)}
-                            className="text-gray-400 hover:text-purple-400 transition-colors"
-                            title="Copy address"
-                          >
-                            {copiedAddress === employee.walletAddress ? (
-                              <CheckCircle2 className="w-4 h-4 text-green-400" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </button>
-                          <a
-                            href={`https://etherscan.io/address/${employee.walletAddress}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-purple-400 transition-colors"
-                            title="View on Etherscan"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        </div>
+                          {copiedAddress === employee.walletAddress ? (
+                            <CheckCircle2 className="w-3 h-3 text-green-400" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </button>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-white font-medium">{formatCurrency(employee.payUsd)}</span>
