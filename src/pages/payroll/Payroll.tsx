@@ -58,7 +58,7 @@ export const Payroll: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white">Payroll</h1>
-            <p className="text-gray-400 mt-1">Manage employees and run batch payments</p>
+            <p className="text-gray-400 text-sm">Manage employees and run batch payments</p>
           </div>
           <div className="flex gap-3">
             <button
