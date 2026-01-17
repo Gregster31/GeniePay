@@ -1,16 +1,16 @@
 const isDev = import.meta.env.VITE_ENV_KEY === 'TEST';
 
-// Fetch ETH price from CoinGecko (returns 0 in dev mode)
+// Fetch ETH price from CoinGecko (returns 1 in dev mode)
 export const fetchEthPrice = async (): Promise<number> => {
-  if (isDev) return 0;
+  if (isDev) return 1;
   
   try {
     const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
     const data = await res.json();
-    return data.ethereum?.usd || 0;
+    return data.ethereum?.usd || 1;
   } catch (e) {
     console.error('Price fetch failed:', e);
-    return 0;
+    return 1;
   }
 };
 

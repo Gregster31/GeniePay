@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, Send, Copy, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { UserPlus, Send, Copy, CheckCircle2 } from 'lucide-react';
 import { mockEmployees } from '@/data/MockEmployeeData';
 import type { Employee } from '@/models/EmployeeModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
