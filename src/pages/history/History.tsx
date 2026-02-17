@@ -64,6 +64,19 @@ export const History: React.FC = () => {
   return (
     <div className="min-h-screen p-6 flex items-center justify-center">
       <div className="w-full max-w-7xl space-y-6">
+        {/* Header */}
+        <div>
+          <h1
+            className="text-3xl font-bold text-white mb-2"
+            style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}
+          >
+            Transaction History
+          </h1>
+          <p className="text-gray-400 text-sm">
+            View your blockchain transaction history across all networks
+          </p>
+        </div>
+        
         {/* Table */}
         <div
           className="rounded-2xl overflow-hidden"
