@@ -17,33 +17,46 @@
   <img width="1887" height="883" alt="image" src="https://github.com/user-attachments/assets/cdea4dfc-4568-4d8c-a6f0-fffd962f77bd" />
 </a>
 
-## Overview
-### No demo, no sales call, no BS
-**GeniePay** is a crypto-based payroll platform that lets businesses pay employees and contractors globally using any kind of cryptocurrency, while staying **tax and compliance ready**. And what differenciates us from the rest is that we're entirely free, you don't even need an account to use us!  
-
-**Our goals:** Remove the **cost, delays, and friction** of international payments and managing your team.  
-
 ---
+
+**GeniePay** is a free, no-account crypto payroll platform. Connect your wallet and pay up to 800 employees or contractors worldwide in a single transaction with tax and compliance built in.
+
+No fees. No middlemen. No data collected.
 
 ## Why GeniePay?
 
-### **The Problem**
-- International payroll is **slow**, **expensive**, and **complicated**.
-- Fees can be **6%+** and delays up to **5 days**.
-- Most crypto payroll solutions ignore tax/legal compliance.
-- Most of these companies need you to pay or even schedule an appointement with them before use
+International payroll is slow, expensive, and painful. Traditional services charge 6%+ in fees, take up to 5 days to settle, and most crypto alternatives either ignore compliance entirely or charge thousands per month behind a sales call.
 
-### **The Solution**
-GeniePay enables:
-- **Instant** cryptocurrency payouts
-- **Automated** tax & compliance handling
-- **Entirely** free and no accounts needed
-  
----
+GeniePay fixes that:
 
-## Core Features
+- **Instant** payouts via smart contracts on Ethereum
+- **Batch payments** — up to 800 recipients in one click
+- **Multi-currency** — stablecoins and fiat-pegged tokens
+- **Tax & compliance ready** — export-friendly records out of the box
+- **Entirely free** — no subscription, no account, no upsell
 
-- **Send** 1000 employee payouts in a single click using smart contracts
-- **Easy** big team management with CSV files
-- **Employer Dashboard** for managing teams and payouts
-- **Multi-Currency Support** (Stablecoins + Fiat)
+## Features
+
+- **Quick Pay** — send one-off payments to any wallet address
+- **Payroll** — schedule and manage recurring team payments
+- **CSV Import** — bulk-load your team from a spreadsheet
+- **Payment History** — full transaction log with status tracking
+- **Employer Dashboard** — manage teams, review summaries, download reports
+
+## Getting Started
+- Connect your wallet
+- Enjoy!
+
+## Privacy
+
+GeniePay does not collect, store, or sell your data. Your wallet is your identity, nothing else is required.
+
+## License
+
+This project is licensed under the **Business Source License 1.1 (BUSL-1.1)**.
+
+You can view, fork, and contribute to this code. You may **not** use it for commercial purposes or deploy it as a hosted service without explicit permission.
+
+On **January 1, 2028**, this license converts automatically to **MIT** (fully open source).
+
+See the [`LICENSE`](./LICENSE) file for full terms.

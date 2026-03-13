@@ -1,79 +1,86 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { useAccount, useDisconnect } from 'wagmi';
 import type { AuthState } from '@/components/auth/auth';
-import { createSignatureMessage } from '@/components/auth/auth';
+import type { Employee } from '@/models/EmployeeModel';
+import { saveEmployeesToSession, loadEmployeesFromSession, clearEmployeesFromSession } from '@/utils/EmployeeSession';
 
 interface AuthContextType extends AuthState {
-  authenticate: () => Promise<void>;
   logout: () => void;
+  employees: Employee[];
+  addEmployee: (employee: Omit<Employee, 'id' | 'dateAdded'>) => void;
+  removeEmployee: (id: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const { isConnected, status } = useAccount();
   const { disconnect } = useDisconnect();
+
+  const didExplicitLogout = useRef(false);
 
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     isLoading: false,
   });
 
-  /**
-   * Authenticate: Request wallet signature
-   */
-  const authenticate = useCallback(async () => {
-    if (!address) throw new Error('No wallet connected');
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+    return loadEmployeesFromSession() ?? [];
+  });
 
-    setAuthState(prev => ({ ...prev, isLoading: true }));
+  useEffect(() => {
+    saveEmployeesToSession(employees);
+  }, [employees]);
 
-    try {
-      const message = createSignatureMessage(address);
-      await signMessageAsync({ message });
-      
+  useEffect(() => {
+    if (status === 'connected') {
+      didExplicitLogout.current = false;
       setAuthState({ isAuthenticated: true, isLoading: false });
-    } catch (error) {
-      setAuthState({ isAuthenticated: false, isLoading: false });
-      throw error;
     }
-  }, [address, signMessageAsync]);
 
-  /**
-   * Logout: Disconnect wallet and clear auth
-   */
+    if (status === 'disconnected' && didExplicitLogout.current) {
+      setAuthState({ isAuthenticated: false, isLoading: false });
+      clearEmployeesFromSession();
+      setEmployees([]);
+      didExplicitLogout.current = false;
+    }
+  }, [status]);
+
   const logout = useCallback(() => {
+    didExplicitLogout.current = true;
     disconnect();
-    setAuthState({ isAuthenticated: false, isLoading: false });
   }, [disconnect]);
 
-  useEffect(() => {
-    if (!isConnected) {
-      setAuthState({ isAuthenticated: false, isLoading: false });
-    }
-  }, [isConnected]);
+  const addEmployee = useCallback((newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
+    setEmployees(prev => {
+      const next = [
+        ...prev,
+        {
+          ...newEmployee,
+          id: Math.max(0, ...prev.map(e => e.id)) + 1,
+          dateAdded: new Date(),
+        },
+      ];
+      return next;
+    });
+  }, []);
 
-  // Auto-request signature when wallet connects (if not already authenticated)
-  useEffect(() => {
-    if (isConnected && address && !authState.isAuthenticated && !authState.isLoading) {
-      // Small delay to let wallet connection UI settle
-      const timer = setTimeout(() => {
-        authenticate().catch((error) => {
-          console.log('Signature rejected:', error);
-        });
-      }, 500);
+  const removeEmployee = useCallback((id: number) => {
+    setEmployees(prev => prev.filter(e => e.id !== id));
+  }, []);
 
-      return () => clearTimeout(timer);
-    }
-  }, [isConnected, address, authState.isAuthenticated, authState.isLoading, authenticate]);
-
-  const value: AuthContextType = {
-    ...authState,
-    authenticate,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{
+      ...authState,
+      isAuthenticated: isConnected,
+      logout,
+      employees,
+      addEmployee,
+      removeEmployee,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
