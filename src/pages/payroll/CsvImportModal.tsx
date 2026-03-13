@@ -22,7 +22,6 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({ isOpen, onClose,
   const [fileName, setFileName] = useState('');
   const [result, setResult] = useState<CSVParseResult>({ valid: [], errors: [] });
 
-  // ⚠️ Hooks ABOVE the early return — never conditionally
   const processFile = useCallback((file: File) => {
     setFileName(file.name);
     const reader = new FileReader();

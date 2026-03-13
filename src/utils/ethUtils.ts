@@ -25,3 +25,5 @@ export const usdToEth = (usd: number, price: number): number => {
 };
 
 export const isDevelopment = isDev;
+
+export const isValidEthAddress = (addr: string) => /^0x[a-fA-F0-9]{40}$/.test(addr.trim());

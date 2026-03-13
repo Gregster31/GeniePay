@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Employee } from '@/models/EmployeeModel';
+import { isValidEthAddress } from '@/utils/ethUtils';
 
-interface AddEmployeeModalProps {
+interface EmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (employee: Omit<Employee, 'id' | 'dateAdded'>) => void;
+  onEdit?: (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => void;
+  employeeToEdit?: Employee | null;
 }
 
 interface FormData {
@@ -25,8 +28,6 @@ const INITIAL_FORM: FormData = {
   department: '',
   payUsd: '',
 };
-
-const isValidEthAddress = (address: string): boolean => /^0x[a-fA-F0-9]{40}$/.test(address);
 
 interface InputFieldProps {
   label: string;
@@ -62,9 +63,9 @@ const InputField: React.FC<InputFieldProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full px-4 py-2 rounded-lg bg-white/5 border text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-        name === 'walletAddress' ? 'font-mono text-sm' : ''
-      }`}
+      className={`w-full px-4 py-2 rounded-lg bg-white/5 border text-white placeholder-gray-500
+        focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors
+        ${name === 'walletAddress' ? 'font-mono text-sm' : ''}`}
       style={{ borderColor: error ? '#ef4444' : 'rgba(124, 58, 237, 0.3)' }}
       {...props}
     />
@@ -72,9 +73,33 @@ const InputField: React.FC<InputFieldProps> = ({
   </div>
 );
 
-export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onClose, onAdd }) => {
+export const EmployeeModal: React.FC<EmployeeModalProps> = ({
+  isOpen,
+  onClose,
+  onAdd,
+  onEdit,
+  employeeToEdit,
+}) => {
+  const isEditMode = Boolean(employeeToEdit && onEdit);
+
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<FormData>>({});
+
+  useEffect(() => {
+    if (isEditMode && employeeToEdit) {
+      setForm({
+        name: employeeToEdit.name,
+        email: employeeToEdit.email ?? '',
+        walletAddress: employeeToEdit.walletAddress,
+        role: employeeToEdit.role,
+        department: employeeToEdit.department ?? '',
+        payUsd: String(employeeToEdit.payUsd),
+      });
+    } else {
+      setForm(INITIAL_FORM);
+    }
+    setErrors({});
+  }, [employeeToEdit, isEditMode, isOpen]);
 
   if (!isOpen) return null;
 
@@ -108,17 +133,22 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onCl
     e.preventDefault();
     if (!validate()) return;
 
-    onAdd({
+    const payload: Omit<Employee, 'id' | 'dateAdded'> = {
       name: form.name.trim(),
       email: form.email.trim() || undefined,
       walletAddress: form.walletAddress.trim(),
       role: form.role.trim(),
       department: form.department.trim() || undefined,
       payUsd: parseFloat(form.payUsd),
-    });
+    };
 
-    setForm(INITIAL_FORM);
-    setErrors({});
+    if (isEditMode && employeeToEdit) {
+      onEdit!(employeeToEdit.id, payload);
+    } else {
+      onAdd(payload);
+    }
+
+    handleClose();
   };
 
   const handleClose = () => {
@@ -141,8 +171,13 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onCl
           className="flex items-center justify-between p-6 border-b"
           style={{ borderColor: 'rgba(124, 58, 237, 0.2)' }}
         >
-          <h2 className="text-2xl font-bold text-white">Add New Employee</h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-white transition-colors">
+          <h2 className="text-2xl font-bold text-white">
+            {isEditMode ? 'Edit Employee' : 'Add New Employee'}
+          </h2>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -158,6 +193,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onCl
             required
             placeholder="Genie Pay"
           />
+
           <InputField
             label="Email"
             name="email"
@@ -167,6 +203,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onCl
             type="email"
             placeholder="genie.pay@genie.com"
           />
+
           <InputField
             label="Wallet Address"
             name="walletAddress"
@@ -225,7 +262,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onCl
               className="px-6 py-2 rounded-lg font-medium transition-colors"
               style={{ backgroundColor: '#7c3aed', color: 'white' }}
             >
-              Add Employee
+              {isEditMode ? 'Save Changes' : 'Add Employee'}
             </button>
           </div>
         </form>
