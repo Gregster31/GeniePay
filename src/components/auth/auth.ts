@@ -12,13 +12,9 @@ export const PUBLIC_ROUTES = [
 ] as const;
 
 export const PROTECTED_ROUTES = [
-  '/team',
   '/pay',
   '/payroll',
-  '/account-history',
-  '/documents',
-  '/deposit',
-  '/settings',
+  '/history',
 ] as const;
 
 export const isPublicRoute = (path: string): boolean => {

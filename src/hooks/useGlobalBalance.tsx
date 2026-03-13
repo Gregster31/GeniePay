@@ -1,8 +1,3 @@
-/**
- * Simple Balance Hook - No Context Needed
- * Just wraps Wagmi's useBalance with formatting
- */
-
 import { useMemo } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { formatEther } from 'viem';

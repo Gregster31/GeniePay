@@ -1,34 +1,30 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
-  DollarSign, 
   ChevronRight,
   ArrowUpRight,
   Calendar,
   Clock,
 } from 'lucide-react';
-import { useAccount, useBalance } from 'wagmi';
-import { formatEther } from 'viem';
+import { WalletBalanceCard } from './WalletBalanceCard';
+import { QuickPayCard } from './QuickpayCard';
+import { mockEmployees } from '@/data/MockEmployeeData';
+import { usePaymentSchedule } from '@/hooks/usePaymentSchedule';
 
-// ========================= TYPES =========================
-
+// ============================================================================
+// STAT CARD COMPONENT
+// ============================================================================
 interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; color?: string }>;
   trend?: string;
   trendUp?: boolean;
   onClick?: () => void;
+  children?: React.ReactNode;
 }
-
-interface QuickPayFormData {
-  payee: string;
-  amount: string;
-}
-
-// ========================= STAT CARD COMPONENT =========================
 
 const StatCard: React.FC<StatCardProps> = ({ 
   title, 
@@ -37,10 +33,11 @@ const StatCard: React.FC<StatCardProps> = ({
   icon: Icon, 
   trend, 
   trendUp,
-  onClick 
+  onClick,
+  children
 }) => (
   <div 
-    className={`rounded-2xl p-6 transition-all duration-300 relative overflow-hidden ${
+    className={`rounded-2xl p-4 sm:p-6 transition-all duration-300 relative overflow-hidden ${
       onClick ? 'cursor-pointer hover:scale-[1.03]' : ''
     }`}
     style={{ 
@@ -62,7 +59,6 @@ const StatCard: React.FC<StatCardProps> = ({
       }
     }}
   >
-    {/* Gradient overlay */}
     <div 
       className="absolute inset-0 opacity-10"
       style={{
@@ -71,38 +67,40 @@ const StatCard: React.FC<StatCardProps> = ({
     />
     
     <div className="relative z-10">
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
         <div 
-          className="p-3 rounded-xl transition-all duration-300"
+          className="p-2 sm:p-3 rounded-xl transition-all duration-300"
           style={{ 
             backgroundColor: 'rgba(124, 58, 237, 0.15)',
             boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)'
           }}
         >
-          <Icon className="w-6 h-6" style={{ color: '#a855f7' }} />
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6" color="#a855f7" />
         </div>
-        {onClick && <ChevronRight className="w-5 h-5 text-gray-500 hover:text-purple-400 transition-colors" />}
+        {onClick && <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 hover:text-purple-400 transition-colors" />}
       </div>
       
-      <h3 className="text-sm font-medium text-gray-400 mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <h3 className="text-xs sm:text-sm font-medium text-gray-400 mb-2 sm:mb-3">
         {title}
       </h3>
       
       <div className="flex items-baseline gap-2 mb-2">
-        <p className="text-3xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>
+        <p className="text-2xl sm:text-3xl font-bold text-white" style={{ letterSpacing: '-0.02em' }}>
           {value}
         </p>
       </div>
       
       {subtitle && (
-        <p className="text-sm text-gray-500 mb-3">{subtitle}</p>
+        <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">{subtitle}</p>
       )}
       
+      {children}
+      
       {trend && (
-        <div className="flex items-center gap-1.5 mt-3 px-2 py-1.5 rounded-lg inline-flex" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
+        <div className="flex items-center gap-1.5 mt-2 sm:mt-3 px-2 py-1.5 rounded-lg inline-flex" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
           {trendUp !== undefined && (
             <ArrowUpRight 
-              className={`w-4 h-4 ${trendUp ? 'text-green-400' : 'text-red-400 rotate-90'}`} 
+              className={`w-3 h-3 sm:w-4 sm:h-4 ${trendUp ? 'text-green-400' : 'text-red-400 rotate-90'}`} 
             />
           )}
           <span className={`text-xs font-semibold ${
@@ -118,179 +116,23 @@ const StatCard: React.FC<StatCardProps> = ({
   </div>
 );
 
-// ========================= WALLET BALANCE CARD (Portfolio Value) =========================
-
-const WalletBalanceCard: React.FC<{ balance: string; balanceUSD: string }> = ({ balance, balanceUSD }) => (
-  <div 
-    className="rounded-2xl p-6 transition-all duration-300 relative overflow-hidden"
-    style={{ 
-      backgroundColor: '#1A1B22',
-      border: '1px solid rgba(124, 58, 237, 0.2)',
-      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
-    }}
-  >
-    {/* Gradient overlay */}
-    <div 
-      className="absolute inset-0 opacity-10"
-      style={{
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%)'
-      }}
-    />
-    
-    <div className="relative z-10">
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-400" style={{ fontFamily: "'Inter', sans-serif" }}>
-          Portfolio value
-        </h3>
-      </div>
-      
-      <div className="mb-2">
-        <p className="text-4xl font-bold text-white" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>
-          CA${balanceUSD}
-        </p>
-      </div>
-      
-      <p className="text-sm text-gray-500">{balance} ETH</p>
-    </div>
-  </div>
-);
-
-// ========================= GLASSY QUICK PAY CARD =========================
-
-const QuickPayCard: React.FC = () => {
+// ============================================================================
+// MAIN DASHBOARD
+// ============================================================================
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<QuickPayFormData>({
-    payee: '',
-    amount: ''
-  });
+  const { frequency, save, daysUntilNext, nextPaymentDate } = usePaymentSchedule();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate('/pay', { state: formData });
-  };
-
-  return (
-    <div 
-      className="rounded-2xl p-6 relative overflow-hidden backdrop-blur-xl"
-      style={{ 
-        backgroundColor: 'rgba(26, 27, 34, 0.6)',
-        border: '1px solid rgba(124, 58, 237, 0.3)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(16px)'
-      }}
-    >
-      {/* Glass gradient overlay */}
-      <div 
-        className="absolute inset-0 opacity-40"
-        style={{
-          background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(168, 85, 247, 0.15) 50%, rgba(124, 58, 237, 0.1) 100%)'
-        }}
-      />
-      
-      {/* Shimmer effect */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          background: 'linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%)',
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 3s infinite'
-        }}
-      />
-      
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
-      
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-base font-medium text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-            Quick Pay
-          </h3>
-          <button
-            onClick={() => navigate('/pay')}
-            className="text-sm font-medium hover:opacity-80 transition-opacity"
-            style={{ color: '#c4b5fd' }}
-          >
-            Confirm →
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Amount Display - Large centered text */}
-          <div className="text-center py-4">
-            <div className="mb-2">
-              <span className="text-2xl font-bold text-white mr-2">$</span>
-              <input
-                type="text"
-                placeholder="Add amount"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-gray-500 text-center w-48"
-                style={{ 
-                  fontFamily: "'Inter', sans-serif"
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Payee Select - Glassy dropdown */}
-          <div>
-            <select
-              value={formData.payee}
-              onChange={(e) => setFormData({ ...formData, payee: e.target.value })}
-              className="w-full px-4 py-3.5 rounded-xl text-white focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer text-sm backdrop-blur-sm"
-              style={{ 
-                backgroundColor: 'rgba(31, 29, 46, 0.6)',
-                border: '1px solid rgba(124, 58, 237, 0.3)',
-                fontFamily: "'Inter', sans-serif"
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = 'rgba(124, 58, 237, 0.6)';
-                e.target.style.boxShadow = '0 0 0 3px rgba(124, 58, 237, 0.15)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'rgba(124, 58, 237, 0.3)';
-                e.target.style.boxShadow = 'none';
-              }}
-            >
-              <option value="" className="bg-gray-900">Select payee...</option>
-              <option value="employee1" className="bg-gray-900">John Doe (0x1234...5678)</option>
-              <option value="employee2" className="bg-gray-900">Jane Smith (0x8765...4321)</option>
-              <option value="contractor1" className="bg-gray-900">Alex Johnson (0xabcd...efgh)</option>
-            </select>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// ========================= MAIN DASHBOARD =========================
-
-export const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { address } = useAccount();
-  const { data: balance } = useBalance({ address });
-
-  // Mock data - replace with actual data from your backend
-  const stats = {
-    totalPayments: '45.8 ETH',
-    totalPaymentsUSD: '$137,400',
-    totalEmployees: 12,
-    activeEmployees: 10,
-    monthlyPayroll: '15.2 ETH',
-    monthlyPayrollUSD: '$45,600',
-  };
-
-  const currentBalance = balance 
-    ? parseFloat(formatEther(balance.value)).toFixed(4)
-    : '0.0000';
+  // Calculate employee stats
+  const stats = useMemo(() => {
+    const totalEmployees = mockEmployees.length;
+    const monthlyPayroll = mockEmployees.reduce((sum, e) => sum + (e.payUsd || 0), 0);
     
-  const currentBalanceUSD = (parseFloat(currentBalance) * 3000).toFixed(2);
+    return {
+      totalEmployees,
+      monthlyPayrollUSD: `$${monthlyPayroll.toFixed(2)}`,
+    };
+  }, []);
 
   return (
     <div 
@@ -299,50 +141,71 @@ export const Dashboard: React.FC = () => {
         backgroundColor: '#0f0d16',
       }}
     >
-      <div className="p-6 lg:p-8">
-        {/* First Row - Stats Grid (with more top spacing) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-8">
-          <StatCard
-            title="Total Payments This Year"
-            value={stats.totalPayments}
-            subtitle={stats.totalPaymentsUSD}
-            icon={DollarSign}
-            trend="+12.5% from last year"
-            trendUp={true}
-          />
+      <div className="p-4 sm:p-6 lg:p-8">
+        
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 mt-4 sm:mt-8">
           
           <StatCard
             title="Total Employees"
             value={stats.totalEmployees}
-            subtitle={`${stats.activeEmployees} active`}
             icon={Users}
-            trend="2 added this month"
-            trendUp={true}
-            onClick={() => navigate('/team')}
+            onClick={() => navigate('/payroll')}
           />
           
           <StatCard
             title="Monthly Payroll"
-            value={stats.monthlyPayroll}
-            subtitle={stats.monthlyPayrollUSD}
+            value={stats.monthlyPayrollUSD}
             icon={Calendar}
-            trend="Next run in 5 days"
+            trend={`Next: ${nextPaymentDate}`}
+            onClick={() => navigate('/payroll')}
           />
           
           <StatCard
             title="Next Payment"
-            value="5 days"
-            subtitle="December 27, 2025"
+            value={`${daysUntilNext} days`}
+            subtitle={nextPaymentDate}
             icon={Clock}
-            trend="12 employees scheduled"
-          />
+          >
+            {/* Payment Schedule Selector */}
+            <div className="mt-3 pt-3 border-t border-gray-700/50">
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    save('monthly');
+                  }}
+                  className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    frequency === 'monthly'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    save('bi-weekly');
+                  }}
+                  className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    frequency === 'bi-weekly'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                  }`}
+                >
+                  Bi-weekly
+                </button>
+              </div>
+            </div>
+          </StatCard>
         </div>
 
         {/* Second Row - Wallet Balance + Quick Pay */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Wallet Balance - Takes 1 column */}
           <div className="lg:col-span-1">
-            <WalletBalanceCard balance={currentBalance} balanceUSD={currentBalanceUSD} />
+            <WalletBalanceCard />
           </div>
 
           {/* Quick Pay - Takes 2 columns */}
