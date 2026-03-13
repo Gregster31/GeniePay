@@ -9,21 +9,20 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "composite": true,
-    
+
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "jsx": "react-jsx",
-    
+
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
-    
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
