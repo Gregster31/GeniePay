@@ -22,7 +22,6 @@ export const History: React.FC = () => {
     staleTime: 30000,
   });
 
-  // Append new transactions when data changes
   React.useEffect(() => {
     if (transactions.length > 0) {
       setAllTransactions(prev => {
@@ -41,23 +40,18 @@ export const History: React.FC = () => {
     }
   };
 
-  const handleLoadMore = () => {
-    setPage(prev => prev + 1);
-  };
+  const handleLoadMore = () => setPage(prev => prev + 1);
 
-  const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
+  const formatDate = (date: Date): string =>
+    date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
-  if (error) {
-    return <ErrorPage />;
-  }
+  if (error) return <ErrorPage />;
 
   const displayTransactions = allTransactions.length > 0 ? allTransactions : transactions;
 
@@ -76,7 +70,7 @@ export const History: React.FC = () => {
             View your blockchain transaction history across all networks
           </p>
         </div>
-        
+
         {/* Table */}
         <div
           className="rounded-2xl overflow-hidden"
@@ -105,140 +99,119 @@ export const History: React.FC = () => {
                         borderBottom: '1px solid rgba(124, 58, 237, 0.2)',
                       }}
                     >
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">
-                        Date
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">
-                        Network
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">
-                        From
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">
-                        To
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">
-                        Amount (ETH)
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">
-                        Gas Fee (Wei)
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">
-                        Actions
-                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Date</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Network</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">From</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">To</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Amount (ETH)</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Gas Fee (Wei)</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {displayTransactions.map((tx, index) => (
-                      <tr
-                        key={tx.hash}
-                        className="transition-all hover:bg-white/5"
-                        style={{
-                          borderBottom:
-                            index < displayTransactions.length - 1
-                              ? '1px solid rgba(124, 58, 237, 0.1)'
-                              : 'none',
-                        }}
-                      >
-                        {/* Date */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-300">
-                            {formatDate(tx.timestamp)}
-                          </span>
-                        </td>
+                    {displayTransactions.map((tx, index) => {
+                      const isSent = tx.from.toLowerCase() === address?.toLowerCase();
 
-                        {/* Network */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-300">
-                            {tx.network}
-                          </span>
-                        </td>
+                      return (
+                        <tr
+                          key={tx.hash}
+                          className="transition-all hover:bg-white/5"
+                          style={{
+                            borderBottom:
+                              index < displayTransactions.length - 1
+                                ? '1px solid rgba(124, 58, 237, 0.1)'
+                                : 'none',
+                          }}
+                        >
+                          {/* Date */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-300">{formatDate(tx.timestamp)}</span>
+                          </td>
 
-                        {/* From - Clickable */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => handleCopy(tx.from)}
-                            className="flex items-center gap-1 group"
-                            title="Click to copy address"
-                          >
-                            <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">
-                              {sliceAddress(tx.from)}
-                            </span>
-                            {copiedHash === tx.from ? (
-                              <CheckCircle2 className="w-3 h-3 text-green-400" />
-                            ) : (
-                              <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            )}
-                          </button>
-                        </td>
+                          {/* Network */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-300">{tx.network}</span>
+                          </td>
 
-                        {/* To - Clickable */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => handleCopy(tx.to)}
-                            className="flex items-center gap-1 group"
-                            title="Click to copy address"
-                          >
-                            <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">
-                              {sliceAddress(tx.to)}
-                            </span>
-                            {copiedHash === tx.to ? (
-                              <CheckCircle2 className="w-3 h-3 text-green-400" />
-                            ) : (
-                              <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            )}
-                          </button>
-                        </td>
-
-                        {/* Amount */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-semibold text-white">
-                            {tx.value}
-                          </span>
-                        </td>
-
-                        {/* Gas Fee */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-400">
-                            {tx.gasFee}
-                          </span>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleCopy(tx.hash)}
-                              className="p-2 rounded-lg transition-all"
-                              style={{
-                                backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                                border: '1px solid rgba(124, 58, 237, 0.2)',
-                              }}
-                              title="Copy transaction hash"
-                            >
-                              {copiedHash === tx.hash ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                          {/* From */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button onClick={() => handleCopy(tx.from)} className="flex items-center gap-1 group" title="Click to copy address">
+                              <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">
+                                {sliceAddress(tx.from)}
+                              </span>
+                              {copiedHash === tx.from ? (
+                                <CheckCircle2 className="w-3 h-3 text-green-400" />
                               ) : (
-                                <Copy className="w-4 h-4 text-purple-400" />
+                                <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                               )}
                             </button>
-                            <a
-                              href={getExplorerUrl(tx.hash, tx.chainId)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-lg transition-all"
-                              style={{
-                                backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                                border: '1px solid rgba(124, 58, 237, 0.2)',
-                              }}
-                              title="View on Blockscout"
+                          </td>
+
+                          {/* To */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button onClick={() => handleCopy(tx.to)} className="flex items-center gap-1 group" title="Click to copy address">
+                              <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">
+                                {sliceAddress(tx.to)}
+                              </span>
+                              {copiedHash === tx.to ? (
+                                <CheckCircle2 className="w-3 h-3 text-green-400" />
+                              ) : (
+                                <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              )}
+                            </button>
+                          </td>
+
+                          {/* Amount — red with minus if sent, green with plus if received */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className="text-sm font-semibold"
+                              style={{ color: isSent ? '#f87171' : '#4ade80' }}
                             >
-                              <ExternalLink className="w-4 h-4 text-purple-400" />
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              {isSent ? `−${tx.value}` : `+${tx.value}`}
+                            </span>
+                          </td>
+
+                          {/* Gas Fee */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-400">{tx.gasFee}</span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleCopy(tx.hash)}
+                                className="p-2 rounded-lg transition-all"
+                                style={{
+                                  backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                                  border: '1px solid rgba(124, 58, 237, 0.2)',
+                                }}
+                                title="Copy transaction hash"
+                              >
+                                {copiedHash === tx.hash ? (
+                                  <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                ) : (
+                                  <Copy className="w-4 h-4 text-purple-400" />
+                                )}
+                              </button>
+                              <a
+                                href={getExplorerUrl(tx.hash, tx.chainId)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 rounded-lg transition-all"
+                                style={{
+                                  backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                                  border: '1px solid rgba(124, 58, 237, 0.2)',
+                                }}
+                                title="View on Blockscout"
+                              >
+                                <ExternalLink className="w-4 h-4 text-purple-400" />
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

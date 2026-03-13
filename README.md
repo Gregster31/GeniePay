@@ -23,8 +23,6 @@
 
 No fees. No middlemen. No data collected.
 
----
-
 ## Why GeniePay?
 
 International payroll is slow, expensive, and painful. Traditional services charge 6%+ in fees, take up to 5 days to settle, and most crypto alternatives either ignore compliance entirely or charge thousands per month behind a sales call.
@@ -37,8 +35,6 @@ GeniePay fixes that:
 - **Tax & compliance ready** — export-friendly records out of the box
 - **Entirely free** — no subscription, no account, no upsell
 
----
-
 ## Features
 
 - **Quick Pay** — send one-off payments to any wallet address
@@ -47,19 +43,13 @@ GeniePay fixes that:
 - **Payment History** — full transaction log with status tracking
 - **Employer Dashboard** — manage teams, review summaries, download reports
 
----
-
 ## Getting Started
 - Connect your wallet
 - Enjoy!
 
----
-
 ## Privacy
 
 GeniePay does not collect, store, or sell your data. Your wallet is your identity, nothing else is required.
-
----
 
 ## License
 

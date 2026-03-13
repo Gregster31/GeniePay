@@ -176,21 +176,6 @@ export const Payroll: React.FC = () => {
                   <tr>
                     <td colSpan={6} className="px-6 py-16 text-center">
                       <p className="text-gray-400">No employees added yet</p>
-                      <div className="flex items-center justify-center gap-4 mt-4">
-                        <button
-                          onClick={() => setShowAddModal(true)}
-                          className="text-purple-400 hover:text-purple-300 text-sm transition-colors"
-                        >
-                          Add your first employee
-                        </button>
-                        <span className="text-gray-600">or</span>
-                        <button
-                          onClick={() => setShowCSVModal(true)}
-                          className="text-purple-400 hover:text-purple-300 text-sm transition-colors"
-                        >
-                          Import from CSV
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ) : (
