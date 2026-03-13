@@ -2,9 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { useAccount, useDisconnect } from 'wagmi';
 import type { AuthState } from '@/components/auth/auth';
 import type { Employee } from '@/models/EmployeeModel';
-import { mockEmployees } from '@/data/MockEmployeeData';
 import { saveEmployeesToSession, loadEmployeesFromSession, clearEmployeesFromSession } from '@/utils/EmployeeSession';
-
 
 interface AuthContextType extends AuthState {
   logout: () => void;
@@ -27,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [employees, setEmployees] = useState<Employee[]>(() => {
-    return loadEmployeesFromSession() ?? mockEmployees;
+    return loadEmployeesFromSession() ?? [];
   });
 
   useEffect(() => {
@@ -43,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (status === 'disconnected' && didExplicitLogout.current) {
       setAuthState({ isAuthenticated: false, isLoading: false });
       clearEmployeesFromSession();
-      setEmployees(mockEmployees);
+      setEmployees([]);
       didExplicitLogout.current = false;
     }
   }, [status]);

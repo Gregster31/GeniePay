@@ -9,8 +9,8 @@ import {
 } from 'lucide-react';
 import { WalletBalanceCard } from './WalletBalanceCard';
 import { QuickPayCard } from './QuickpayCard';
-import { mockEmployees } from '@/data/MockEmployeeData';
 import { usePaymentSchedule } from '@/hooks/usePaymentSchedule';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ============================================================================
 // STAT CARD COMPONENT
@@ -121,18 +121,18 @@ const StatCard: React.FC<StatCardProps> = ({
 // ============================================================================
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { employees } = useAuth();
   const { frequency, save, daysUntilNext, nextPaymentDate } = usePaymentSchedule();
 
-  // Calculate employee stats
   const stats = useMemo(() => {
-    const totalEmployees = mockEmployees.length;
-    const monthlyPayroll = mockEmployees.reduce((sum, e) => sum + (e.payUsd || 0), 0);
-    
+    const totalEmployees = employees.length;
+    const monthlyPayroll = employees.reduce((sum, e) => sum + (e.payUsd || 0), 0);
+      
     return {
       totalEmployees,
       monthlyPayrollUSD: `$${monthlyPayroll.toFixed(2)}`,
     };
-  }, []);
+  }, [employees]);
 
   return (
     <div 
