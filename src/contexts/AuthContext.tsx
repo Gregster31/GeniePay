@@ -1,33 +1,85 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import type { AuthState } from '@/components/auth/auth';
+import type { Employee } from '@/models/EmployeeModel';
+import { mockEmployees } from '@/data/MockEmployeeData';
+import { saveEmployeesToSession, loadEmployeesFromSession, clearEmployeesFromSession } from '@/utils/EmployeeSession';
+
 
 interface AuthContextType extends AuthState {
   logout: () => void;
+  employees: Employee[];
+  addEmployee: (employee: Omit<Employee, 'id' | 'dateAdded'>) => void;
+  removeEmployee: (id: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isConnected } = useAccount();
+  const { isConnected, status } = useAccount();
   const { disconnect } = useDisconnect();
+
+  const didExplicitLogout = useRef(false);
 
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     isLoading: false,
   });
 
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+    return loadEmployeesFromSession() ?? mockEmployees;
+  });
+
   useEffect(() => {
-    setAuthState({ isAuthenticated: isConnected, isLoading: false });
-  }, [isConnected]);
+    saveEmployeesToSession(employees);
+  }, [employees]);
+
+  useEffect(() => {
+    if (status === 'connected') {
+      didExplicitLogout.current = false;
+      setAuthState({ isAuthenticated: true, isLoading: false });
+    }
+
+    if (status === 'disconnected' && didExplicitLogout.current) {
+      setAuthState({ isAuthenticated: false, isLoading: false });
+      clearEmployeesFromSession();
+      setEmployees(mockEmployees);
+      didExplicitLogout.current = false;
+    }
+  }, [status]);
 
   const logout = useCallback(() => {
+    didExplicitLogout.current = true;
     disconnect();
-    setAuthState({ isAuthenticated: false, isLoading: false });
   }, [disconnect]);
 
+  const addEmployee = useCallback((newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
+    setEmployees(prev => {
+      const next = [
+        ...prev,
+        {
+          ...newEmployee,
+          id: Math.max(0, ...prev.map(e => e.id)) + 1,
+          dateAdded: new Date(),
+        },
+      ];
+      return next;
+    });
+  }, []);
+
+  const removeEmployee = useCallback((id: number) => {
+    setEmployees(prev => prev.filter(e => e.id !== id));
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ ...authState, logout }}>
+    <AuthContext.Provider value={{
+      ...authState,
+      isAuthenticated: isConnected,
+      logout,
+      employees,
+      addEmployee,
+      removeEmployee,
+    }}>
       {children}
     </AuthContext.Provider>
   );

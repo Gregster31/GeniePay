@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { UserPlus, Send, Copy, CheckCircle2 } from 'lucide-react';
-import { mockEmployees } from '@/data/MockEmployeeData';
 import type { Employee } from '@/models/EmployeeModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { copyToClipboard } from '@/utils/ClipboardCopy';
 import { AddEmployeeModal } from '@/pages/payroll/AddEmployeeModal';
 import { BatchPaymentModal } from '@/pages/payroll/BatchPaymentModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const Payroll: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
+  const { employees, addEmployee: addEmployeeToContext } = useAuth();
+
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
+
   const selectedEmployees = employees.filter(emp => selectedIds.includes(emp.id));
   const totalAmount = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
   const allSelected = employees.length > 0 && selectedIds.length === employees.length;
@@ -36,12 +38,7 @@ export const Payroll: React.FC = () => {
   };
 
   const addEmployee = (newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
-    const employee: Employee = {
-      ...newEmployee,
-      id: Math.max(0, ...employees.map(e => e.id)) + 1,
-      dateAdded: new Date(),
-    };
-    setEmployees([...employees, employee]);
+    addEmployeeToContext(newEmployee);
     setShowAddModal(false);
   };
 
