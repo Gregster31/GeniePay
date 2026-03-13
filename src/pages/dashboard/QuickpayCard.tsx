@@ -5,6 +5,7 @@ import { formatEther, isAddress } from 'viem';
 import { sepolia, mainnet } from 'wagmi/chains';
 import { usePayment } from '@/hooks/usePayment';
 import { fetchEthPrice, ethToUsd, usdToEth, isDevelopment } from '@/utils/ethUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 type Currency = 'ETH' | 'USD';
 
@@ -15,7 +16,7 @@ export const QuickPayCard: React.FC = () => {
     address,
     chainId: isDevelopment ? sepolia.id : mainnet.id
   });
-  
+  const { employees } = useAuth();
   const { 
     sendPayment, 
     isProcessing, 
@@ -194,13 +195,30 @@ export const QuickPayCard: React.FC = () => {
           {/* Recipient */}
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Send to</label>
+            
+            <select
+              onChange={(e) => setRecipient(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none cursor-pointer font-mono mb-2"
+              style={{
+                backgroundColor: 'rgba(31, 29, 46, 0.6)',
+                border: `1px solid ${borderColor}`,
+              }}
+            >
+              <option value="">Select employee…</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.walletAddress}>
+                  {emp.name}
+                </option>
+              ))}
+            </select>
+
             <input
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              placeholder="0x... wallet address"
+              placeholder="or paste 0x... address"
               className="w-full px-4 py-3 rounded-xl text-white bg-transparent outline-none focus:outline-none focus:ring-0 font-mono text-sm"
-              style={{ 
+              style={{
                 backgroundColor: 'rgba(31, 29, 46, 0.6)',
                 border: `1px solid ${borderColor}`,
               }}
