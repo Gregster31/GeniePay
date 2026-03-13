@@ -1,5 +1,6 @@
-
-<img width="1431" height="458" alt="banner" src="https://github.com/user-attachments/assets/aead3c05-90d4-4f77-aed9-2dd47fb82d3f" />
+<a href="https://geniepay.vercel.app/" target="_blank" rel="noopener noreferrer">
+  <img width="1431" height="458" alt="banner" src="https://github.com/user-attachments/assets/aead3c05-90d4-4f77-aed9-2dd47fb82d3f" />
+</a>
 
 <p align="center">
   <a href="#">
@@ -12,8 +13,12 @@
   </a>
 </p>
 
-## Overview
+<a href="https://geniepay.vercel.app/" target="_blank" rel="noopener noreferrer">
+  <img width="1887" height="883" alt="image" src="https://github.com/user-attachments/assets/cdea4dfc-4568-4d8c-a6f0-fffd962f77bd" />
+</a>
 
+## Overview
+### No demo, no sales call, no BS
 **GeniePay** is a crypto-based payroll platform that lets businesses pay employees and contractors globally using any kind of cryptocurrency, while staying **tax and compliance ready**. And what differenciates us from the rest is that we're entirely free, you don't even need an account to use us!  
 
 **Our goals:** Remove the **cost, delays, and friction** of international payments and managing your team.  
