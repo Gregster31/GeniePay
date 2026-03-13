@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { UserPlus, Send, Copy, CheckCircle2 } from 'lucide-react';
+import { UserPlus, Send, Copy, CheckCircle2, FileUp } from 'lucide-react';
 import type { Employee } from '@/models/EmployeeModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { copyToClipboard } from '@/utils/ClipboardCopy';
 import { AddEmployeeModal } from '@/pages/payroll/AddEmployeeModal';
 import { BatchPaymentModal } from '@/pages/payroll/BatchPaymentModal';
+import { CSVImportModal } from '@/pages/payroll/CsvImportModal';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const Payroll: React.FC = () => {
@@ -14,6 +15,7 @@ export const Payroll: React.FC = () => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
+  const [showCSVModal, setShowCSVModal] = useState(false);
 
   const selectedEmployees = employees.filter(emp => selectedIds.includes(emp.id));
   const totalAmount = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
@@ -37,9 +39,15 @@ export const Payroll: React.FC = () => {
     setSelectedIds(allSelected ? [] : employees.map(emp => emp.id));
   };
 
+  // Single employee add — delegates to AuthContext
   const addEmployee = (newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
     addEmployeeToContext(newEmployee);
     setShowAddModal(false);
+  };
+
+  // Bulk CSV import — adds each employee via the same context method
+  const handleCSVImport = (imported: Omit<Employee, 'id' | 'dateAdded'>[]) => {
+    imported.forEach(emp => addEmployeeToContext(emp));
   };
 
   const formatCurrency = (amount: number) =>
@@ -51,6 +59,7 @@ export const Payroll: React.FC = () => {
   return (
     <div className="min-h-screen p-6 flex items-center justify-center">
       <div className="w-full max-w-7xl space-y-6">
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -58,6 +67,21 @@ export const Payroll: React.FC = () => {
             <p className="text-gray-400 text-sm">Manage employees and run batch payments</p>
           </div>
           <div className="flex gap-3">
+            {/* CSV Import */}
+            <button
+              onClick={() => setShowCSVModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
+              style={{
+                backgroundColor: 'rgba(124, 58, 237, 0.08)',
+                border: '1px solid rgba(124, 58, 237, 0.25)',
+                color: '#a78bfa',
+              }}
+            >
+              <FileUp className="w-4 h-4" />
+              Import CSV
+            </button>
+
+            {/* Add Single Employee */}
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
@@ -70,6 +94,8 @@ export const Payroll: React.FC = () => {
               <UserPlus className="w-4 h-4" />
               Add Employee
             </button>
+
+            {/* Run Batch Payment */}
             <button
               onClick={() => setShowBatchModal(true)}
               disabled={selectedIds.length === 0}
@@ -150,12 +176,21 @@ export const Payroll: React.FC = () => {
                   <tr>
                     <td colSpan={6} className="px-6 py-16 text-center">
                       <p className="text-gray-400">No employees added yet</p>
-                      <button
-                        onClick={() => setShowAddModal(true)}
-                        className="mt-4 text-purple-400 hover:text-purple-300 text-sm"
-                      >
-                        Add your first employee
-                      </button>
+                      <div className="flex items-center justify-center gap-4 mt-4">
+                        <button
+                          onClick={() => setShowAddModal(true)}
+                          className="text-purple-400 hover:text-purple-300 text-sm transition-colors"
+                        >
+                          Add your first employee
+                        </button>
+                        <span className="text-gray-600">or</span>
+                        <button
+                          onClick={() => setShowCSVModal(true)}
+                          className="text-purple-400 hover:text-purple-300 text-sm transition-colors"
+                        >
+                          Import from CSV
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -220,12 +255,21 @@ export const Payroll: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <AddEmployeeModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onAdd={addEmployee} />
+      <AddEmployeeModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={addEmployee}
+      />
       <BatchPaymentModal
         isOpen={showBatchModal}
         onClose={() => setShowBatchModal(false)}
         employees={selectedEmployees}
         totalAmount={totalAmount}
+      />
+      <CSVImportModal
+        isOpen={showCSVModal}
+        onClose={() => setShowCSVModal(false)}
+        onImport={handleCSVImport}
       />
     </div>
   );
