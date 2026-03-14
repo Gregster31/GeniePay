@@ -1,4 +1,4 @@
-<a href="https://geniepay.vercel.app/" target="_blank" rel="noopener noreferrer">
+<a href="https://geniepay.ca" target="_blank" rel="noopener noreferrer">
   <img width="1431" height="458" alt="banner" src="https://github.com/user-attachments/assets/aead3c05-90d4-4f77-aed9-2dd47fb82d3f" />
 </a>
 
@@ -13,7 +13,7 @@
   </a>
 </p>
 
-<a href="https://geniepay.vercel.app/" target="_blank" rel="noopener noreferrer">
+<a href="https://geniepay.ca" target="_blank" rel="noopener noreferrer">
   <img width="1887" height="883" alt="image" src="https://github.com/user-attachments/assets/cdea4dfc-4568-4d8c-a6f0-fffd962f77bd" />
 </a>
 
