@@ -4,9 +4,10 @@ import { useAccount, useSwitchChain } from 'wagmi';
 import { isAddress } from 'viem';
 import { sepolia, mainnet } from 'wagmi/chains';
 import { usePayment } from '@/hooks/usePayment';
-import { useEthPrice } from '@/hooks/useEthPrice'; // ← shared React Query cache
-import { useGlobalBalance } from '@/hooks/useGlobalBalance'; // ← shared balance hook
-import { ethToUsd, usdToEth, isDevelopment } from '@/utils/EthUtils';
+import { useEthPrice } from '@/hooks/useEthPrice';
+import { useGlobalBalance } from '@/hooks/useGlobalBalance';
+import { ethToUsd, usdToEth } from '@/utils/EthUtils';
+import { isDevelopment } from '@/utils/Environment';
 import { useAuth } from '@/contexts/AuthContext';
 
 type Currency = 'ETH' | 'USD';
@@ -15,11 +16,7 @@ export const QuickPayCard: React.FC = () => {
   const { chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const { employees } = useAuth();
-
-  // ← Reuse the same balance hook as WalletBalanceCard — no duplicate RPC calls
   const { formattedBalance, isConnected } = useGlobalBalance();
-
-  // ← Shared ETH price — no extra CoinGecko fetch
   const { ethPrice } = useEthPrice();
 
   const {
