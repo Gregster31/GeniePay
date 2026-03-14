@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Employee } from '@/models/EmployeeModel';
-import { isValidEthAddress } from '@/utils/ethUtils';
+import { isValidEthAddress } from '@/utils/EthUtils';
 
 interface EmployeeModalProps {
   isOpen: boolean;

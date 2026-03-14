@@ -3,8 +3,8 @@ const getEnv = (key: string, fallback = ''): string => {
 };
 
 const envKey = getEnv('VITE_ENV_KEY', 'production');
-export const isDevelopment = envKey.toLowerCase() === 'test';
-export const isProduction = envKey.toLowerCase() === 'production';
+export const isDevelopment = envKey.toUpperCase() === 'TEST';
+export const isProduction = envKey.toUpperCase() === 'PRODUCTION';
 
 export const chainId = isProduction ? 1 : 11155111; // Mainnet : Sepolia
 

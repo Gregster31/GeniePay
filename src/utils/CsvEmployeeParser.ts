@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import type { Employee } from '@/models/EmployeeModel';
-import { isValidEthAddress } from './ethUtils';
+import { isValidEthAddress } from './EthUtils';
 
 export interface CSVParseResult {
   valid: Omit<Employee, 'id' | 'dateAdded'>[];
