@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
-import { UserPlus, Send, Copy, CheckCircle2, FileUp } from 'lucide-react';
+import { UserPlus, Send, Copy, CheckCircle2, FileUp, Pencil } from 'lucide-react';
 import type { Employee } from '@/models/EmployeeModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { copyToClipboard } from '@/utils/ClipboardCopy';
-import { AddEmployeeModal } from '@/pages/payroll/AddEmployeeModal';
+import { EmployeeModal } from '@/pages/payroll/EmployeeModal';
 import { BatchPaymentModal } from '@/pages/payroll/BatchPaymentModal';
 import { CSVImportModal } from '@/pages/payroll/CsvImportModal';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const Payroll: React.FC = () => {
-  const { employees, addEmployee: addEmployeeToContext } = useAuth();
+  const {
+    employees,
+    addEmployee: addEmployeeToContext,
+    updateEmployee: updateEmployeeInContext,
+  } = useAuth();
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [showCSVModal, setShowCSVModal] = useState(false);
+
+  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
 
   const selectedEmployees = employees.filter(emp => selectedIds.includes(emp.id));
   const totalAmount = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
@@ -39,13 +46,25 @@ export const Payroll: React.FC = () => {
     setSelectedIds(allSelected ? [] : employees.map(emp => emp.id));
   };
 
-  // Single employee add — delegates to AuthContext
-  const addEmployee = (newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
+  const handleAdd = (newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
     addEmployeeToContext(newEmployee);
     setShowAddModal(false);
   };
 
-  // Bulk CSV import — adds each employee via the same context method
+  const handleEdit = (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => {
+    updateEmployeeInContext(id, updates);
+    setEmployeeToEdit(null);
+  };
+
+  const openEditModal = (employee: Employee) => {
+    setEmployeeToEdit(employee);
+  };
+
+  const handleModalClose = () => {
+    setShowAddModal(false);
+    setEmployeeToEdit(null);
+  };
+
   const handleCSVImport = (imported: Omit<Employee, 'id' | 'dateAdded'>[]) => {
     imported.forEach(emp => addEmployeeToContext(emp));
   };
@@ -81,7 +100,7 @@ export const Payroll: React.FC = () => {
               Import CSV
             </button>
 
-            {/* Add Single Employee */}
+            {/* Add Employee */}
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
@@ -101,61 +120,32 @@ export const Payroll: React.FC = () => {
               disabled={selectedIds.length === 0}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: selectedIds.length > 0 ? '#7c3aed' : 'rgba(124, 58, 237, 0.3)',
+                backgroundColor: selectedIds.length > 0
+                  ? 'rgba(124, 58, 237, 0.8)'
+                  : 'rgba(124, 58, 237, 0.2)',
+                border: '1px solid rgba(124, 58, 237, 0.4)',
                 color: 'white',
               }}
             >
               <Send className="w-4 h-4" />
-              Run Batch Payment ({selectedIds.length})
+              {selectedIds.length > 0
+                ? `Pay ${selectedIds.length} Employee${selectedIds.length > 1 ? 's' : ''}`
+                : 'Run Payroll'}
             </button>
           </div>
         </div>
 
-        {/* Selection Summary */}
-        {selectedIds.length > 0 && (
-          <div
-            className="p-4 rounded-lg flex items-center justify-between"
-            style={{
-              backgroundColor: 'rgba(124, 58, 237, 0.1)',
-              border: '1px solid rgba(124, 58, 237, 0.2)',
-            }}
-          >
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Selected Employees</p>
-                <p className="text-lg font-semibold text-white">{selectedIds.length}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Total Amount</p>
-                <p className="text-lg font-semibold text-purple-400">{formatCurrency(totalAmount)}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setSelectedIds([])}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Clear Selection
-            </button>
-          </div>
-        )}
-
-        {/* Employee Table */}
         <div
           className="rounded-2xl overflow-hidden"
           style={{
-            backgroundColor: 'rgba(26, 27, 34, 0.6)',
+            backgroundColor: 'rgba(26, 27, 34, 0.8)',
             border: '1px solid rgba(124, 58, 237, 0.2)',
           }}
         >
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr
-                  style={{
-                    backgroundColor: 'rgba(15, 13, 22, 0.6)',
-                    borderBottom: '1px solid rgba(124, 58, 237, 0.2)',
-                  }}
-                >
+                <tr style={{ borderBottom: '1px solid rgba(124, 58, 237, 0.2)' }}>
                   <th className="px-6 py-4 text-left">
                     <input
                       type="checkbox"
@@ -164,17 +154,21 @@ export const Payroll: React.FC = () => {
                       className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-gray-900"
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Role</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Wallet Address</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Pay (USD)</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Date Added</th>
+                  {['Employee', 'Role', 'Wallet', 'Monthly Pay', 'Date Added', ''].map(h => (
+                    <th
+                      key={h}
+                      className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
+
               <tbody>
                 {employees.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
+                    <td colSpan={7} className="px-6 py-16 text-center">
                       <p className="text-gray-400">No employees added yet</p>
                     </td>
                   </tr>
@@ -185,9 +179,12 @@ export const Payroll: React.FC = () => {
                       className="transition-all hover:bg-white/5"
                       style={{
                         borderBottom:
-                          index < employees.length - 1 ? '1px solid rgba(124, 58, 237, 0.1)' : 'none',
+                          index < employees.length - 1
+                            ? '1px solid rgba(124, 58, 237, 0.1)'
+                            : 'none',
                       }}
                     >
+                      {/* Checkbox */}
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
@@ -196,18 +193,28 @@ export const Payroll: React.FC = () => {
                           className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-500 focus:ring-purple-500 focus:ring-offset-gray-900"
                         />
                       </td>
+
+                      {/* Name / Email */}
                       <td className="px-6 py-4">
                         <div>
                           <p className="text-white font-medium">{employee.name}</p>
-                          {employee.email && <p className="text-sm text-gray-400">{employee.email}</p>}
+                          {employee.email && (
+                            <p className="text-sm text-gray-400">{employee.email}</p>
+                          )}
                         </div>
                       </td>
+
+                      {/* Role / Department */}
                       <td className="px-6 py-4">
                         <div>
                           <p className="text-white">{employee.role}</p>
-                          {employee.department && <p className="text-sm text-gray-400">{employee.department}</p>}
+                          {employee.department && (
+                            <p className="text-sm text-gray-400">{employee.department}</p>
+                          )}
                         </div>
                       </td>
+
+                      {/* Wallet */}
                       <td className="px-6 py-4">
                         <button
                           onClick={() => handleCopy(employee.walletAddress)}
@@ -224,11 +231,36 @@ export const Payroll: React.FC = () => {
                           )}
                         </button>
                       </td>
+
+                      {/* Monthly Pay */}
                       <td className="px-6 py-4">
-                        <span className="text-white font-medium">{formatCurrency(employee.payUsd)}</span>
+                        <span className="text-white font-medium">
+                          {formatCurrency(employee.payUsd)}
+                        </span>
                       </td>
+
+                      {/* Date Added */}
                       <td className="px-6 py-4">
-                        <span className="text-gray-400 text-sm">{formatDate(employee.dateAdded)}</span>
+                        <span className="text-gray-400 text-sm">
+                          {formatDate(employee.dateAdded)}
+                        </span>
+                      </td>
+
+                      {/* Edit action */}
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => openEditModal(employee)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                          style={{
+                            backgroundColor: 'rgba(124, 58, 237, 0.08)',
+                            border: '1px solid rgba(124, 58, 237, 0.2)',
+                            color: '#a78bfa',
+                          }}
+                          title="Edit employee"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          Edit
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -239,18 +271,22 @@ export const Payroll: React.FC = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      <AddEmployeeModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={addEmployee}
+      {/* Single modal instance handles both Add and Edit */}
+      <EmployeeModal
+        isOpen={showAddModal || Boolean(employeeToEdit)}
+        onClose={handleModalClose}
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        employeeToEdit={employeeToEdit}
       />
+
       <BatchPaymentModal
         isOpen={showBatchModal}
         onClose={() => setShowBatchModal(false)}
         employees={selectedEmployees}
         totalAmount={totalAmount}
       />
+
       <CSVImportModal
         isOpen={showCSVModal}
         onClose={() => setShowCSVModal(false)}

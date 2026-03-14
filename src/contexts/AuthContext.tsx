@@ -2,12 +2,17 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { useAccount, useDisconnect } from 'wagmi';
 import type { AuthState } from '@/components/auth/auth';
 import type { Employee } from '@/models/EmployeeModel';
-import { saveEmployeesToSession, loadEmployeesFromSession, clearEmployeesFromSession } from '@/utils/EmployeeSession';
+import {
+  saveEmployeesToSession,
+  loadEmployeesFromSession,
+  clearEmployeesFromSession,
+} from '@/utils/EmployeeSession';
 
 interface AuthContextType extends AuthState {
   logout: () => void;
   employees: Employee[];
   addEmployee: (employee: Omit<Employee, 'id' | 'dateAdded'>) => void;
+  updateEmployee: (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => void;
   removeEmployee: (id: number) => void;
 }
 
@@ -52,32 +57,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [disconnect]);
 
   const addEmployee = useCallback((newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
-    setEmployees(prev => {
-      const next = [
-        ...prev,
-        {
-          ...newEmployee,
-          id: Math.max(0, ...prev.map(e => e.id)) + 1,
-          dateAdded: new Date(),
-        },
-      ];
-      return next;
-    });
+    setEmployees(prev => [
+      ...prev,
+      {
+        ...newEmployee,
+        id: Math.max(0, ...prev.map(e => e.id)) + 1,
+        dateAdded: new Date(),
+      },
+    ]);
   }, []);
+
+  const updateEmployee = useCallback(
+    (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => {
+      setEmployees(prev =>
+        prev.map(emp => (emp.id === id ? { ...emp, ...updates } : emp))
+      );
+    },
+    []
+  );
 
   const removeEmployee = useCallback((id: number) => {
     setEmployees(prev => prev.filter(e => e.id !== id));
   }, []);
 
   return (
-    <AuthContext.Provider value={{
-      ...authState,
-      isAuthenticated: isConnected,
-      logout,
-      employees,
-      addEmployee,
-      removeEmployee,
-    }}>
+    <AuthContext.Provider
+      value={{
+        ...authState,
+        isAuthenticated: isConnected,
+        logout,
+        employees,
+        addEmployee,
+        updateEmployee,
+        removeEmployee,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

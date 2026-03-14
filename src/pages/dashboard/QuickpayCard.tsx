@@ -1,41 +1,41 @@
 import { Send, Loader2, CheckCircle, ArrowUpDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useAccount, useBalance, useSwitchChain } from 'wagmi';
-import { formatEther, isAddress } from 'viem';
+import { useAccount, useSwitchChain } from 'wagmi';
+import { isAddress } from 'viem';
 import { sepolia, mainnet } from 'wagmi/chains';
 import { usePayment } from '@/hooks/usePayment';
-import { fetchEthPrice, ethToUsd, usdToEth, isDevelopment } from '@/utils/ethUtils';
+import { useEthPrice } from '@/hooks/useEthPrice'; // ← shared React Query cache
+import { useGlobalBalance } from '@/hooks/useGlobalBalance'; // ← shared balance hook
+import { ethToUsd, usdToEth, isDevelopment } from '@/utils/EthUtils';
 import { useAuth } from '@/contexts/AuthContext';
 
 type Currency = 'ETH' | 'USD';
 
 export const QuickPayCard: React.FC = () => {
-  const { address, chain } = useAccount();
+  const { chain } = useAccount();
   const { switchChain } = useSwitchChain();
-  const { data: balance } = useBalance({ 
-    address,
-    chainId: isDevelopment ? sepolia.id : mainnet.id
-  });
   const { employees } = useAuth();
-  const { 
-    sendPayment, 
-    isProcessing, 
-    isConfirmed, 
+
+  // ← Reuse the same balance hook as WalletBalanceCard — no duplicate RPC calls
+  const { formattedBalance, isConnected } = useGlobalBalance();
+
+  // ← Shared ETH price — no extra CoinGecko fetch
+  const { ethPrice } = useEthPrice();
+
+  const {
+    sendPayment,
+    isProcessing,
+    isConfirmed,
     txHash,
-    sendError 
+    sendError,
   } = usePayment();
 
   const [currency, setCurrency] = useState<Currency>('ETH');
   const [amount, setAmount] = useState('');
   const [recipient, setRecipient] = useState('');
-  const [ethPrice, setEthPrice] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchEthPrice().then(setEthPrice);
-  }, []);
-
-  // Handle successful transaction
+  // Clear form and show success banner on confirmed tx
   useEffect(() => {
     if (isConfirmed && txHash) {
       setShowSuccess(true);
@@ -45,16 +45,14 @@ export const QuickPayCard: React.FC = () => {
     }
   }, [isConfirmed, txHash]);
 
-  // Handle transaction errors
   useEffect(() => {
     if (sendError) {
       alert(`Failed: ${sendError}`);
     }
   }, [sendError]);
 
-  const maxBal = balance ? parseFloat(formatEther(balance.value)) : 0;
+  const maxBal = parseFloat(formattedBalance);
   const numAmount = parseFloat(amount) || 0;
-  
   const ethAmount = currency === 'ETH' ? numAmount : usdToEth(numAmount, ethPrice);
   const usdAmount = currency === 'USD' ? numAmount : ethToUsd(numAmount, ethPrice);
 
@@ -66,76 +64,70 @@ export const QuickPayCard: React.FC = () => {
       return;
     }
 
-    // Check if user is on the correct network
+    // Switch to correct network if needed
     const targetChain = isDevelopment ? sepolia : mainnet;
     if (chain?.id !== targetChain.id) {
       try {
         await switchChain({ chainId: targetChain.id });
-      } catch (error) {
+      } catch {
         alert(`Please switch to ${isDevelopment ? 'Sepolia Testnet' : 'Ethereum Mainnet'} in your wallet`);
         return;
       }
     }
 
-    sendPayment({
-      recipientAddress: recipient,
-      amount: ethAmount.toString(),
-    });
+    sendPayment({ recipientAddress: recipient, amount: ethAmount.toString() });
   };
 
-  const borderColor = isDevelopment ? 'rgba(251, 191, 36, 0.3)' : 'rgba(124, 58, 237, 0.3)';
+  const borderColor  = isDevelopment ? 'rgba(251, 191, 36, 0.3)' : 'rgba(124, 58, 237, 0.3)';
   const gradientStart = isDevelopment ? 'rgba(251, 191, 36, 0.3)' : 'rgba(124, 58, 237, 0.3)';
-  const gradientEnd = isDevelopment ? 'rgba(245, 158, 11, 0.1)' : 'rgba(124, 58, 237, 0.1)';
-  const buttonBg = isDevelopment ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)' : 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
-  const accentColor = isDevelopment ? 'text-yellow-400' : 'text-purple-400';
+  const gradientEnd   = isDevelopment ? 'rgba(245, 158, 11, 0.1)'  : 'rgba(124, 58, 237, 0.1)';
+  const buttonBg     = isDevelopment
+    ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
+    : 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
+  const accentColor  = isDevelopment ? 'text-yellow-400' : 'text-purple-400';
 
   return (
-    <div 
+    <div
       className="rounded-2xl p-6 relative overflow-hidden"
-      style={{ 
+      style={{
         backgroundColor: 'rgba(26, 27, 34, 0.6)',
         border: `1px solid ${borderColor}`,
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
       }}
     >
-      <div 
+      {/* Background gradient */}
+      <div
         className="absolute inset-0 opacity-40"
-        style={{
-          background: `linear-gradient(135deg, ${gradientStart} 0%, ${gradientEnd} 100%)`
-        }}
+        style={{ background: `linear-gradient(135deg, ${gradientStart} 0%, ${gradientEnd} 100%)` }}
       />
-      
-      {/* Shimmer effect */}
-      <div 
+
+      {/* Shimmer */}
+      <div
         className="absolute inset-0 opacity-20"
         style={{
-          background: 'linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%)',
+          background: 'linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%)',
           backgroundSize: '200% 100%',
-          animation: 'shimmer 8s infinite'
+          animation: 'shimmer 8s infinite',
         }}
       />
-      
+
       <style>{`
         @keyframes shimmer {
-          0% { background-position: 200% 0; }
+          0%    { background-position: 200% 0; }
           37.5% { background-position: -200% 0; }
-          100% { background-position: -200% 0; }
+          100%  { background-position: -200% 0; }
         }
         input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
       `}</style>
-      
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-white">Quick Pay</h3>
         </div>
 
+        {/* Success banner */}
         {showSuccess && (
           <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-green-400" />
@@ -143,9 +135,17 @@ export const QuickPayCard: React.FC = () => {
           </div>
         )}
 
+        {/* Dev mode badge */}
         {isDevelopment && (
           <div className="mb-4 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
             <p className="text-xs text-yellow-500">Sepolia Testnet</p>
+          </div>
+        )}
+
+        {/* Not connected state */}
+        {!isConnected && (
+          <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
+            <p className="text-sm text-gray-400">Connect your wallet to send payments</p>
           </div>
         )}
 
@@ -153,12 +153,9 @@ export const QuickPayCard: React.FC = () => {
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Amount</label>
-            <div 
+            <div
               className="rounded-xl px-4 py-3"
-              style={{ 
-                backgroundColor: 'rgba(31, 29, 46, 0.6)',
-                border: `1px solid ${borderColor}`,
-              }}
+              style={{ backgroundColor: 'rgba(31, 29, 46, 0.6)', border: `1px solid ${borderColor}` }}
             >
               <div className="flex items-center justify-between">
                 <input
@@ -183,7 +180,13 @@ export const QuickPayCard: React.FC = () => {
                 <span>{currency === 'ETH' ? `$${usdAmount.toFixed(2)}` : `${ethAmount.toFixed(4)} ETH`}</span>
                 <button
                   type="button"
-                  onClick={() => setAmount(currency === 'ETH' ? maxBal.toFixed(4) : ethToUsd(maxBal, ethPrice).toFixed(2))}
+                  onClick={() =>
+                    setAmount(
+                      currency === 'ETH'
+                        ? maxBal.toFixed(4)
+                        : ethToUsd(maxBal, ethPrice).toFixed(2),
+                    )
+                  }
                   className={`${accentColor} hover:opacity-80 font-medium`}
                 >
                   {maxBal.toFixed(4)} ETH available • Max
@@ -195,17 +198,14 @@ export const QuickPayCard: React.FC = () => {
           {/* Recipient */}
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Send to</label>
-            
+
             <select
               onChange={(e) => setRecipient(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none cursor-pointer font-mono mb-2"
-              style={{
-                backgroundColor: 'rgba(31, 29, 46, 0.6)',
-                border: `1px solid ${borderColor}`,
-              }}
+              style={{ backgroundColor: 'rgba(31, 29, 46, 0.6)', border: `1px solid ${borderColor}` }}
             >
               <option value="">Select employee…</option>
-              {employees.map(emp => (
+              {employees.map((emp) => (
                 <option key={emp.id} value={emp.walletAddress}>
                   {emp.name}
                 </option>
@@ -218,10 +218,7 @@ export const QuickPayCard: React.FC = () => {
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="or paste 0x... address"
               className="w-full px-4 py-3 rounded-xl text-white bg-transparent outline-none focus:outline-none focus:ring-0 font-mono text-sm"
-              style={{
-                backgroundColor: 'rgba(31, 29, 46, 0.6)',
-                border: `1px solid ${borderColor}`,
-              }}
+              style={{ backgroundColor: 'rgba(31, 29, 46, 0.6)', border: `1px solid ${borderColor}` }}
             />
             {recipient && !isAddress(recipient) && (
               <p className="text-xs text-red-400 mt-1">Invalid address</p>
@@ -231,7 +228,7 @@ export const QuickPayCard: React.FC = () => {
           {/* Send Button */}
           <button
             type="submit"
-            disabled={isProcessing || !recipient || !amount || ethAmount > maxBal}
+            disabled={isProcessing || !recipient || !amount || ethAmount > maxBal || !isConnected}
             className="w-full py-3 px-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             style={{ background: buttonBg, color: 'white' }}
           >

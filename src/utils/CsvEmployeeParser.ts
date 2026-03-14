@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import type { Employee } from '@/models/EmployeeModel';
+import { isValidEthAddress } from './EthUtils';
 
 export interface CSVParseResult {
   valid: Omit<Employee, 'id' | 'dateAdded'>[];
@@ -7,8 +8,6 @@ export interface CSVParseResult {
 }
 
 export const ACCEPTED_EXTENSIONS = '.csv,.xlsx,.xls';
-
-const isValidEthAddress = (addr: string) => /^0x[a-fA-F0-9]{40}$/.test(addr.trim());
 
 const normalize = (s: string) => s.toLowerCase().replace(/[\s_]/g, '');
 
