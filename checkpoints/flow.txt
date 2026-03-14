@@ -27,11 +27,8 @@ SETTINGS IDEAS:
 - Change black/white
 - Change USD/CAD/AUS/...
 
-TEST FLOW EXPLAINED:
-2 switches that need to match up (.env + MetaMask)
-useGlbalBalance will just read whatever balance from the chain your wallet is connected to.
-If you try to use QuickPay (quickpay has locked in chains for prod and dev), then it'll request a chain change in your wallet
-
+APP FLOW EXPLAINED:
+Connects to whatever chain you want with your wallet and you'll be able to send money and bulk orders too
 
 🎨 Color Theme Changes:
 

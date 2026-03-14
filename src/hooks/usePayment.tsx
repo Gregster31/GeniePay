@@ -6,7 +6,6 @@ import {
   useAccount 
 } from 'wagmi';
 import { parseEther } from 'viem';
-import { config } from '../utils/Environment';
 
 interface SendPaymentParams {
   recipientAddress: string;
@@ -23,7 +22,6 @@ export const usePayment = () => {
     refetch: refetchBalance 
   } = useBalance({
     address,
-    chainId: config.chainId,
   });
 
   const { 

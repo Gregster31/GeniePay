@@ -1,10 +1,6 @@
-import { isDevelopment } from '@/utils/Environment';
-
 const ETH_PRICE_FALLBACK = 0;
 
 export const fetchEthPrice = async (): Promise<number> => {
-  if (isDevelopment) return ETH_PRICE_FALLBACK;
- 
   try {
     const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
     if (!res.ok) return ETH_PRICE_FALLBACK;
