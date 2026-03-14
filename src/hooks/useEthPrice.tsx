@@ -6,7 +6,7 @@ export const useEthPrice = () => {
     queryKey: ['ethPrice'],
     queryFn: fetchEthPrice,
     refetchInterval: 60_000,
-    staleTime: 30_000,
+    staleTime: 60_000,
     placeholderData: 0,
     retry: 2,
   });
