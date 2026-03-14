@@ -1,21 +1,16 @@
-const isDev = import.meta.env.VITE_ENV_KEY?.toUpperCase() === 'TEST';
-export const isDevelopment = isDev;
+import { isDevelopment } from '@/utils/Environment';
 
-const ETH_PRICE_FALLBACK = 3000;
+const ETH_PRICE_FALLBACK = 0;
 
 export const fetchEthPrice = async (): Promise<number> => {
-  if (isDev) return ETH_PRICE_FALLBACK;
-
+  if (isDevelopment) return ETH_PRICE_FALLBACK;
+ 
   try {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-    );
+    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
     if (!res.ok) return ETH_PRICE_FALLBACK;
-
     const data = await res.json();
-    return data.ethereum?.usd ?? ETH_PRICE_FALLBACK;
-  } catch (e) {
-    console.error('Price fetch failed:', e);
+    return parseFloat(data.price) || ETH_PRICE_FALLBACK;
+  } catch {
     return ETH_PRICE_FALLBACK;
   }
 };

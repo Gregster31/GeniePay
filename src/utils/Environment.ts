@@ -4,9 +4,8 @@ const getEnv = (key: string, fallback = ''): string => {
 
 const envKey = getEnv('VITE_ENV_KEY', 'production');
 export const isDevelopment = envKey.toUpperCase() === 'TEST';
-export const isProduction = envKey.toUpperCase() === 'PRODUCTION';
 
-export const chainId = isProduction ? 1 : 11155111; // Mainnet : Sepolia
+export const chainId = isDevelopment ? 11155111 : 1; //Sepolia : Mainnet
 
 // WalletConnect (required for RainbowKit)
 export const walletConnectProjectId = getEnv('VITE_WALLET_CONNECT_PROJECT_ID');
@@ -18,7 +17,6 @@ if (!walletConnectProjectId) {
 // Export simple config object
 export const config = {
   isDevelopment,
-  isProduction,
   chainId,
   walletConnectProjectId,
   appName: 'GeniePay',

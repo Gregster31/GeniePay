@@ -27,9 +27,10 @@ SETTINGS IDEAS:
 - Change black/white
 - Change USD/CAD/AUS/...
 
-
-**Improve AuthContext.tsx
-
+TEST FLOW EXPLAINED:
+2 switches that need to match up (.env + MetaMask)
+useGlbalBalance will just read whatever balance from the chain your wallet is connected to.
+If you try to use QuickPay (quickpay has locked in chains for prod and dev), then it'll request a chain change in your wallet
 
 
 🎨 Color Theme Changes:

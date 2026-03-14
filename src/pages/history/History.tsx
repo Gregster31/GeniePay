@@ -10,16 +10,16 @@ import { ErrorPage } from '@/pages/ErrorPage';
 const INITIAL_LIMIT = 10;
 
 export const History: React.FC = () => {
-  const { address } = useAccount();
+  const { address, chain } = useAccount();
   const [page, setPage] = useState(1);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [copiedHash, setCopiedHash] = useState<string | null>(null);
 
   const { data: transactions = [], isLoading, error } = useQuery({
-    queryKey: ['transactions', address, page],
-    queryFn: () => fetchTransactions(address!, page, INITIAL_LIMIT),
+    queryKey: ['transactions', address, chain?.id, page], 
+    queryFn: () => fetchTransactions(address!, page, INITIAL_LIMIT, chain?.id),
     enabled: !!address,
-    staleTime: 30000,
+    staleTime: 30_000,
   });
 
   React.useEffect(() => {
@@ -31,6 +31,11 @@ export const History: React.FC = () => {
       });
     }
   }, [transactions]);
+
+  React.useEffect(() => {
+    setAllTransactions([]);
+    setPage(1);
+  }, [chain?.id]);
 
   const handleCopy = async (text: string) => {
     const success = await copyToClipboard(text);
@@ -44,11 +49,8 @@ export const History: React.FC = () => {
 
   const formatDate = (date: Date): string =>
     date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
     });
 
   if (error) return <ErrorPage />;
@@ -58,7 +60,6 @@ export const History: React.FC = () => {
   return (
     <div className="min-h-screen p-6 flex items-center justify-center">
       <div className="w-full max-w-7xl space-y-6">
-        {/* Header */}
         <div>
           <h1
             className="text-3xl font-bold text-white mb-2"
@@ -67,11 +68,12 @@ export const History: React.FC = () => {
             Transaction History
           </h1>
           <p className="text-gray-400 text-sm">
-            View your blockchain transaction history across all networks
+            {chain
+              ? `Showing transactions on ${chain.name}`
+              : 'View your blockchain transaction history across all networks'}
           </p>
         </div>
 
-        {/* Table */}
         <div
           className="rounded-2xl overflow-hidden"
           style={{
@@ -93,12 +95,7 @@ export const History: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr
-                      style={{
-                        backgroundColor: 'rgba(15, 13, 22, 0.6)',
-                        borderBottom: '1px solid rgba(124, 58, 237, 0.2)',
-                      }}
-                    >
+                    <tr style={{ backgroundColor: 'rgba(15, 13, 22, 0.6)', borderBottom: '1px solid rgba(124, 58, 237, 0.2)' }}>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Date</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">Network</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase">From</th>
@@ -111,98 +108,54 @@ export const History: React.FC = () => {
                   <tbody>
                     {displayTransactions.map((tx, index) => {
                       const isSent = tx.from.toLowerCase() === address?.toLowerCase();
-
                       return (
                         <tr
                           key={tx.hash}
                           className="transition-all hover:bg-white/5"
-                          style={{
-                            borderBottom:
-                              index < displayTransactions.length - 1
-                                ? '1px solid rgba(124, 58, 237, 0.1)'
-                                : 'none',
-                          }}
+                          style={{ borderBottom: index < displayTransactions.length - 1 ? '1px solid rgba(124, 58, 237, 0.1)' : 'none' }}
                         >
-                          {/* Date */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-300">{formatDate(tx.timestamp)}</span>
                           </td>
-
-                          {/* Network */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-300">{tx.network}</span>
                           </td>
-
-                          {/* From */}
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button onClick={() => handleCopy(tx.from)} className="flex items-center gap-1 group" title="Click to copy address">
-                              <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">
-                                {sliceAddress(tx.from)}
-                              </span>
-                              {copiedHash === tx.from ? (
-                                <CheckCircle2 className="w-3 h-3 text-green-400" />
-                              ) : (
-                                <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              )}
+                            <button onClick={() => handleCopy(tx.from)} className="flex items-center gap-1 group" title="Click to copy">
+                              <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">{sliceAddress(tx.from)}</span>
+                              {copiedHash === tx.from ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                             </button>
                           </td>
-
-                          {/* To */}
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button onClick={() => handleCopy(tx.to)} className="flex items-center gap-1 group" title="Click to copy address">
-                              <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">
-                                {sliceAddress(tx.to)}
-                              </span>
-                              {copiedHash === tx.to ? (
-                                <CheckCircle2 className="w-3 h-3 text-green-400" />
-                              ) : (
-                                <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              )}
+                            <button onClick={() => handleCopy(tx.to)} className="flex items-center gap-1 group" title="Click to copy">
+                              <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">{sliceAddress(tx.to)}</span>
+                              {copiedHash === tx.to ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                             </button>
                           </td>
-
-                          {/* Amount — red with minus if sent, green with plus if received */}
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className="text-sm font-semibold"
-                              style={{ color: isSent ? '#f87171' : '#4ade80' }}
-                            >
+                            <span className="text-sm font-semibold" style={{ color: isSent ? '#f87171' : '#4ade80' }}>
                               {isSent ? `−${tx.value}` : `+${tx.value}`}
                             </span>
                           </td>
-
-                          {/* Gas Fee */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-400">{tx.gasFee}</span>
                           </td>
-
-                          {/* Actions */}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleCopy(tx.hash)}
                                 className="p-2 rounded-lg transition-all"
-                                style={{
-                                  backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                                  border: '1px solid rgba(124, 58, 237, 0.2)',
-                                }}
+                                style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.2)' }}
                                 title="Copy transaction hash"
                               >
-                                {copiedHash === tx.hash ? (
-                                  <CheckCircle2 className="w-4 h-4 text-green-400" />
-                                ) : (
-                                  <Copy className="w-4 h-4 text-purple-400" />
-                                )}
+                                {copiedHash === tx.hash ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-purple-400" />}
                               </button>
                               <a
                                 href={getExplorerUrl(tx.hash, tx.chainId)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2 rounded-lg transition-all"
-                                style={{
-                                  backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                                  border: '1px solid rgba(124, 58, 237, 0.2)',
-                                }}
+                                style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.2)' }}
                                 title="View on Blockscout"
                               >
                                 <ExternalLink className="w-4 h-4 text-purple-400" />
@@ -216,26 +169,15 @@ export const History: React.FC = () => {
                 </table>
               </div>
 
-              {/* Load More */}
               {transactions.length === INITIAL_LIMIT && (
                 <div className="p-6 text-center border-t" style={{ borderColor: 'rgba(124, 58, 237, 0.2)' }}>
                   <button
                     onClick={handleLoadMore}
                     disabled={isLoading}
                     className="px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50"
-                    style={{
-                      background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-                      color: 'white',
-                    }}
+                    style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: 'white' }}
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      'Load More'
-                    )}
+                    {isLoading ? <><Loader2 className="w-4 h-4 inline mr-2 animate-spin" />Loading...</> : 'Load More'}
                   </button>
                 </div>
               )}

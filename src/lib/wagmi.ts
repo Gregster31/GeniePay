@@ -8,16 +8,15 @@ export const wagmiConfig = getDefaultConfig({
   chains: [mainnet, polygon, optimism, arbitrum, base, sepolia],
 
   transports: {
-    [mainnet.id]:  http('https://cloudflare-eth.com'),
-    [polygon.id]:  http('https://polygon-rpc.com'),
-    [optimism.id]: http('https://mainnet.optimism.io'),
-    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
-    [base.id]:     http('https://mainnet.base.org'),
-    [sepolia.id]:  http('https://ethereum-sepolia-rpc.publicnode.com'),
+    [mainnet.id]:  http('https://eth.drpc.org'),
+    [polygon.id]:  http('https://polygon.drpc.org'),
+    [optimism.id]: http('https://optimism.drpc.org'),
+    [arbitrum.id]: http('https://arbitrum.drpc.org'),
+    [base.id]:     http('https://base.drpc.org'),
+    [sepolia.id]:  http('https://sepolia.drpc.org'),
   },
 
   pollingInterval: 60_000,
-
   ssr: false,
 });
 
