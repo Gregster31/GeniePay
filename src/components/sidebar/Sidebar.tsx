@@ -33,7 +33,7 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { id: 'pay', label: 'Quick Pay', icon: Zap, path: '/pay' },
   { id: 'payroll', label: 'Payroll', icon: Calendar, path: '/payroll' },
   { id: 'history', label: 'History', icon: History, path: '/history' },
@@ -53,7 +53,7 @@ const SidebarHeader: React.FC<{ isCollapsed: boolean; isMobile: boolean; onToggl
   <div className={`p-6 border-b ${isCollapsed && !isMobile ? 'px-3' : ''}`} style={{ borderColor: '#2a2438' }}>
     <div className="flex items-center justify-between">
       <button 
-        onClick={() => window.location.href = '/'}
+        onClick={() => window.location.href = '/dashboard'}
         className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
       >
         <img src="/geniepay_logov4.png" alt="GeniePay Logo" className="h-8 w-8 object-contain flex-shrink-0" />

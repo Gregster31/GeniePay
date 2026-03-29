@@ -10,29 +10,24 @@ import { CSVImportModal } from '@/pages/payroll/CsvImportModal';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const Payroll: React.FC = () => {
-  const {
-    employees,
-    addEmployee,
-    updateEmployee,
-    removeEmployee,
-  } = useAuth();
+  const { employees, addEmployee, updateEmployee, removeEmployee } = useAuth();
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds]           = useState<string[]>([]);
+  const [showAddModal, setShowAddModal]          = useState(false);
+  const [showBatchModal, setShowBatchModal]      = useState(false);
+  const [showCSVModal, setShowCSVModal]          = useState(false);
+  const [employeeToEdit, setEmployeeToEdit]      = useState<Employee | null>(null);
+  const [employeeToDelete, setEmployeeToDelete]  = useState<Employee | null>(null);
+  const [isDeleting, setIsDeleting]              = useState(false);
+  const { copy, copiedValue: copiedAddress }     = useCopyToClipboard();
+
   const selectedEmployees = employees.filter(emp => selectedIds.includes(emp.id));
-  const totalAmount = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
-  const allSelected = employees.length > 0 && selectedIds.length === employees.length;
-  const [showAddModal, setShowAddModal]     = useState(false);
-  const [showBatchModal, setShowBatchModal] = useState(false);
-  const [showCSVModal, setShowCSVModal]     = useState(false);
-  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
-  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { copy, copiedValue: copiedAddress } = useCopyToClipboard();
+  const totalAmount       = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
+  const allSelected       = employees.length > 0 && selectedIds.length === employees.length;
+  const hasSelection      = selectedIds.length > 0;
 
-  const toggleEmployee = (id: string) =>
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
-    );
+  const toggleEmployee  = (id: string) =>
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]);
 
   const toggleSelectAll = () =>
     setSelectedIds(allSelected ? [] : employees.map(e => e.id));
@@ -51,11 +46,6 @@ export const Payroll: React.FC = () => {
     for (const emp of imported) await addEmployee(emp);
   };
 
-  const handleModalClose = () => {
-    setShowAddModal(false);
-    setEmployeeToEdit(null);
-  };
-
   const handleDeleteConfirm = async () => {
     if (!employeeToDelete) return;
     setIsDeleting(true);
@@ -69,58 +59,52 @@ export const Payroll: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 flex items-center justify-center">
+    <div className="min-h-screen p-4 sm:p-6 flex items-center justify-center">
       <div className="w-full max-w-7xl space-y-6">
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* ── Header ────────────────────────────────────────────────────────
+            Mobile : title on top, buttons in a 2-col grid below
+            sm+    : title left, buttons right in a single row              */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Payroll</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Payroll</h1>
             <p className="text-gray-400 text-sm">Manage employees and run batch payments</p>
           </div>
-          <div className="flex gap-3">
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+            {/* Import CSV */}
             <button
               onClick={() => setShowCSVModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                backgroundColor: 'rgba(124, 58, 237, 0.08)',
-                border: '1px solid rgba(124, 58, 237, 0.25)',
-                color: '#a78bfa',
-              }}
+              className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{ backgroundColor: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', color: '#a78bfa' }}
             >
-              <FileUp className="w-4 h-4" />
+              <FileUp className="w-4 h-4 shrink-0" />
               Import CSV
             </button>
 
+            {/* Add Employee */}
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                border: '1px solid rgba(124, 58, 237, 0.3)',
-                color: '#a78bfa',
-              }}
+              className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{ backgroundColor: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.3)', color: '#a78bfa' }}
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="w-4 h-4 shrink-0" />
               Add Employee
             </button>
 
+            {/* Run Payroll — full width on mobile */}
             <button
               onClick={() => setShowBatchModal(true)}
-              disabled={selectedIds.length === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!hasSelection}
+              className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: selectedIds.length > 0
-                  ? 'rgba(124, 58, 237, 0.8)'
-                  : 'rgba(124, 58, 237, 0.2)',
-                border: '1px solid rgba(124, 58, 237, 0.4)',
+                backgroundColor: hasSelection ? 'rgba(124,58,237,0.8)' : 'rgba(124,58,237,0.2)',
+                border: '1px solid rgba(124,58,237,0.4)',
                 color: 'white',
               }}
             >
-              <Send className="w-4 h-4" />
-              {selectedIds.length > 0
-                ? `Pay ${selectedIds.length} Employee${selectedIds.length > 1 ? 's' : ''}`
-                : 'Run Payroll'}
+              <Send className="w-4 h-4 shrink-0" />
+              {hasSelection ? `Pay ${selectedIds.length} Employee${selectedIds.length > 1 ? 's' : ''}` : 'Run Payroll'}
             </button>
           </div>
         </div>
@@ -128,15 +112,12 @@ export const Payroll: React.FC = () => {
         {/* Table */}
         <div
           className="rounded-2xl overflow-hidden"
-          style={{
-            backgroundColor: 'rgba(26, 27, 34, 0.8)',
-            border: '1px solid rgba(124, 58, 237, 0.2)',
-          }}
+          style={{ backgroundColor: 'rgba(26,27,34,0.8)', border: '1px solid rgba(124,58,237,0.2)' }}
         >
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(124, 58, 237, 0.2)' }}>
+                <tr style={{ borderBottom: '1px solid rgba(124,58,237,0.2)' }}>
                   <th className="px-6 py-4 text-left">
                     <input
                       type="checkbox"
@@ -146,10 +127,7 @@ export const Payroll: React.FC = () => {
                     />
                   </th>
                   {['Employee', 'Role', 'Wallet', 'Monthly Pay', 'Date Added', ''].map(h => (
-                    <th
-                      key={h}
-                      className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400"
-                    >
+                    <th key={h} className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">
                       {h}
                     </th>
                   ))}
@@ -168,13 +146,8 @@ export const Payroll: React.FC = () => {
                     <tr
                       key={employee.id}
                       className="transition-all hover:bg-white/5"
-                      style={{
-                        borderBottom: index < employees.length - 1
-                          ? '1px solid rgba(124, 58, 237, 0.1)'
-                          : 'none',
-                      }}
+                      style={{ borderBottom: index < employees.length - 1 ? '1px solid rgba(124,58,237,0.1)' : 'none' }}
                     >
-                      {/* Checkbox */}
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
@@ -184,80 +157,50 @@ export const Payroll: React.FC = () => {
                         />
                       </td>
 
-                      {/* Name / Email */}
                       <td className="px-6 py-4">
                         <p className="text-white font-medium">{employee.name}</p>
-                        {employee.email && (
-                          <p className="text-sm text-gray-400">{employee.email}</p>
-                        )}
+                        {employee.email && <p className="text-sm text-gray-400">{employee.email}</p>}
                       </td>
 
-                      {/* Role / Department */}
                       <td className="px-6 py-4">
                         <p className="text-white">{employee.role}</p>
-                        {employee.department && (
-                          <p className="text-sm text-gray-400">{employee.department}</p>
-                        )}
+                        {employee.department && <p className="text-sm text-gray-400">{employee.department}</p>}
                       </td>
 
-                      {/* Wallet */}
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => copy(employee.walletAddress)}
-                          className="flex items-center gap-1 group"
-                          title="Click to copy address"
-                        >
+                        <button onClick={() => copy(employee.walletAddress)} className="flex items-center gap-1 group" title="Click to copy address">
                           <code className="text-sm text-gray-300 font-mono group-hover:text-purple-400 transition-colors">
                             {sliceAddress(employee.walletAddress)}
                           </code>
                           {copiedAddress === employee.walletAddress
                             ? <CheckCircle2 className="w-3 h-3 text-green-400" />
-                            : <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          }
+                            : <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                         </button>
                       </td>
 
-                      {/* Monthly Pay */}
                       <td className="px-6 py-4">
-                        <span className="text-white font-medium">
-                          {formatCurrency(employee.payUsd)}
-                        </span>
+                        <span className="text-white font-medium">{formatCurrency(employee.payUsd)}</span>
                       </td>
 
-                      {/* Date Added */}
                       <td className="px-6 py-4">
-                        <span className="text-gray-400 text-sm">
-                          {formatDate(employee.dateAdded)}
-                        </span>
+                        <span className="text-gray-400 text-sm">{formatDate(employee.dateAdded)}</span>
                       </td>
 
-                      {/* Actions: Edit + Delete */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setEmployeeToEdit(employee)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                            style={{
-                              backgroundColor: 'rgba(124, 58, 237, 0.08)',
-                              border: '1px solid rgba(124, 58, 237, 0.2)',
-                              color: '#a78bfa',
-                            }}
+                            style={{ backgroundColor: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', color: '#a78bfa' }}
                           >
-                            <Pencil className="w-3 h-3" />
-                            Edit
+                            <Pencil className="w-3 h-3" /> Edit
                           </button>
-
                           <button
                             onClick={() => setEmployeeToDelete(employee)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                            style={{
-                              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                              border: '1px solid rgba(239, 68, 68, 0.2)',
-                              color: '#f87171',
-                            }}
+                            style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}
                           >
-                            <Trash2 className="w-3 h-3" />
-                            Remove
+                            <Trash2 className="w-3 h-3" /> Remove
                           </button>
                         </div>
                       </td>
@@ -273,7 +216,7 @@ export const Payroll: React.FC = () => {
       {/* Modals */}
       <EmployeeModal
         isOpen={showAddModal || Boolean(employeeToEdit)}
-        onClose={handleModalClose}
+        onClose={() => { setShowAddModal(false); setEmployeeToEdit(null); }}
         onAdd={handleAdd}
         onEdit={handleEdit}
         employeeToEdit={employeeToEdit}
@@ -297,30 +240,21 @@ export const Payroll: React.FC = () => {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div
             className="w-full max-w-md rounded-2xl p-6 space-y-4"
-            style={{
-              backgroundColor: 'rgba(26, 27, 34, 0.95)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-            }}
+            style={{ backgroundColor: 'rgba(26,27,34,0.95)', border: '1px solid rgba(239,68,68,0.3)' }}
           >
             <div>
               <h2 className="text-lg font-bold text-white">Remove Employee</h2>
               <p className="text-sm text-gray-400 mt-1">
                 Are you sure you want to remove{' '}
-                <span className="text-white font-medium">{employeeToDelete.name}</span>?
-                This cannot be undone.
+                <span className="text-white font-medium">{employeeToDelete.name}</span>? This cannot be undone.
               </p>
             </div>
-
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setEmployeeToDelete(null)}
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50"
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#9ca3af',
-                }}
+                style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af' }}
               >
                 Cancel
               </button>
@@ -328,10 +262,7 @@ export const Payroll: React.FC = () => {
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50"
-                style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                  color: 'white',
-                }}
+                style={{ backgroundColor: 'rgba(239,68,68,0.8)', color: 'white' }}
               >
                 {isDeleting ? 'Removing...' : 'Yes, Remove'}
               </button>
