@@ -13,7 +13,7 @@ type Currency = 'ETH' | 'USD';
 export const QuickPayCard: React.FC = () => {
   const { chain } = useAccount();
   const { employees } = useAuth();
-  const { formattedBalance, isConnected } = useGlobalBalance();
+  const { formattedBalance } = useGlobalBalance();
   const { ethPrice } = useEthPrice();
   const {
     sendPayment,
@@ -43,11 +43,28 @@ export const QuickPayCard: React.FC = () => {
   const ethAmount = currency === 'ETH' ? numAmount : usdToEth(numAmount, ethPrice);
   const usdAmount = currency === 'USD' ? numAmount : ethToUsd(numAmount, ethPrice);
 
+  const recipientIsValid = isAddress(recipient);
+  const amountIsValid    = numAmount > 0 && ethAmount <= maxBal;
+  const canSend          = recipientIsValid && amountIsValid && !isProcessing && !!chain;
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAddress(recipient) || ethAmount <= 0 || ethAmount > maxBal) return;
+    if (!canSend) return;
     sendPayment({ recipientAddress: recipient, amount: ethAmount.toString() });
   };
+
+  const errorMessage: string | undefined =
+    sendErrorDetails instanceof Error
+      ? sendErrorDetails.message
+      : typeof sendErrorDetails === 'string'
+        ? sendErrorDetails
+        : undefined;
+
+  const showError =
+    sendError &&
+    !showSuccess &&
+    !errorMessage?.toLowerCase().includes('user rejected') &&
+    !errorMessage?.toLowerCase().includes('user denied');
 
   return (
     <div
@@ -99,23 +116,28 @@ export const QuickPayCard: React.FC = () => {
         {showSuccess && (
           <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-            <p className="text-sm text-green-400">Payment sent!</p>
+            <div>
+              <p className="text-sm text-green-400">Payment sent!</p>
+              {txHash && (
+                <a
+                  href={`https://etherscan.io/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-green-500/70 hover:text-green-400 underline"
+                >
+                  View on Etherscan
+                </a>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Error banner — silently ignore user rejections */}
-        {sendError && !sendErrorDetails?.message?.toLowerCase().includes('user rejected') && (
+        {/* Error banner */}
+        {showError && (
           <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
             <p className="text-sm text-red-400">
-              {sendErrorDetails?.message ?? 'Transaction failed. Please try again.'}
+              {errorMessage ?? 'Transaction failed. Please try again.'}
             </p>
-          </div>
-        )}
-
-        {/* Not connected */}
-        {!isConnected && (
-          <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
-            <p className="text-sm text-gray-400">Connect your wallet to send payments</p>
           </div>
         )}
 
@@ -147,13 +169,26 @@ export const QuickPayCard: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
-                <span>{currency === 'ETH' ? `$${usdAmount.toFixed(2)}` : `${ethAmount.toFixed(4)} ETH`}</span>
+                <span>
+                  {currency === 'ETH'
+                    ? `$${usdAmount.toFixed(2)}`
+                    : `${ethAmount.toFixed(4)} ETH`}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setAmount(currency === 'ETH' ? maxBal.toFixed(4) : ethToUsd(maxBal, ethPrice).toFixed(2))}
-                  className="text-purple-400 hover:opacity-80 font-medium"
+                  onClick={() =>
+                    setAmount(
+                      currency === 'ETH'
+                        ? maxBal.toString()
+                        : ethToUsd(maxBal, ethPrice).toFixed(2),
+                    )
+                  }
+                  className="text-purple-400 hover:text-purple-300 transition-colors"
                 >
-                  {maxBal.toFixed(4)} ETH available • Max
+                  Max:{' '}
+                  {currency === 'ETH'
+                    ? `${maxBal.toFixed(4)} ETH`
+                    : `$${ethToUsd(maxBal, ethPrice).toFixed(2)}`}
                 </button>
               </div>
             </div>
@@ -161,49 +196,62 @@ export const QuickPayCard: React.FC = () => {
 
           {/* Recipient */}
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Send to</label>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Recipient</label>
 
-            <select
-              onChange={(e) => setRecipient(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl text-white text-sm outline-none cursor-pointer font-mono mb-2"
-              style={{ backgroundColor: 'rgba(31, 29, 46, 0.6)' }}
-            >
-              <option value="">Select employee…</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.walletAddress}>
-                  {emp.name}
-                </option>
-              ))}
-            </select>
+            {/* Employee quick-select */}
+            {employees.length > 0 && (
+              <select
+                value=""
+                onChange={(e) => { if (e.target.value) setRecipient(e.target.value); }}
+                className="w-full mb-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              >
+                <option value="">Select an employee…</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.walletAddress}>
+                    {emp.name} — {emp.walletAddress.slice(0, 6)}…{emp.walletAddress.slice(-4)}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <input
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              placeholder="or paste 0x... address"
-              className="w-full px-4 py-3 rounded-xl text-white bg-transparent outline-none font-mono text-sm"
-              style={{ backgroundColor: 'rgba(31, 29, 46, 0.6)' }}
+              placeholder="0x..."
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all"
             />
-            {recipient && !isAddress(recipient) && (
-              <p className="text-xs text-red-400 mt-1">Invalid address</p>
+            {recipient && !recipientIsValid && (
+              <p className="text-xs text-red-400 mt-1">Invalid Ethereum address</p>
             )}
           </div>
 
-          {/* Send Button */}
+          {/* Wrong network warning */}
+          {!chain && (
+            <p className="text-xs text-yellow-400">
+              Switch to a supported network to send payments.
+            </p>
+          )}
+
+          {/* Send button */}
           <button
             type="submit"
-            disabled={isProcessing || !isAddress(recipient) || ethAmount <= 0 || ethAmount > maxBal || !isConnected}
-            className="w-full py-3 px-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: 'white' }}
+            disabled={!canSend}
+            className="w-full py-3 rounded-xl font-medium text-white transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: canSend
+                ? 'linear-gradient(135deg, #7c3aed, #a855f7)'
+                : 'rgba(124, 58, 237, 0.3)',
+            }}
           >
             {isProcessing ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Processing...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Sending…
               </>
             ) : (
               <>
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4" />
                 Send Payment
               </>
             )}

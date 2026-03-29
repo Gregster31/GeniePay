@@ -151,7 +151,7 @@ export const ErrorPage: React.FC = () => {
             }}
           >
             <Home className="w-4 h-4" />
-            Back to Dashboard
+            Back to Landing Page
           </Link>
 
           <button
