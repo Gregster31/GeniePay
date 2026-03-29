@@ -662,7 +662,7 @@ const LandingPage: React.FC = () => {
               </h1>
 
               <p className="hero-content-delay2" style={{ fontSize:'clamp(15px,1.8vw,18px)',color:'#6b7280',maxWidth:'480px',lineHeight:1.7,marginBottom:'40px' }}>
-                Crypto payroll for modern teams. Send 1,000 payouts in a single transaction.
+                Crypto payroll for modern teams. Send 800+ payouts in a single transaction.
                 Zero fees, zero delays, zero middlemen.
               </p>
 
