@@ -43,3 +43,7 @@ Thumbs.db
 # Package manager
 .pnpm-store/
 .yarn/
+
+# Flows
+codingSyntax.txt
+flow.txt

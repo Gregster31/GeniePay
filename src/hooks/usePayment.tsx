@@ -1,10 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { 
-  useBalance, 
-  useSendTransaction, 
-  useWaitForTransactionReceipt,
-  useAccount 
-} from 'wagmi';
+import { useBalance, useSendTransaction, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { parseEther } from 'viem';
 
 interface SendPaymentParams {
@@ -14,50 +9,27 @@ interface SendPaymentParams {
 
 export const usePayment = () => {
   const { address } = useAccount();
-  
-  const { 
-    data: balance, 
-    isError: balanceError, 
-    isLoading: balanceLoading,
-    refetch: refetchBalance 
-  } = useBalance({
-    address,
-  });
 
-  const { 
-    sendTransaction, 
-    data: txHash, 
-    isPending: isSending,
-    isError: sendError,
-    error: sendErrorDetails,
-    reset: resetTransaction
-  } = useSendTransaction();
+  const { data: balance, isError: balanceError, isLoading: balanceLoading, refetch: refetchBalance } = useBalance({ address });
 
-  const { 
-    isLoading: isConfirming, 
-    isSuccess: isConfirmed,
-  } = useWaitForTransactionReceipt({
+  const { sendTransaction, data: txHash, isPending: isSending, isError: sendError, error: sendErrorDetails, reset: resetTransaction } = useSendTransaction();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash: txHash,
+    confirmations: 1,
+    pollingInterval: 1000,
   });
 
-  // Auto-refetch balance when transaction confirms
   useEffect(() => {
-    if (isConfirmed) {
-      const timer = setTimeout(() => refetchBalance(), 500);
-      return () => clearTimeout(timer);
-    }
+    if (isConfirmed) refetchBalance();
   }, [isConfirmed, refetchBalance]);
 
   const sendPayment = useCallback(
     ({ recipientAddress, amount }: SendPaymentParams) => {
       resetTransaction();
-      
-      sendTransaction({
-        to: recipientAddress as `0x${string}`,
-        value: parseEther(amount),
-      });
+      sendTransaction({ to: recipientAddress as `0x${string}`, value: parseEther(amount) });
     },
-    [sendTransaction, resetTransaction]
+    [sendTransaction, resetTransaction],
   );
 
   return {

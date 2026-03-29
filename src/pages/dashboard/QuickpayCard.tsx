@@ -7,14 +7,17 @@ import { useEthPrice } from '@/hooks/useEthPrice';
 import { useGlobalBalance } from '@/hooks/useGlobalBalance';
 import { ethToUsd, usdToEth } from '@/utils/EthUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import { saveReceipt } from '@/services/ReceiptService';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Currency = 'ETH' | 'USD';
 
 export const QuickPayCard: React.FC = () => {
-  const { chain } = useAccount();
+  const { chain, address } = useAccount();
   const { employees } = useAuth();
   const { formattedBalance, isConnected } = useGlobalBalance();
   const { ethPrice } = useEthPrice();
+  const queryClient = useQueryClient();
   const {
     sendPayment,
     isProcessing,
@@ -29,14 +32,46 @@ export const QuickPayCard: React.FC = () => {
   const [recipient, setRecipient] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const [pendingReceipt, setPendingReceipt] = useState<{
+    recipient: string;
+    ethAmount: number;
+    usdAmount: number;
+  } | null>(null);
+
   useEffect(() => {
-    if (isConfirmed && txHash) {
+    if (isConfirmed && txHash && pendingReceipt) {
       setShowSuccess(true);
       setAmount('');
       setRecipient('');
       setTimeout(() => setShowSuccess(false), 3000);
+
+      const recipientName = employees.find(
+        (e) => e.walletAddress.toLowerCase() === pendingReceipt.recipient.toLowerCase(),
+      )?.name;
+
+      saveReceipt({
+        type: 'quickpay',
+        txHash,
+        network: chain?.name ?? 'Ethereum',
+        currency: 'ETH',
+        totalUsd: pendingReceipt.usdAmount,
+        totalCrypto: pendingReceipt.ethAmount,
+        from: address ?? '',
+        recipients: [
+          {
+            name: recipientName,
+            address: pendingReceipt.recipient,
+            amountEth: pendingReceipt.ethAmount,
+            amountUsd: pendingReceipt.usdAmount,
+          },
+        ],
+      })
+        .then(() => queryClient.invalidateQueries({ queryKey: ['receipts'] }))
+        .catch(console.error);
+
+      setPendingReceipt(null);
     }
-  }, [isConfirmed, txHash]);
+  }, [isConfirmed, txHash, pendingReceipt, chain, address, employees, queryClient]);
 
   const maxBal    = parseFloat(formattedBalance);
   const numAmount = parseFloat(amount) || 0;
@@ -46,6 +81,7 @@ export const QuickPayCard: React.FC = () => {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAddress(recipient) || ethAmount <= 0 || ethAmount > maxBal) return;
+    setPendingReceipt({ recipient, ethAmount, usdAmount });
     sendPayment({ recipientAddress: recipient, amount: ethAmount.toString() });
   };
 
@@ -99,7 +135,7 @@ export const QuickPayCard: React.FC = () => {
         {showSuccess && (
           <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-            <p className="text-sm text-green-400">Payment sent!</p>
+            <p className="text-sm text-green-400">Payment sent! Receipt saved to Documents.</p>
           </div>
         )}
 

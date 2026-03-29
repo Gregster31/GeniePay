@@ -1,112 +1,98 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Zap, 
-  Calendar, 
-  History, 
-  Copy, 
-  ExternalLink, 
-  Wallet, 
-  Lock, 
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import {
+  LayoutDashboard,
+  Send,
+  Users,
+  History,
+  LogOut,
   ChevronLeft,
   ChevronRight,
+  Wallet,
+  Copy,
+  Check,
+  ExternalLink,
   Menu,
   X,
-  Check
+  FileText,
 } from 'lucide-react';
-import { useAccount } from 'wagmi';
 import { useAuth } from '@/contexts/AuthContext';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 
-// ========================= TYPES & CONSTANTS =========================
+const SIDEBAR_WIDTH_EXPANDED  = '240px';
+const SIDEBAR_WIDTH_COLLAPSED = '72px';
 
 interface NavigationItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
   path: string;
-  badge?: string;
-  badgeColor?: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const navigationItems: NavigationItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { id: 'pay', label: 'Quick Pay', icon: Zap, path: '/pay' },
-  { id: 'payroll', label: 'Payroll', icon: Calendar, path: '/payroll' },
-  { id: 'history', label: 'History', icon: History, path: '/history' },
+  { id: 'dashboard', label: 'Dashboard', path: '/dashboard',  icon: LayoutDashboard },
+  { id: 'pay',       label: 'Quick Pay', path: '/pay',        icon: Send },
+  { id: 'payroll',   label: 'Payroll',   path: '/payroll',    icon: Users },
+  { id: 'documents', label: 'Documents', path: '/documents',   icon: FileText },
+  { id: 'history',   label: 'History',   path: '/history',    icon: History },
 ];
 
-const SIDEBAR_WIDTH_EXPANDED = '19rem';
-const SIDEBAR_WIDTH_COLLAPSED = '6rem';  
-
-// ========================= CHILD COMPONENTS =========================
-
-/** Logo/Brand Header */
-const SidebarHeader: React.FC<{ isCollapsed: boolean; isMobile: boolean; onToggle: () => void }> = ({ 
-  isCollapsed, 
-  isMobile, 
-  onToggle 
-}) => (
-  <div className={`p-6 border-b ${isCollapsed && !isMobile ? 'px-3' : ''}`} style={{ borderColor: '#2a2438' }}>
-    <div className="flex items-center justify-between">
-      <button 
-        onClick={() => window.location.href = '/'}
-        className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
+const SidebarHeader: React.FC<{
+  isCollapsed: boolean;
+  isMobile: boolean;
+  onToggle: () => void;
+}> = ({ isCollapsed, isMobile, onToggle }) => (
+  <div
+    className="flex items-center justify-between p-4"
+    style={{ borderBottom: '1px solid #2a2438' }}
+  >
+    {(!isCollapsed || isMobile) && (
+      <div className="flex items-center gap-3">
+        <img src="/geniepay_logov4.png" alt="GeniePay" className="w-8 h-8 object-contain" />
+        <span className="text-white font-bold text-lg" style={{ letterSpacing: '-0.02em' }}>
+          GeniePay
+        </span>
+      </div>
+    )}
+    {!isMobile && (
+      <button
+        onClick={onToggle}
+        className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-gray-400 hover:text-white"
+        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
-        <img src="/geniepay_logov4.png" alt="GeniePay Logo" className="h-8 w-8 object-contain flex-shrink-0" />
-        {(!isCollapsed || isMobile) && (
-          <h1 className="text-xl font-bold whitespace-nowrap tracking-wide" style={{ fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif", letterSpacing: '0.02em' }}>
-            GeniePay
-          </h1>
-        )}
+        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
       </button>
-      
-      {!isMobile && (
-        <button
-          onClick={onToggle}
-          className="p-1.5 hover:bg-white/5 rounded-lg transition-colors ml-auto"
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
-      )}
-    </div>
+    )}
   </div>
 );
 
-/** Connected Wallet Display */
-const ConnectedWalletDisplay: React.FC<{ 
-  address: string; 
+const ConnectedWalletDisplay: React.FC<{
+  address: string;
   isCollapsed: boolean;
   isMobile: boolean;
 }> = ({ address, isCollapsed, isMobile }) => {
-const { copy, copiedValue: copied } = useCopyToClipboard();
-  const shortenedAddress = sliceAddress(address);
-
-  const handleCopy = async () => {
-    await copy(address);
-  };
+  const { copy, copiedValue: copied } = useCopyToClipboard();
+  const shortened = sliceAddress(address);
 
   if (isCollapsed && !isMobile) {
     return (
       <div className="px-2 mb-2 mt-4">
-        <div 
+        <div
           className="rounded-lg p-2 flex flex-col items-center gap-2"
-          style={{ 
-            backgroundColor: 'rgba(26, 27, 34, 0.6)',
-            border: '1px solid rgba(124, 58, 237, 0.2)',
-          }}
+          style={{ backgroundColor: 'rgba(26,27,34,0.6)', border: '1px solid rgba(124,58,237,0.2)' }}
         >
           <Wallet className="w-4 h-4 text-purple-400" />
           <button
-            onClick={handleCopy}
+            onClick={() => copy(address)}
             className="p-1 hover:bg-white/5 rounded transition-colors"
             title={copied ? 'Copied!' : 'Copy address'}
           >
-            {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400" />}
+            {copied
+              ? <Check className="w-3 h-3 text-green-400" />
+              : <Copy className="w-3 h-3 text-gray-400" />}
           </button>
         </div>
       </div>
@@ -115,22 +101,21 @@ const { copy, copiedValue: copied } = useCopyToClipboard();
 
   return (
     <div className="px-4 mb-2 mt-4">
-      <div 
+      <div
         className="rounded-lg p-3"
-        style={{ 
-          backgroundColor: 'rgba(26, 27, 34, 0.6)',
-          border: '1px solid rgba(124, 58, 237, 0.2)',
-        }}
+        style={{ backgroundColor: 'rgba(26,27,34,0.6)', border: '1px solid rgba(124,58,237,0.2)' }}
       >
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-gray-400">Connected Wallet</span>
           <div className="flex items-center gap-1">
             <button
-              onClick={handleCopy}
+              onClick={() => copy(address)}
               className="p-1 hover:bg-white/5 rounded transition-colors"
               title={copied ? 'Copied!' : 'Copy address'}
             >
-              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400" />}
+              {copied
+                ? <Check className="w-3 h-3 text-green-400" />
+                : <Copy className="w-3 h-3 text-gray-400" />}
             </button>
             <a
               href={`https://etherscan.io/address/${address}`}
@@ -143,97 +128,61 @@ const { copy, copiedValue: copied } = useCopyToClipboard();
             </a>
           </div>
         </div>
-        <p className="text-sm font-mono text-white">{shortenedAddress}</p>
+        <p className="text-sm font-mono text-white">{shortened}</p>
       </div>
     </div>
   );
 };
 
-/** Limited Access Banner */
-const LimitedAccessBanner: React.FC = () => (
-  <div className="px-4 py-3 mx-4 mb-4 rounded-lg" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
-    <div className="flex items-start gap-2">
-      <Lock className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
-      <div>
-        <p className="text-xs font-medium text-yellow-500 mb-1">Limited Access</p>
-        <p className="text-xs text-gray-400">Connect wallet and sign to unlock all features</p>
-      </div>
-    </div>
-  </div>
-);
-
-/** Navigation Button */
 const NavButton: React.FC<{
   item: NavigationItem;
   isActive: boolean;
-  isDisabled: boolean;
   isCollapsed: boolean;
   isMobile: boolean;
   onClick: () => void;
-}> = ({ item, isActive, isDisabled, isCollapsed, isMobile, onClick }) => {
+}> = ({ item, isActive, isCollapsed, isMobile, onClick }) => {
   const Icon = item.icon;
-  
-  const baseClasses = `
-    flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-    ${isCollapsed && !isMobile ? 'justify-center px-3' : ''}
-    ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-  `;
-
-  const activeClasses = isActive
-    ? 'text-white font-semibold' // Brighter white and semibold for active
-    : 'text-gray-400 hover:text-white hover:bg-white/5';
 
   return (
     <button
       onClick={onClick}
-      disabled={isDisabled}
-      className={`${baseClasses} ${activeClasses} w-full text-left relative`}
+      className={`
+        flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 w-full text-left
+        ${isCollapsed && !isMobile ? 'justify-center px-3' : ''}
+        ${isActive ? 'text-white font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/5'}
+      `}
       title={isCollapsed && !isMobile ? item.label : undefined}
     >
-      <Icon className="w-5 h-5 flex-shrink-0" />
+      {/* Active indicator */}
+      {isActive && (
+        <div
+          className="absolute left-0 w-1 h-6 rounded-r-full"
+          style={{ background: 'linear-gradient(180deg, #7c3aed, #a855f7)' }}
+        />
+      )}
+      <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-purple-400' : ''}`} />
       {(!isCollapsed || isMobile) && (
-        <>
-          <span className="flex-1" style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '0.01em' }}>
-            {item.label}
-          </span>
-          {item.badge && (
-            <span 
-              className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.badgeColor || 'bg-purple-600'} text-white`}
-            >
-              {item.badge}
-            </span>
-          )}
-          {isDisabled && <Lock className="w-4 h-4 text-gray-500" />}
-        </>
+        <span className="text-sm">{item.label}</span>
       )}
     </button>
   );
 };
 
-/** Connection Button */
-const ConnectionButton: React.FC<{ 
-  hasFullAccess: boolean; 
-  isCollapsed: boolean; 
-  isMobile: boolean; 
+const ConnectionButton: React.FC<{
+  isConnected: boolean;
+  isCollapsed: boolean;
+  isMobile: boolean;
   onLogout: () => void;
-}> = ({ hasFullAccess, isCollapsed, isMobile, onLogout }) => {
-  const buttonClasses = `
-    w-full flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all
-    ${isCollapsed && !isMobile ? 'justify-center px-3 py-3' : 'justify-center px-4 py-3'}
-  `;
-
-  const fontStyle = { fontFamily: "'Inter', sans-serif", letterSpacing: '0.01em' };
-
-  if (hasFullAccess) {
+}> = ({ isConnected, isCollapsed, isMobile, onLogout }) => {
+  if (isConnected) {
     return (
       <button
         onClick={onLogout}
-        className={`${buttonClasses} bg-red-800 hover:bg-red-700 text-white`}
-        style={fontStyle}
+        className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-left text-gray-400 hover:text-red-400 hover:bg-red-500/5 transition-all duration-200"
         title={isCollapsed && !isMobile ? 'Disconnect' : undefined}
       >
-        <Wallet className="w-4 h-4 flex-shrink-0" />
-        {(!isCollapsed || isMobile) && <span>Disconnect</span>}
+        <LogOut className="w-5 h-5 flex-shrink-0" />
+        {(!isCollapsed || isMobile) && <span className="text-sm">Disconnect</span>}
       </button>
     );
   }
@@ -243,17 +192,7 @@ const ConnectionButton: React.FC<{
       {({ openConnectModal }) => (
         <button
           onClick={openConnectModal}
-          className={`${buttonClasses} text-white`}
-          style={{
-            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-            ...fontStyle
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, #6d28d9 0%, #9333ea 100%)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)';
-          }}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-left text-purple-400 hover:text-purple-300 hover:bg-purple-500/5 transition-all duration-200"
           title={isCollapsed && !isMobile ? 'Connect Wallet' : undefined}
         >
           <Wallet className="w-4 h-4 flex-shrink-0" />
@@ -264,66 +203,57 @@ const ConnectionButton: React.FC<{
   );
 };
 
-// ========================= MAIN SIDEBAR COMPONENT =========================
-
 export const Sidebar: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const { address, isConnected } = useAccount();
-  const { isAuthenticated, logout } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  const hasFullAccess = isConnected && isAuthenticated;
+  const { logout } = useAuth();
 
-  // Detect mobile screen size
+  const [isCollapsed,   setIsCollapsed]   = useState(false);
+  const [isMobileOpen,  setIsMobileOpen]  = useState(false);
+  const [isMobile,      setIsMobile]      = useState(false);
+
   useEffect(() => {
-    const checkMobile = () => {
+    const check = () => {
       setIsMobile(window.innerWidth < 1024);
       if (window.innerWidth >= 1024) setIsMobileOpen(false);
     };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Update CSS custom property when collapse state changes
   useEffect(() => {
-    const sidebarWidth = isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
-    document.documentElement.style.setProperty('--sidebar-width', sidebarWidth);
+    document.documentElement.style.setProperty(
+      '--sidebar-width',
+      isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED,
+    );
   }, [isCollapsed]);
 
+  const isActiveRoute = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(path + '/');
+
   const handleNavigation = (path: string) => {
-    const isProtected = !['/dashboard', '/'].includes(path);
-    if (isProtected && !hasFullAccess) {
-      return;
-    }
     navigate(path);
     if (isMobile) setIsMobileOpen(false);
   };
 
-  const isActiveRoute = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    // Exact match or match with trailing slash to prevent /pay from matching /payroll
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
-
   return (
     <>
-      {/* Mobile Hamburger Button */}
+      {/* Mobile hamburger */}
       {isMobile && (
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           className="fixed top-4 left-4 z-50 p-2 rounded-lg lg:hidden"
           style={{ backgroundColor: '#1A1B22', border: '1px solid #2a2438' }}
         >
-          {isMobileOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+          {isMobileOpen
+            ? <X    className="w-6 h-6 text-white" />
+            : <Menu className="w-6 h-6 text-white" />}
         </button>
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar panel */}
       <aside
         className={`
           sidebar
@@ -333,7 +263,7 @@ export const Sidebar: React.FC = () => {
         `}
         style={{
           backgroundColor: '#1A1B22',
-          width: isMobile ? SIDEBAR_WIDTH_EXPANDED : isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED,
+          width:  isMobile ? SIDEBAR_WIDTH_EXPANDED : isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED,
           margin: isMobile ? '0' : '1rem',
           height: isMobile ? '100vh' : 'calc(100vh - 2rem)',
           borderRadius: isMobile ? '0' : '1.5rem',
@@ -341,46 +271,51 @@ export const Sidebar: React.FC = () => {
         }}
       >
         <div className="h-full flex flex-col text-white overflow-hidden">
-          <SidebarHeader isCollapsed={isCollapsed} isMobile={isMobile} onToggle={() => setIsCollapsed(!isCollapsed)} />
-          
-          {hasFullAccess && address && (
-            <ConnectedWalletDisplay address={address} isCollapsed={isCollapsed} isMobile={isMobile} />
+          <SidebarHeader
+            isCollapsed={isCollapsed}
+            isMobile={isMobile}
+            onToggle={() => setIsCollapsed(!isCollapsed)}
+          />
+
+          {/* Wallet address display */}
+          {isConnected && address && (
+            <ConnectedWalletDisplay
+              address={address}
+              isCollapsed={isCollapsed}
+              isMobile={isMobile}
+            />
           )}
 
-          <nav className={`flex-1 py-4 overflow-y-auto ${isCollapsed && !isMobile ? 'px-2' : 'px-4'}`}>
-            {navigationItems.map((item) => {
-              const isActive = isActiveRoute(item.path);
-              const isProtected = !['/dashboard', '/'].includes(item.path);
-              const isDisabled = isProtected && !hasFullAccess;
-              
-              return (
-                <NavButton
-                  key={item.id}
-                  item={item}
-                  isActive={isActive}
-                  isDisabled={isDisabled}
-                  isCollapsed={isCollapsed}
-                  isMobile={isMobile}
-                  onClick={() => handleNavigation(item.path)}
-                />
-              );
-            })}
+          {/* Navigation */}
+          <nav className={`flex-1 py-4 overflow-y-auto relative ${isCollapsed && !isMobile ? 'px-2' : 'px-4'}`}>
+            {navigationItems.map((item) => (
+              <NavButton
+                key={item.id}
+                item={item}
+                isActive={isActiveRoute(item.path)}
+                isCollapsed={isCollapsed}
+                isMobile={isMobile}
+                onClick={() => handleNavigation(item.path)}
+              />
+            ))}
           </nav>
-          
-          {!hasFullAccess && (!isCollapsed || isMobile) && <LimitedAccessBanner />}
-          
-          <div className={`p-4 ${isCollapsed && !isMobile ? 'px-2' : ''}`} style={{ borderTop: '1px solid #2a2438' }}>
-            <ConnectionButton 
-              hasFullAccess={hasFullAccess} 
-              isCollapsed={isCollapsed} 
-              isMobile={isMobile} 
-              onLogout={logout} 
+
+          {/* Footer */}
+          <div
+            className={`p-4 ${isCollapsed && !isMobile ? 'px-2' : ''}`}
+            style={{ borderTop: '1px solid #2a2438' }}
+          >
+            <ConnectionButton
+              isConnected={isConnected}
+              isCollapsed={isCollapsed}
+              isMobile={isMobile}
+              onLogout={logout}
             />
           </div>
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       {isMobile && isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"

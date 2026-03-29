@@ -3,7 +3,6 @@ import React, {
   useCallback, useRef, useEffect,
 } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
-import type { AuthState } from '@/components/auth/auth';
 import type { Employee } from '@/models/EmployeeModel';
 import {
   signInWithWallet,
@@ -14,11 +13,13 @@ import {
   deleteEmployee,
 } from '@/services/EmployeeService';
 
-interface AuthContextType extends AuthState {
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
   logout: () => void;
   employees: Employee[];
   isLoadingEmployees: boolean;
-  addEmployee: (employee: Omit<Employee, 'id' | 'dateAdded'>) => Promise<void>;
+  addEmployee:    (employee: Omit<Employee, 'id' | 'dateAdded'>) => Promise<void>;
   updateEmployee: (id: string, updates: Omit<Employee, 'id' | 'dateAdded'>) => Promise<void>;
   removeEmployee: (id: string) => Promise<void>;
 }
@@ -28,19 +29,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { address, isConnected, status } = useAccount();
   const { disconnect } = useDisconnect();
+
+  // Prevent the disconnect handler from firing on a page reload (wagmi
+  // briefly reports 'disconnected' before reconnecting from storage).
   const didExplicitLogout = useRef(false);
 
-  const [authState, setAuthState] = useState<AuthState>({ isAuthenticated: false, isLoading: false });
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading,          setIsLoading]          = useState(false);
+  const [employees,          setEmployees]          = useState<Employee[]>([]);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
-  // Sign in to Supabase + load employees when wallet connects
   useEffect(() => {
     if (status === 'connected' && address) {
       didExplicitLogout.current = false;
-      setAuthState({ isAuthenticated: true, isLoading: false });
 
       (async () => {
+        setIsLoading(true);
         setIsLoadingEmployees(true);
         try {
           await signInWithWallet(address);
@@ -49,13 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (err) {
           console.error('Supabase auth/fetch failed:', err);
         } finally {
+          setIsLoading(false);
           setIsLoadingEmployees(false);
         }
       })();
     }
 
     if (status === 'disconnected' && didExplicitLogout.current) {
-      setAuthState({ isAuthenticated: false, isLoading: false });
       setEmployees([]);
       didExplicitLogout.current = false;
     }
@@ -84,8 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{
-      ...authState,
       isAuthenticated: isConnected,
+      isLoading,
       logout,
       employees,
       isLoadingEmployees,

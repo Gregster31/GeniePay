@@ -8,15 +8,9 @@ import Dashboard from '@/pages/dashboard';
 import Pay from '@/pages/pay';
 import Payroll from '@/pages/payroll';
 import History from '@/pages/history';
+import Documents from '@/pages/documents';
 import LandingPage from '@/pages/landing';
 
-/**
- * STRUCTURE:
- * - All routes are wrapped in ProtectedRoute
- * - ProtectedRoute checks: wallet connected + signature verified
- * - Users can't access private routes without both verifications
- * - Uses CSS Grid for responsive layout that automatically adjusts to sidebar state
- */
 const ProtectedLayout: React.FC = () => (
   <ProtectedRoute>
     <div className="app-layout">
@@ -38,10 +32,11 @@ const router = createBrowserRouter([
     element: <ProtectedLayout />,
     errorElement: <ErrorPage />,
     children: [
-      { path: 'dashboard', element: <Dashboard /> },
-      { path: 'pay',       element: <Pay /> },
-      { path: 'payroll',   element: <Payroll /> },
-      { path: 'history',   element: <History /> },
+      { path: 'dashboard',  element: <Dashboard /> },
+      { path: 'pay',        element: <Pay /> },
+      { path: 'payroll',    element: <Payroll /> },
+      { path: 'documents',  element: <Documents /> },
+      { path: 'history',    element: <History /> },
     ],
   },
 ]);
