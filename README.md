@@ -9,7 +9,6 @@
     <img src="https://img.shields.io/badge/Smart%20Contracts-Hardhat-yellow" alt="Hardhat" height="24">
     <img src="https://img.shields.io/badge/Frontend-React-blue" alt="React" height="24">
     <img src="https://img.shields.io/badge/Web3%20Wallet-MetaMask-f6851b" alt="MetaMask" height="24">
-    <img src="https://img.shields.io/badge/Network-Sepolia%20Testnet-5c4ee5" alt="Ethereum Testnet" height="24">
   </a>
 </p>
 
@@ -17,44 +16,42 @@
   <img width="1175" height="723" alt="image" src="https://github.com/user-attachments/assets/5e535958-f1dd-4a82-a20f-e5d82ed8e2dc" />
 </a>
 
----
-
-**GeniePay** is a free, no-account crypto payroll platform. Connect your wallet and pay up to 800 employees or contractors worldwide in a single transaction with tax and compliance built in.
-
-No fees. No middlemen. No data collected.
+**GeniePay** is a free, self-custody crypto payroll tool. Connect your wallet and pay up to 800 employees or contractors worldwide in a single transaction. No fees. No middlemen. No account needed.
 
 ## Why GeniePay?
 
-International payroll is slow, expensive, and painful. Traditional services charge 6%+ in fees, take up to 5 days to settle, and most crypto alternatives either ignore compliance entirely or charge thousands per month behind a sales call.
-
-GeniePay fixes that:
+In 2020 alone, global businesses spent $23.5T across international borders resulting in $120B in transaction fees. GeniePay lets employers pay their teams instantly and cheaply using blockchain, while keeping full records for their own bookkeeping.
 
 - **Instant** payouts via smart contracts on Ethereum
-- **Batch payments** — up to 800 recipients in one click
-- **Multi-currency** — stablecoins and fiat-pegged tokens
-- **Tax & compliance ready** — export-friendly records out of the box
-- **Entirely free** — no subscription, no account, no upsell
+- **Batch payments** up to 800 recipients in one click
+- **Multi-currency** stablecoins and fiat-pegged tokens
+- **Downloadable records** full transaction history for your own bookkeeping
 
 ## Features
 
-- **Quick Pay** — send one-off payments to any wallet address
-- **Payroll** — schedule and manage recurring team payments
-- **CSV Import** — bulk-load your team from a spreadsheet
-- **Payment History** — full transaction log with status tracking
-- **Employer Dashboard** — manage teams, review summaries, download reports
+- **Quick Pay** send one-off payments to any wallet address
+- **Payroll** schedule and manage recurring team payments
+- **CSV Import** bulk-load your team from a spreadsheet
+- **Payment History** full transaction log with status tracking
+- **Employer Dashboard** manage teams, review summaries, download reports
 
 ## Getting Started
-- Connect your wallet
-- Enjoy!
+```bash
+git clone https://github.com/Gregster31/GeniePay.git
+cd GeniePay
+npm install
+npm run dev
+```
 
-## Privacy
+Or try it live at [geniepay.ca](https://geniepay.ca). Connect your wallet and go.
 
-GeniePay does not collect, store, or sell your data. Your wallet is your identity, nothing else is required.
+## Disclaimer
+
+GeniePay is self-custody software. All transactions are signed and sent directly from your own wallet. We never hold or move your funds. Records generated are for your own bookkeeping purposes.
 
 ## License
 
 This project is licensed under the **Business Source License 1.1 (BUSL-1.1)**.
-
 You can view, fork, and contribute to this code. You may **not** use it for commercial purposes or deploy it as a hosted service without explicit permission.
 
 On **January 1, 2028**, this license converts automatically to **MIT** (fully open source).
