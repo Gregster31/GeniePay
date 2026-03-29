@@ -14,7 +14,7 @@
 </p>
 
 <a href="https://geniepay.ca" target="_blank" rel="noopener noreferrer">
-  <img width="1887" height="883" alt="image" src="https://github.com/user-attachments/assets/cdea4dfc-4568-4d8c-a6f0-fffd962f77bd" />
+  <img width="1175" height="723" alt="image" src="https://github.com/user-attachments/assets/5e535958-f1dd-4a82-a20f-e5d82ed8e2dc" />
 </a>
 
 ---
