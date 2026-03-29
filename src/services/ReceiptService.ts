@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { Receipt, ReceiptRecipient } from '@/models/ReceiptModel';
 
-const MAX_RECEIPTS = 5;
+const MAX_RECEIPTS = 6;
 
 interface ReceiptRow {
   id: string;

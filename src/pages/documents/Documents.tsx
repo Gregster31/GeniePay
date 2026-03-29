@@ -187,7 +187,7 @@ export const Documents: React.FC = () => {
               Documents
             </h1>
             <p className="text-gray-400 text-sm">
-              Transaction receipts · up to 5 stored · oldest overwritten when full
+              Transaction receipts · up to 6 stored · oldest overwritten when full
             </p>
           </div>
 
@@ -202,7 +202,7 @@ export const Documents: React.FC = () => {
               }}
             >
               <FileText className="w-4 h-4" />
-              {receipts.length} / 5 receipts
+              {receipts.length} / 6 receipts
             </div>
           )}
         </div>
