@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { Receipt, ReceiptRecipient } from '@/models/ReceiptModel';
 
-const MAX_RECEIPTS = 6;
+const MAX_RECEIPTS = 5;
 
 interface ReceiptRow {
   id: string;
@@ -53,13 +53,16 @@ export const saveReceipt = async (
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  // Count existing receipts for this user only
   const { data: existing, error: listError } = await supabase
     .from('receipts')
     .select('id, created_at')
-    .order('created_at', { ascending: true }); // oldest first
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: true });
 
   if (listError) throw new Error(listError.message);
 
+  // Delete oldest if at cap
   if (existing && existing.length >= MAX_RECEIPTS) {
     const oldest = existing[0];
     await supabase.from('receipts').delete().eq('id', oldest.id);
