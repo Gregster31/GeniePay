@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { UserPlus, Send, Copy, CheckCircle2, FileUp, Pencil } from 'lucide-react';
+import { UserPlus, Send, Copy, CheckCircle2, FileUp, Pencil, Trash2 } from 'lucide-react';
 import type { Employee } from '@/models/EmployeeModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
-import { copyToClipboard } from '@/utils/ClipboardCopy';
+import { formatCurrency, formatDate } from '@/utils/Format';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { EmployeeModal } from '@/pages/payroll/EmployeeModal';
 import { BatchPaymentModal } from '@/pages/payroll/BatchPaymentModal';
 import { CSVImportModal } from '@/pages/payroll/CsvImportModal';
@@ -11,53 +12,43 @@ import { useAuth } from '@/contexts/AuthContext';
 export const Payroll: React.FC = () => {
   const {
     employees,
-    addEmployee: addEmployeeToContext,
-    updateEmployee: updateEmployeeInContext,
+    addEmployee,
+    updateEmployee,
+    removeEmployee,
   } = useAuth();
 
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showBatchModal, setShowBatchModal] = useState(false);
-  const [showCSVModal, setShowCSVModal] = useState(false);
-
-  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
-
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectedEmployees = employees.filter(emp => selectedIds.includes(emp.id));
   const totalAmount = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
   const allSelected = employees.length > 0 && selectedIds.length === employees.length;
+  const [showAddModal, setShowAddModal]     = useState(false);
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [showCSVModal, setShowCSVModal]     = useState(false);
+  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { copy, copiedValue: copiedAddress } = useCopyToClipboard();
 
-  const handleCopy = async (address: string) => {
-    const success = await copyToClipboard(address);
-    if (success) {
-      setCopiedAddress(address);
-      setTimeout(() => setCopiedAddress(null), 2000);
-    }
-  };
-
-  const toggleEmployee = (id: number) => {
+  const toggleEmployee = (id: string) =>
     setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(empId => empId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
     );
-  };
 
-  const toggleSelectAll = () => {
-    setSelectedIds(allSelected ? [] : employees.map(emp => emp.id));
-  };
+  const toggleSelectAll = () =>
+    setSelectedIds(allSelected ? [] : employees.map(e => e.id));
 
-  const handleAdd = (newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
-    addEmployeeToContext(newEmployee);
+  const handleAdd = async (data: Omit<Employee, 'id' | 'dateAdded'>) => {
+    await addEmployee(data);
     setShowAddModal(false);
   };
 
-  const handleEdit = (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => {
-    updateEmployeeInContext(id, updates);
+  const handleEdit = async (id: string, updates: Omit<Employee, 'id' | 'dateAdded'>) => {
+    await updateEmployee(id, updates);
     setEmployeeToEdit(null);
   };
 
-  const openEditModal = (employee: Employee) => {
-    setEmployeeToEdit(employee);
+  const handleCSVImport = async (imported: Omit<Employee, 'id' | 'dateAdded'>[]) => {
+    for (const emp of imported) await addEmployee(emp);
   };
 
   const handleModalClose = () => {
@@ -65,15 +56,17 @@ export const Payroll: React.FC = () => {
     setEmployeeToEdit(null);
   };
 
-  const handleCSVImport = (imported: Omit<Employee, 'id' | 'dateAdded'>[]) => {
-    imported.forEach(emp => addEmployeeToContext(emp));
+  const handleDeleteConfirm = async () => {
+    if (!employeeToDelete) return;
+    setIsDeleting(true);
+    try {
+      await removeEmployee(employeeToDelete.id);
+      setSelectedIds(prev => prev.filter(id => id !== employeeToDelete.id));
+    } finally {
+      setIsDeleting(false);
+      setEmployeeToDelete(null);
+    }
   };
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-
-  const formatDate = (date: Date) =>
-    date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <div className="min-h-screen p-6 flex items-center justify-center">
@@ -86,7 +79,6 @@ export const Payroll: React.FC = () => {
             <p className="text-gray-400 text-sm">Manage employees and run batch payments</p>
           </div>
           <div className="flex gap-3">
-            {/* CSV Import */}
             <button
               onClick={() => setShowCSVModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
@@ -100,7 +92,6 @@ export const Payroll: React.FC = () => {
               Import CSV
             </button>
 
-            {/* Add Employee */}
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all"
@@ -114,7 +105,6 @@ export const Payroll: React.FC = () => {
               Add Employee
             </button>
 
-            {/* Run Batch Payment */}
             <button
               onClick={() => setShowBatchModal(true)}
               disabled={selectedIds.length === 0}
@@ -135,6 +125,7 @@ export const Payroll: React.FC = () => {
           </div>
         </div>
 
+        {/* Table */}
         <div
           className="rounded-2xl overflow-hidden"
           style={{
@@ -178,10 +169,9 @@ export const Payroll: React.FC = () => {
                       key={employee.id}
                       className="transition-all hover:bg-white/5"
                       style={{
-                        borderBottom:
-                          index < employees.length - 1
-                            ? '1px solid rgba(124, 58, 237, 0.1)'
-                            : 'none',
+                        borderBottom: index < employees.length - 1
+                          ? '1px solid rgba(124, 58, 237, 0.1)'
+                          : 'none',
                       }}
                     >
                       {/* Checkbox */}
@@ -196,39 +186,34 @@ export const Payroll: React.FC = () => {
 
                       {/* Name / Email */}
                       <td className="px-6 py-4">
-                        <div>
-                          <p className="text-white font-medium">{employee.name}</p>
-                          {employee.email && (
-                            <p className="text-sm text-gray-400">{employee.email}</p>
-                          )}
-                        </div>
+                        <p className="text-white font-medium">{employee.name}</p>
+                        {employee.email && (
+                          <p className="text-sm text-gray-400">{employee.email}</p>
+                        )}
                       </td>
 
                       {/* Role / Department */}
                       <td className="px-6 py-4">
-                        <div>
-                          <p className="text-white">{employee.role}</p>
-                          {employee.department && (
-                            <p className="text-sm text-gray-400">{employee.department}</p>
-                          )}
-                        </div>
+                        <p className="text-white">{employee.role}</p>
+                        {employee.department && (
+                          <p className="text-sm text-gray-400">{employee.department}</p>
+                        )}
                       </td>
 
                       {/* Wallet */}
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => handleCopy(employee.walletAddress)}
+                          onClick={() => copy(employee.walletAddress)}
                           className="flex items-center gap-1 group"
                           title="Click to copy address"
                         >
                           <code className="text-sm text-gray-300 font-mono group-hover:text-purple-400 transition-colors">
                             {sliceAddress(employee.walletAddress)}
                           </code>
-                          {copiedAddress === employee.walletAddress ? (
-                            <CheckCircle2 className="w-3 h-3 text-green-400" />
-                          ) : (
-                            <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          )}
+                          {copiedAddress === employee.walletAddress
+                            ? <CheckCircle2 className="w-3 h-3 text-green-400" />
+                            : <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          }
                         </button>
                       </td>
 
@@ -246,21 +231,35 @@ export const Payroll: React.FC = () => {
                         </span>
                       </td>
 
-                      {/* Edit action */}
+                      {/* Actions: Edit + Delete */}
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => openEditModal(employee)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                          style={{
-                            backgroundColor: 'rgba(124, 58, 237, 0.08)',
-                            border: '1px solid rgba(124, 58, 237, 0.2)',
-                            color: '#a78bfa',
-                          }}
-                          title="Edit employee"
-                        >
-                          <Pencil className="w-3 h-3" />
-                          Edit
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setEmployeeToEdit(employee)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                            style={{
+                              backgroundColor: 'rgba(124, 58, 237, 0.08)',
+                              border: '1px solid rgba(124, 58, 237, 0.2)',
+                              color: '#a78bfa',
+                            }}
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => setEmployeeToDelete(employee)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                            style={{
+                              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                              border: '1px solid rgba(239, 68, 68, 0.2)',
+                              color: '#f87171',
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -271,7 +270,7 @@ export const Payroll: React.FC = () => {
         </div>
       </div>
 
-      {/* Single modal instance handles both Add and Edit */}
+      {/* Modals */}
       <EmployeeModal
         isOpen={showAddModal || Boolean(employeeToEdit)}
         onClose={handleModalClose}
@@ -292,6 +291,54 @@ export const Payroll: React.FC = () => {
         onClose={() => setShowCSVModal(false)}
         onImport={handleCSVImport}
       />
+
+      {/* Delete Confirmation Modal */}
+      {employeeToDelete && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div
+            className="w-full max-w-md rounded-2xl p-6 space-y-4"
+            style={{
+              backgroundColor: 'rgba(26, 27, 34, 0.95)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+            }}
+          >
+            <div>
+              <h2 className="text-lg font-bold text-white">Remove Employee</h2>
+              <p className="text-sm text-gray-400 mt-1">
+                Are you sure you want to remove{' '}
+                <span className="text-white font-medium">{employeeToDelete.name}</span>?
+                This cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setEmployeeToDelete(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#9ca3af',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                  color: 'white',
+                }}
+              >
+                {isDeleting ? 'Removing...' : 'Yes, Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

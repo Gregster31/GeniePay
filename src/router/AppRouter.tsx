@@ -8,6 +8,7 @@ import Dashboard from '@/pages/dashboard';
 import Pay from '@/pages/pay';
 import Payroll from '@/pages/payroll';
 import History from '@/pages/history';
+import LandingPage from '@/pages/landing';
 
 /**
  * STRUCTURE:
@@ -16,41 +17,31 @@ import History from '@/pages/history';
  * - Users can't access private routes without both verifications
  * - Uses CSS Grid for responsive layout that automatically adjusts to sidebar state
  */
-const ProtectedLayout: React.FC = () => {
-  return (
-    <ProtectedRoute>
-      <div className="app-layout">
-        <Sidebar />
-        <main className="main-content">
-          <Outlet />
-        </main>
-      </div>
-    </ProtectedRoute>
-  );
-};
+const ProtectedLayout: React.FC = () => (
+  <ProtectedRoute>
+    <div className="app-layout">
+      <Sidebar />
+      <main className="main-content">
+        <Outlet />
+      </main>
+    </div>
+  </ProtectedRoute>
+);
 
 const router = createBrowserRouter([
   {
     path: '/',
+    element: <LandingPage />,
+    errorElement: <ErrorPage />,
+  },
+  {
     element: <ProtectedLayout />,
     errorElement: <ErrorPage />,
     children: [
-      {
-        index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: 'pay',
-        element: <Pay />,
-      },
-      {
-        path: 'payroll',
-        element: <Payroll />,
-      },
-      {
-        path: 'history',
-        element: <History />,
-      }
+      { path: 'dashboard', element: <Dashboard /> },
+      { path: 'pay',       element: <Pay /> },
+      { path: 'payroll',   element: <Payroll /> },
+      { path: 'history',   element: <History /> },
     ],
   },
 ]);

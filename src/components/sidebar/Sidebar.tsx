@@ -19,7 +19,7 @@ import { useAccount } from 'wagmi';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
-import { copyToClipboard } from '@/utils/ClipboardCopy';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 
 // ========================= TYPES & CONSTANTS =========================
 
@@ -83,15 +83,11 @@ const ConnectedWalletDisplay: React.FC<{
   isCollapsed: boolean;
   isMobile: boolean;
 }> = ({ address, isCollapsed, isMobile }) => {
-  const [copied, setCopied] = useState(false);
+const { copy, copiedValue: copied } = useCopyToClipboard();
   const shortenedAddress = sliceAddress(address);
 
   const handleCopy = async () => {
-    const success = await copyToClipboard(address);
-    if (success) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    await copy(address);
   };
 
   if (isCollapsed && !isMobile) {

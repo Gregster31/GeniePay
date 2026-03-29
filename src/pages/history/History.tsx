@@ -4,7 +4,7 @@ import { useAccount } from 'wagmi';
 import { Copy, ExternalLink, Loader2, CheckCircle2 } from 'lucide-react';
 import { fetchTransactions, getExplorerUrl, type Transaction } from '@/utils/Blockscout';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
-import { copyToClipboard } from '@/utils/ClipboardCopy';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { ErrorPage } from '@/pages/ErrorPage';
 
 const INITIAL_LIMIT = 10;
@@ -13,7 +13,7 @@ export const History: React.FC = () => {
   const { address, chain } = useAccount();
   const [page, setPage] = useState(1);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  const [copiedHash, setCopiedHash] = useState<string | null>(null);
+  const { copy, copiedValue: copiedHash } = useCopyToClipboard();
 
   const { data: transactions = [], isLoading, error } = useQuery({
     queryKey: ['transactions', address, chain?.id, page], 
@@ -36,14 +36,6 @@ export const History: React.FC = () => {
     setAllTransactions([]);
     setPage(1);
   }, [chain?.id]);
-
-  const handleCopy = async (text: string) => {
-    const success = await copyToClipboard(text);
-    if (success) {
-      setCopiedHash(text);
-      setTimeout(() => setCopiedHash(null), 2000);
-    }
-  };
 
   const handleLoadMore = () => setPage(prev => prev + 1);
 
@@ -121,13 +113,13 @@ export const History: React.FC = () => {
                             <span className="text-sm text-gray-300">{tx.network}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button onClick={() => handleCopy(tx.from)} className="flex items-center gap-1 group" title="Click to copy">
+                            <button onClick={() => copy(tx.from)} className="flex items-center gap-1 group" title="Click to copy">
                               <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">{sliceAddress(tx.from)}</span>
                               {copiedHash === tx.from ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                             </button>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button onClick={() => handleCopy(tx.to)} className="flex items-center gap-1 group" title="Click to copy">
+                            <button onClick={() => copy(tx.to)} className="flex items-center gap-1 group" title="Click to copy">
                               <span className="text-sm font-mono text-gray-300 group-hover:text-purple-400 transition-colors">{sliceAddress(tx.to)}</span>
                               {copiedHash === tx.to ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                             </button>
@@ -143,7 +135,7 @@ export const History: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => handleCopy(tx.hash)}
+                                onClick={() => copy(tx.hash)}
                                 className="p-2 rounded-lg transition-all"
                                 style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.2)' }}
                                 title="Copy transaction hash"

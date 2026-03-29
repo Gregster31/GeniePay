@@ -1,104 +1,105 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, {
+  createContext, useContext, useState,
+  useCallback, useRef, useEffect,
+} from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import type { AuthState } from '@/components/auth/auth';
 import type { Employee } from '@/models/EmployeeModel';
 import {
-  saveEmployeesToSession,
-  loadEmployeesFromSession,
-  clearEmployeesFromSession,
-} from '@/utils/EmployeeSession';
+  signInWithWallet,
+  signOutWallet,
+  fetchEmployees,
+  insertEmployee,
+  updateEmployee as dbUpdateEmployee,
+  deleteEmployee,
+} from '@/services/EmployeeService';
 
 interface AuthContextType extends AuthState {
   logout: () => void;
   employees: Employee[];
-  addEmployee: (employee: Omit<Employee, 'id' | 'dateAdded'>) => void;
-  updateEmployee: (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => void;
-  removeEmployee: (id: number) => void;
+  isLoadingEmployees: boolean;
+  addEmployee: (employee: Omit<Employee, 'id' | 'dateAdded'>) => Promise<void>;
+  updateEmployee: (id: string, updates: Omit<Employee, 'id' | 'dateAdded'>) => Promise<void>;
+  removeEmployee: (id: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isConnected, status } = useAccount();
+  const { address, isConnected, status } = useAccount();
   const { disconnect } = useDisconnect();
-
   const didExplicitLogout = useRef(false);
 
-  const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: false,
-    isLoading: false,
-  });
+  const [authState, setAuthState] = useState<AuthState>({ isAuthenticated: false, isLoading: false });
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    return loadEmployeesFromSession() ?? [];
-  });
-
+  // Sign in to Supabase + load employees when wallet connects
   useEffect(() => {
-    saveEmployeesToSession(employees);
-  }, [employees]);
-
-  useEffect(() => {
-    if (status === 'connected') {
+    if (status === 'connected' && address) {
       didExplicitLogout.current = false;
       setAuthState({ isAuthenticated: true, isLoading: false });
+
+      (async () => {
+        setIsLoadingEmployees(true);
+        try {
+          await signInWithWallet(address);
+          const data = await fetchEmployees();
+          setEmployees(data);
+        } catch (err) {
+          console.error('Supabase auth/fetch failed:', err);
+        } finally {
+          setIsLoadingEmployees(false);
+        }
+      })();
     }
 
     if (status === 'disconnected' && didExplicitLogout.current) {
       setAuthState({ isAuthenticated: false, isLoading: false });
-      clearEmployeesFromSession();
       setEmployees([]);
       didExplicitLogout.current = false;
     }
-  }, [status]);
+  }, [status, address]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     didExplicitLogout.current = true;
+    await signOutWallet();
     disconnect();
   }, [disconnect]);
 
-  const addEmployee = useCallback((newEmployee: Omit<Employee, 'id' | 'dateAdded'>) => {
-    setEmployees(prev => [
-      ...prev,
-      {
-        ...newEmployee,
-        id: Math.max(0, ...prev.map(e => e.id)) + 1,
-        dateAdded: new Date(),
-      },
-    ]);
+  const addEmployee = useCallback(async (data: Omit<Employee, 'id' | 'dateAdded'>) => {
+    const created = await insertEmployee(data);
+    setEmployees(prev => [...prev, created]);
   }, []);
 
-  const updateEmployee = useCallback(
-    (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => {
-      setEmployees(prev =>
-        prev.map(emp => (emp.id === id ? { ...emp, ...updates } : emp))
-      );
-    },
-    []
-  );
+  const updateEmployee = useCallback(async (id: string, updates: Omit<Employee, 'id' | 'dateAdded'>) => {
+    const updated = await dbUpdateEmployee(id, updates);
+    setEmployees(prev => prev.map(e => e.id === id ? updated : e));
+  }, []);
 
-  const removeEmployee = useCallback((id: number) => {
+  const removeEmployee = useCallback(async (id: string) => {
+    await deleteEmployee(id);
     setEmployees(prev => prev.filter(e => e.id !== id));
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{
-        ...authState,
-        isAuthenticated: isConnected,
-        logout,
-        employees,
-        addEmployee,
-        updateEmployee,
-        removeEmployee,
-      }}
-    >
+    <AuthContext.Provider value={{
+      ...authState,
+      isAuthenticated: isConnected,
+      logout,
+      employees,
+      isLoadingEmployees,
+      addEmployee,
+      updateEmployee,
+      removeEmployee,
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 };
