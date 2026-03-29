@@ -6,7 +6,7 @@ import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import {
   ArrowRight, Zap, Shield, Globe, Users,
-  FileSpreadsheet, ChevronRight, Check,
+  FileSpreadsheet, ChevronRight, Check, Menu, X,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,18 +24,18 @@ const CHAINS = [
 ];
 
 const FEATURES = [
-  { icon: <Zap size={18}/>,           title: 'Instant settlement',  desc: 'Payments hit wallets in seconds, not 3 to 5 business days. No bank cut-off times, no weekends.' },
-  { icon: <Users size={18}/>,         title: 'Batch payroll',       desc: 'Pay your entire team in a single on-chain transaction. 10 or 1,000 employees, same one click.' },
-  { icon: <FileSpreadsheet size={18}/>, title: 'CSV import',         desc: 'Bulk-import your team from any HR tool. Paste a spreadsheet, validate wallets, run payroll.' },
-  { icon: <Globe size={18}/>,         title: 'Multi-currency',      desc: 'Pay in ETH, USDC, USDT, or DAI across Ethereum, Polygon, Arbitrum, Base, and more.' },
-  { icon: <Shield size={18}/>,        title: 'Non-custodial',       desc: 'Funds go directly from your wallet to your team. We never touch your money.' },
-  { icon: <Check size={18}/>,         title: 'Compliance ready',    desc: 'Downloadable payroll records with every transaction. Built for your accountant from day one.' },
+  { icon: <Zap size={18}/>,             title: 'Instant settlement',  desc: 'Payments hit wallets in seconds, not 3 to 5 business days. No bank cut-off times, no weekends.' },
+  { icon: <Users size={18}/>,           title: 'Batch payroll',       desc: 'Pay your entire team in a single on-chain transaction. 10 or 800 employees, same one click.' },
+  { icon: <FileSpreadsheet size={18}/>, title: 'CSV import',          desc: 'Bulk-import your team from any HR tool. Paste a spreadsheet, validate wallets, run payroll.' },
+  { icon: <Globe size={18}/>,           title: 'Multi-currency',      desc: 'Pay in ETH, USDC, USDT, or DAI across Ethereum, Polygon, Arbitrum, Base, and more.' },
+  { icon: <Shield size={18}/>,          title: 'Non-custodial',       desc: 'Funds go directly from your wallet to your team. We never touch your money.' },
+  { icon: <Check size={18}/>,           title: 'Downloadable records', desc: 'Full transaction history with every payroll run. Export anytime for your own bookkeeping.' },
 ];
 
 const STEPS = [
   { n: '01', title: 'Connect your wallet', desc: 'Use MetaMask, Coinbase Wallet, WalletConnect, or any supported wallet. Your address is your identity. No email, no password.' },
-  { n: '02', title: 'Add your team',       desc: 'Add employees manually or bulk-import via CSV. Each person gets a wallet address and a monthly pay amount.' },
-  { n: '03', title: 'Run payroll',         desc: 'Select employees, choose ETH or a stablecoin, confirm once in your wallet. All payments dispatch in a single transaction.' },
+  { n: '02', title: 'Add your team',       desc: 'Add employees manually or bulk-import via CSV. Each person gets a wallet address and a payment amount.' },
+  { n: '03', title: 'Run payroll',         desc: 'Select employees, choose ETH or a stablecoin, confirm once in your wallet. All payments go out in a single transaction.' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ const useParallax = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PARTICLE NETWORK CANVAS (SEDA-style floating dots with connection lines)
+// PARTICLE NETWORK CANVAS
 // ─────────────────────────────────────────────────────────────────────────────
 interface Particle {
   x: number; y: number;
@@ -141,12 +141,10 @@ const ParticleCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) =>
       ctx.clearRect(0, 0, w, h);
 
       for (const p of particles.current) {
-        // Move
         p.x += p.vx; p.y += p.vy;
         if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
         if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
 
-        // Mouse repulsion (subtle)
         const dx = p.x - mouse.current.x;
         const dy = p.y - mouse.current.y;
         const dist = Math.hypot(dx, dy);
@@ -154,19 +152,16 @@ const ParticleCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) =>
           const force = (1 - dist / MOUSE_DIST) * 0.4;
           p.vx += (dx / dist) * force * 0.05;
           p.vy += (dy / dist) * force * 0.05;
-          // clamp speed
           const speed = Math.hypot(p.vx, p.vy);
           if (speed > 0.8) { p.vx = (p.vx / speed) * 0.8; p.vy = (p.vy / speed) * 0.8; }
         }
 
-        // Draw dot
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(167,139,250,${p.alpha})`;
         ctx.fill();
       }
 
-      // Connection lines
       for (let i = 0; i < particles.current.length; i++) {
         for (let j = i + 1; j < particles.current.length; j++) {
           const a = particles.current[i];
@@ -199,7 +194,7 @@ const ParticleCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) =>
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INTERACTIVE GRID CANVAS (cursor illumination)
+// INTERACTIVE GRID CANVAS
 // ─────────────────────────────────────────────────────────────────────────────
 const GridCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -272,7 +267,7 @@ const GridCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ANIMATED WAVY LINE (SEDA-style decorative separator)
+// WAVY LINE
 // ─────────────────────────────────────────────────────────────────────────────
 const WavyLine: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -296,11 +291,11 @@ const WavyLine: React.FC = () => {
         ctx.lineTo(x, y);
       }
       const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
-      grad.addColorStop(0,    'rgba(124,58,237,0)');
-      grad.addColorStop(0.2,  'rgba(124,58,237,0.6)');
-      grad.addColorStop(0.5,  'rgba(167,139,250,1)');
-      grad.addColorStop(0.8,  'rgba(124,58,237,0.6)');
-      grad.addColorStop(1,    'rgba(124,58,237,0)');
+      grad.addColorStop(0,   'rgba(124,58,237,0)');
+      grad.addColorStop(0.2, 'rgba(124,58,237,0.6)');
+      grad.addColorStop(0.5, 'rgba(167,139,250,1)');
+      grad.addColorStop(0.8, 'rgba(124,58,237,0.6)');
+      grad.addColorStop(1,   'rgba(124,58,237,0)');
       ctx.strokeStyle = grad;
       ctx.lineWidth = 1.5;
       ctx.stroke();
@@ -314,7 +309,7 @@ const WavyLine: React.FC = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FLOATING TRANSACTION CARD (SEDA-style live activity widget)
+// LIVE TX FEED
 // ─────────────────────────────────────────────────────────────────────────────
 const MOCK_TXS = [
   { addr: '0x3F4a...9c2E', amount: '$12,400', token: 'USDC', employees: 14, time: '2s ago' },
@@ -409,7 +404,7 @@ const StatCard: React.FC<{ value: number; suffix: string; label: string; decimal
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FEATURE CARD with scroll reveal
+// FEATURE CARD
 // ─────────────────────────────────────────────────────────────────────────────
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; desc: string; delay: number }> = ({
   icon, title, desc, delay,
@@ -436,7 +431,7 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; desc: string
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CHAIN TICKER (horizontal marquee)
+// CHAIN TICKER
 // ─────────────────────────────────────────────────────────────────────────────
 const ChainTicker: React.FC = () => (
   <div style={{ overflow: 'hidden', width: '100%' }}>
@@ -459,12 +454,80 @@ const LinkedInIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill=
 const XIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MOBILE MENU
+// ─────────────────────────────────────────────────────────────────────────────
+const MobileMenu: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: 'rgba(15,13,22,0.98)',
+      backdropFilter: 'blur(20px)',
+      display: 'flex', flexDirection: 'column',
+      padding: '24px',
+    }}>
+      {/* Top row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '48px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/geniepay_logov4.png" alt="GeniePay" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <span style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>GeniePay</span>
+        </div>
+        <button
+          onClick={onClose}
+          style={{ background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Nav links */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+        {[
+          { label: 'Features', href: '#features' },
+          { label: 'How it works', href: '#how-it-works' },
+          { label: 'Networks', href: '#networks' },
+        ].map(({ label, href }) => (
+          <a
+            key={label}
+            href={href}
+            onClick={onClose}
+            style={{
+              fontSize: '24px', fontWeight: 700, color: '#9ca3af',
+              textDecoration: 'none', padding: '12px 8px',
+              borderBottom: '0.5px solid rgba(255,255,255,0.05)',
+              transition: 'color .15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#9ca3af')}
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+
+      {/* Connect wallet at bottom */}
+      <div style={{ paddingBottom: '16px' }}>
+        <ConnectButton />
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 const LandingPage: React.FC = () => {
   const { isConnected } = useAccount();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const scrollY = useParallax();
 
   useEffect(() => { if (isConnected) navigate('/dashboard'); }, [isConnected, navigate]);
@@ -475,9 +538,8 @@ const LandingPage: React.FC = () => {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  // Parallax multipliers
-  const heroParallax   = useMemo(() => scrollY * 0.25, [scrollY]);
-  const orbParallax    = useMemo(() => scrollY * 0.15, [scrollY]);
+  const heroParallax = useMemo(() => scrollY * 0.25, [scrollY]);
+  const orbParallax  = useMemo(() => scrollY * 0.15, [scrollY]);
 
   return (
     <>
@@ -541,6 +603,8 @@ const LandingPage: React.FC = () => {
         .ghost-btn:hover{color:#fff;border-color:rgba(255,255,255,.25);}
         .nav-link{font-size:14px;color:#9ca3af;text-decoration:none;transition:color .15s;}
         .nav-link:hover{color:#fff;}
+        .nav-links-desktop{display:flex;align-items:center;gap:32px;}
+        .nav-hamburger{display:none;}
         .social-link{
           display:flex;align-items:center;justify-content:center;
           width:36px;height:36px;border-radius:8px;color:#6b7280;
@@ -552,17 +616,25 @@ const LandingPage: React.FC = () => {
         .hero-content-delay{animation:reveal-up .8s ease .15s both;}
         .hero-content-delay2{animation:reveal-up .8s ease .3s both;}
         .hero-content-delay3{animation:reveal-up .8s ease .45s both;}
+
+        /* ── Responsive ── */
         @media(max-width:900px){
           .features-grid{grid-template-columns:1fr 1fr !important;}
           .stats-grid{grid-template-columns:repeat(2,1fr) !important;}
           .hero-split{flex-direction:column !important;}
           .live-feed-col{display:none !important;}
+          .nav-links-desktop{display:none !important;}
+          .nav-hamburger{display:flex !important;}
         }
         @media(max-width:600px){
           .features-grid{grid-template-columns:1fr !important;}
           .stats-grid{grid-template-columns:1fr 1fr !important;}
+          .connect-btn{padding:12px 24px;font-size:14px;}
+          .ghost-btn{padding:12px 18px;font-size:14px;}
         }
       `}</style>
+
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <div style={{ backgroundColor:'#0f0d16',color:'#fff',minHeight:'100vh',fontFamily:'Inter,-apple-system,sans-serif',overflowX:'hidden' }}>
 
@@ -570,21 +642,46 @@ const LandingPage: React.FC = () => {
         <nav style={{
           position:'fixed',top:0,left:0,right:0,zIndex:100,
           display:'flex',alignItems:'center',justifyContent:'space-between',
-          padding:'0 clamp(24px,5vw,64px)',height:'68px',
+          padding:'0 clamp(16px,4vw,64px)',height:'68px',
           background: scrolled ? 'rgba(15,13,22,.92)' : 'transparent',
           backdropFilter: scrolled ? 'blur(16px)' : 'none',
           borderBottom: scrolled ? '0.5px solid rgba(124,58,237,.15)' : 'none',
           transition:'background .3s,backdrop-filter .3s,border-color .3s',
         }}>
-          <button onClick={() => navigate('/')} style={{ display:'flex',alignItems:'center',gap:'12px',background:'none',border:'none',cursor:'pointer',padding:0 }}>
-            <img src="/geniepay_logov4.png" alt="GeniePay" style={{ width:'32px',height:'32px',objectFit:'contain' }} />
-            <span style={{ fontSize:'22px',fontWeight:800,letterSpacing:'-0.02em',color:'#fff' }}>GeniePay</span>
+          {/* Mobile: hamburger on the left */}
+          <button
+            className="nav-hamburger"
+            onClick={() => setMenuOpen(true)}
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '0.5px solid rgba(255,255,255,0.1)',
+              borderRadius: '10px', padding: '8px',
+              cursor: 'pointer', color: '#9ca3af',
+              alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
           </button>
-          <div style={{ display:'flex',alignItems:'center',gap:'32px' }}>
+
+          {/* Logo — centered on mobile, left on desktop */}
+          <button onClick={() => navigate('/')} style={{ display:'flex',alignItems:'center',gap:'10px',background:'none',border:'none',cursor:'pointer',padding:0 }}>
+            <img src="/geniepay_logov4.png" alt="GeniePay" style={{ width:'30px',height:'30px',objectFit:'contain' }} />
+            <span style={{ fontSize:'20px',fontWeight:800,letterSpacing:'-0.02em',color:'#fff' }}>GeniePay</span>
+          </button>
+
+          {/* Desktop nav */}
+          <div className="nav-links-desktop">
             <a href="#features"     className="nav-link">Features</a>
             <a href="#how-it-works" className="nav-link">How it works</a>
             <a href="#networks"     className="nav-link">Networks</a>
             <ConnectButton />
+          </div>
+
+          {/* Mobile: connect button on the right */}
+          <div className="nav-hamburger" style={{ alignItems:'center' }}>
+            <ConnectButton showBalance={false} />
           </div>
         </nav>
 
@@ -593,13 +690,9 @@ const LandingPage: React.FC = () => {
         ══════════════════════════════════════════════════════════════════ */}
         <section style={{ minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'120px clamp(24px,5vw,64px) 80px',position:'relative',overflow:'hidden' }}>
 
-          {/* Particle network layer */}
           <ParticleCanvas style={{ zIndex: 0 }} />
-
-          {/* Grid + cursor glow layer */}
           <GridCanvas style={{ zIndex: 1, opacity: 0.6 }} />
 
-          {/* World map */}
           <img src="/world-map.svg" alt="" aria-hidden="true" style={{
             position:'absolute',top:'50%',left:'50%',
             transform:`translate(-50%,calc(-50% + ${heroParallax}px))`,
@@ -608,7 +701,6 @@ const LandingPage: React.FC = () => {
             filter:'brightness(1.5)',transition:'transform 0s',
           }} />
 
-          {/* Pulsing orb */}
           <div style={{
             position:'absolute',top:'-10%',left:'50%',
             transform:`translateX(-50%) translateY(${orbParallax}px)`,
@@ -618,7 +710,6 @@ const LandingPage: React.FC = () => {
             pointerEvents:'none',zIndex:1,
           }} />
 
-          {/* Spinning ring decoration */}
           <div style={{
             position:'absolute',top:'50%',left:'50%',
             transform:`translate(-50%,-50%) translateY(${heroParallax * 0.5}px)`,
@@ -636,13 +727,11 @@ const LandingPage: React.FC = () => {
             pointerEvents:'none',zIndex:1,
           }} />
 
-          {/* Bottom vignette */}
           <div style={{ position:'absolute',bottom:0,left:0,right:0,height:'220px',background:'linear-gradient(to bottom,transparent,#0f0d16)',pointerEvents:'none',zIndex:2 }} />
 
           {/* Hero split layout */}
           <div className="hero-split" style={{ position:'relative',zIndex:3,display:'flex',alignItems:'center',gap:'64px',maxWidth:'1200px',width:'100%' }}>
 
-            {/* Left: copy */}
             <div style={{ flex:1,textAlign:'left' }}>
               <div className="hero-content" style={{
                 display:'inline-flex',alignItems:'center',gap:'8px',
@@ -654,16 +743,19 @@ const LandingPage: React.FC = () => {
                 animation:'badge-pulse 3s ease-in-out infinite',
               }}>
                 <Zap size={12} style={{ color:'#7c3aed',flexShrink:0 }} />
-                Instant. No Fees. No account needed.
+                {/* Updated badge copy */}
+                Free. No account. No middlemen.
               </div>
 
+              {/* Updated headline */}
               <h1 className="hero-gradient-text hero-content-delay" style={{ fontSize:'clamp(40px,6vw,80px)',fontWeight:800,lineHeight:1.05,letterSpacing:'-0.04em',marginBottom:'24px',display:'block' }}>
                 Pay your global<br />team in one click
               </h1>
 
+              {/* Updated subheadline — matches README tone */}
               <p className="hero-content-delay2" style={{ fontSize:'clamp(15px,1.8vw,18px)',color:'#6b7280',maxWidth:'480px',lineHeight:1.7,marginBottom:'40px' }}>
-                Crypto payroll for modern teams. Send 800+ payouts in a single transaction.
-                Zero fees, zero delays, zero middlemen.
+                Send payroll to 800 employees or contractors worldwide in a single transaction.
+                Faster, cheaper, and entirely yours.
               </p>
 
               <div className="hero-content-delay3" style={{ display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap' }}>
@@ -691,14 +783,12 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Right: live feed */}
             <div className="live-feed-col" style={{ flexShrink:0,width:'420px',animation:'float-up 6s ease-in-out infinite' }}>
               <LiveTxFeed />
             </div>
           </div>
         </section>
 
-        {/* ── Wavy separator ── */}
         <WavyLine />
 
         {/* ── Chain ticker ── */}
@@ -709,14 +799,13 @@ const LandingPage: React.FC = () => {
         {/* ── Stats ── */}
         <section style={{ padding:'80px clamp(24px,5vw,64px)' }}>
           <div className="stats-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'16px',maxWidth:'960px',margin:'0 auto' }}>
-            <StatCard value={0}    suffix="$" label="Platform fees" />
-            <StatCard value={6}    suffix="+" label="Networks supported" />
+            <StatCard value={0}   suffix="$" label="Platform fees" />
+            <StatCard value={6}   suffix="+" label="Networks supported" />
             <StatCard value={800} suffix="+" label="Employees per run" />
-            <StatCard value={3}    suffix="s" label="Average settlement" />
+            <StatCard value={3}   suffix="s" label="Average settlement" />
           </div>
         </section>
 
-        {/* ── Wavy separator ── */}
         <WavyLine />
 
         {/* ── Features ── */}
@@ -724,8 +813,9 @@ const LandingPage: React.FC = () => {
           <div style={{ maxWidth:'960px',margin:'0 auto' }}>
             <div style={{ textAlign:'center',marginBottom:'56px' }}>
               <div style={{ fontSize:'11px',fontWeight:600,color:'#7c3aed',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:'12px' }}>Features</div>
+              {/* Updated section headline */}
               <h2 style={{ fontSize:'clamp(26px,4vw,42px)',fontWeight:700,letterSpacing:'-0.03em',color:'#fff',marginBottom:'12px' }}>Everything your payroll needs</h2>
-              <p style={{ fontSize:'15px',color:'#6b7280',maxWidth:'480px',margin:'0 auto' }}>Built for teams of 1 to 10,000. Zero friction, zero middlemen, zero surprises.</p>
+              <p style={{ fontSize:'15px',color:'#6b7280',maxWidth:'480px',margin:'0 auto' }}>Built for teams of 1 to 800. No friction, no middlemen, no surprises.</p>
             </div>
             <div className="features-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'16px' }}>
               {FEATURES.map((f, i) => <FeatureCard key={f.title} {...f} delay={i * 80} />)}
@@ -755,19 +845,17 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ── Wavy separator ── */}
         <WavyLine />
 
-        {/* ══════════════════════════════════════════════════════════════════
-            CTA — particles + grid (same as hero)
-        ══════════════════════════════════════════════════════════════════ */}
+        {/* ── CTA ── */}
         <section style={{ padding:'120px clamp(24px,5vw,64px)',textAlign:'center',position:'relative',overflow:'hidden' }}>
           <ParticleCanvas style={{ zIndex:0 }} />
           <GridCanvas    style={{ zIndex:1, opacity:0.6 }} />
           <div style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'600px',height:'400px',borderRadius:'50%',background:'radial-gradient(ellipse,rgba(124,58,237,.14) 0%,transparent 70%)',pointerEvents:'none',zIndex:1 }} />
           <div style={{ position:'relative',zIndex:2 }}>
+            {/* Updated CTA copy */}
             <h2 style={{ fontSize:'clamp(30px,5vw,56px)',fontWeight:800,letterSpacing:'-0.03em',color:'#fff',marginBottom:'16px',lineHeight:1.1 }}>Ready to pay your team?</h2>
-            <p style={{ fontSize:'16px',color:'#6b7280',maxWidth:'400px',margin:'0 auto 36px',lineHeight:1.7 }}>No sign-up. No credit card. No waiting. Just connect your wallet and go.</p>
+            <p style={{ fontSize:'16px',color:'#6b7280',maxWidth:'400px',margin:'0 auto 36px',lineHeight:1.7 }}>No sign-up. No fees. Connect your wallet and go.</p>
             <ConnectButton.Custom>
               {({ openConnectModal }) => (
                 <button className="connect-btn" onClick={openConnectModal} style={{ fontSize:'16px',padding:'16px 40px' }}>
@@ -786,9 +874,9 @@ const LandingPage: React.FC = () => {
             <span style={{ fontSize:'13px',color:'#4b5563' }}>GeniePay · 2025</span>
           </div>
           <div style={{ display:'flex',alignItems:'center',gap:'8px' }}>
-            <a href="https://github.com/Gregster31/GeniePay"              target="_blank" rel="noopener noreferrer" className="social-link" title="GitHub"><GitHubIcon /></a>
-            <a href="https://www.linkedin.com/company/geniepayworks"      target="_blank" rel="noopener noreferrer" className="social-link" title="LinkedIn"><LinkedInIcon /></a>
-            <a href="https://x.com/pay_genie"                            target="_blank" rel="noopener noreferrer" className="social-link" title="X"><XIcon /></a>
+            <a href="https://github.com/Gregster31/GeniePay"         target="_blank" rel="noopener noreferrer" className="social-link" title="GitHub"><GitHubIcon /></a>
+            <a href="https://www.linkedin.com/company/geniepayworks" target="_blank" rel="noopener noreferrer" className="social-link" title="LinkedIn"><LinkedInIcon /></a>
+            <a href="https://x.com/pay_genie"                       target="_blank" rel="noopener noreferrer" className="social-link" title="X"><XIcon /></a>
           </div>
         </footer>
 
