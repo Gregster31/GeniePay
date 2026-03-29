@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { X, AlertCircle, CheckCircle2, Loader2, ExternalLink, Zap } from 'lucide-react';
 import { useBulkPayment } from '@/hooks/useBulkPayment';
+import { useAccount } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
+import { saveReceipt } from '@/services/ReceiptService';
 import type { Employee } from '@/models/EmployeeModel';
 
 interface BatchPaymentModalProps {
@@ -16,6 +19,9 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
   employees,
   totalAmount,
 }) => {
+  const { chain, address } = useAccount();
+  const queryClient = useQueryClient();
+
   const {
     approvalHash,
     paymentHash,
@@ -31,6 +37,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
 
   const [gasSavings, setGasSavings] = useState('60%');
   const [selectedCurrency, setSelectedCurrency] = useState<'ETH' | 'USDC'>('USDC');
+  const [receiptSaved, setReceiptSaved] = useState(false);
 
   useEffect(() => {
     if (employees.length > 0) {
@@ -38,29 +45,56 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
     }
   }, [employees.length, estimateGasSavings]);
 
-  // Auto-close on success
+  // Save receipt then auto-close on success
   useEffect(() => {
-    if (isSuccess && paymentHash) {
+    if (isSuccess && paymentHash && !receiptSaved) {
+      setReceiptSaved(true);
+
+      const totalCrypto =
+        selectedCurrency === 'ETH'
+          ? totalAmount / ethPrice
+          : totalAmount; // USDC 1:1 with USD
+
+      saveReceipt({
+        type: 'payroll',
+        txHash: paymentHash,
+        network: chain?.name ?? 'Ethereum',
+        currency: selectedCurrency,
+        totalUsd: totalAmount,
+        totalCrypto,
+        from: address ?? '',
+        recipients: employees.map((emp) => ({
+          name: emp.name,
+          address: emp.walletAddress,
+          amountUsd: emp.payUsd,
+          amountEth:
+            selectedCurrency === 'ETH'
+              ? emp.payUsd / ethPrice
+              : emp.payUsd,
+        })),
+      })
+        .then(() => queryClient.invalidateQueries({ queryKey: ['receipts'] }))
+        .catch(console.error);
+
       setTimeout(() => {
         reset();
+        setReceiptSaved(false);
         onClose();
       }, 3000);
     }
-  }, [isSuccess, paymentHash, reset, onClose]);
+  }, [isSuccess, paymentHash, receiptSaved, selectedCurrency, totalAmount, ethPrice, chain, address, employees, reset, onClose, queryClient]);
 
   const handleClose = () => {
     if (!isProcessing) {
       reset();
+      setReceiptSaved(false);
       onClose();
     }
   };
 
   const handleConfirm = async () => {
     try {
-      await execute({ 
-        employees, 
-        currency: selectedCurrency 
-      });
+      await execute({ employees, currency: selectedCurrency });
     } catch (err) {
       console.error('Payment failed:', err);
     }
@@ -69,15 +103,11 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
-  const formatEthAmount = (usdAmount: number) => {
-    const ethAmount = usdAmount / ethPrice;
-    return ethAmount.toFixed(6); // 6 decimals for ETH
-  };
+  const formatEthAmount = (usdAmount: number) => (usdAmount / ethPrice).toFixed(6);
 
   const getTotalInSelectedCurrency = () => {
     if (selectedCurrency === 'ETH') {
-      const ethTotal = totalAmount / ethPrice;
-      return `${ethTotal.toFixed(6)} ETH`;
+      return `${(totalAmount / ethPrice).toFixed(6)} ETH`;
     }
     return formatCurrency(totalAmount);
   };
@@ -98,25 +128,20 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
         {/* Header */}
         <div
           className="px-6 py-4 flex items-center justify-between"
-          style={{
-            borderBottom: '1px solid rgba(124, 58, 237, 0.2)',
-          }}
+          style={{ borderBottom: '1px solid rgba(124, 58, 237, 0.2)' }}
         >
           <div>
             <h2 className="text-xl font-bold text-white">
               {isSuccess ? '✅ Payment Successful!' : 'Confirm Batch Payment'}
             </h2>
             <p className="text-sm text-gray-400 mt-1">
-              {isSuccess 
-                ? `${employees.length} employees paid successfully`
+              {isSuccess
+                ? `${employees.length} employees paid · receipt saved to Documents`
                 : `Review and confirm payment to ${employees.length} employee${employees.length > 1 ? 's' : ''}`}
             </p>
           </div>
           {!isProcessing && (
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
+            <button onClick={handleClose} className="text-gray-400 hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
           )}
@@ -124,7 +149,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
 
         {/* Content */}
         <div className="px-6 py-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          
+
           {/* Currency Selector */}
           {!isSuccess && !isProcessing && (
             <div>
@@ -132,32 +157,26 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                 Payment Currency
               </label>
               <div className="flex gap-3">
-                <button
-                  onClick={() => setSelectedCurrency('ETH')}
-                  className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-                    selectedCurrency === 'ETH'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                  }`}
-                >
-                  Pay in ETH
-                  <div className="text-xs opacity-70 mt-1">Native Ether</div>
-                </button>
-                <button
-                  onClick={() => setSelectedCurrency('USDC')}
-                  className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-                    selectedCurrency === 'USDC'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                  }`}
-                >
-                  Pay in USDC
-                  <div className="text-xs opacity-70 mt-1">Stablecoin</div>
-                </button>
+                {(['ETH', 'USDC'] as const).map((cur) => (
+                  <button
+                    key={cur}
+                    onClick={() => setSelectedCurrency(cur)}
+                    className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
+                      selectedCurrency === cur
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    }`}
+                  >
+                    Pay in {cur}
+                    <div className="text-xs opacity-70 mt-1">
+                      {cur === 'ETH' ? 'Native Ether' : 'Stablecoin'}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
-          
+
           {/* Success State */}
           {isSuccess && paymentHash && (
             <div
@@ -255,13 +274,11 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                 <div>
                   <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase">Recipients</h3>
                   <div className="space-y-2">
-                    {employees.map(emp => (
+                    {employees.map((emp) => (
                       <div
                         key={emp.id}
                         className="flex justify-between items-center p-3 rounded-lg"
-                        style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        }}
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                       >
                         <div>
                           <div className="font-medium text-white">{emp.name}</div>
@@ -269,7 +286,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                         </div>
                         <div>
                           <div className="font-semibold text-purple-400">
-                            {selectedCurrency === 'ETH' 
+                            {selectedCurrency === 'ETH'
                               ? `${formatEthAmount(emp.payUsd)} ETH`
                               : formatCurrency(emp.payUsd)}
                           </div>
@@ -300,15 +317,15 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                 <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-blue-400 mb-1">
-                    {isApproving 
-                      ? `Step 1/2: Approving ${selectedCurrency}...` 
-                      : selectedCurrency === 'ETH' 
+                    {isApproving
+                      ? `Step 1/2: Approving ${selectedCurrency}...`
+                      : selectedCurrency === 'ETH'
                         ? 'Sending ETH Payment...'
                         : 'Step 2/2: Sending Payment...'}
                   </h3>
                   <p className="text-sm text-gray-300">
-                    {isApproving 
-                      ? 'Confirm the approval transaction in your wallet' 
+                    {isApproving
+                      ? 'Confirm the approval transaction in your wallet'
                       : 'Confirm the payment transaction in your wallet'}
                   </p>
                   {(approvalHash || paymentHash) && (

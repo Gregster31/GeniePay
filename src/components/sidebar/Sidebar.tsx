@@ -16,6 +16,7 @@ import {
   ExternalLink,
   Menu,
   X,
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
@@ -35,6 +36,7 @@ const navigationItems: NavigationItem[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/dashboard',  icon: LayoutDashboard },
   { id: 'pay',       label: 'Quick Pay', path: '/pay',        icon: Send },
   { id: 'payroll',   label: 'Payroll',   path: '/payroll',    icon: Users },
+  { id: 'documents', label: 'Documents', path: '/documents',   icon: FileText },
   { id: 'history',   label: 'History',   path: '/history',    icon: History },
 ];
 
