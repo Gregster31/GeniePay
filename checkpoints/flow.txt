@@ -30,6 +30,15 @@ SETTINGS IDEAS:
 APP FLOW EXPLAINED:
 Connects to whatever chain you want with your wallet and you'll be able to send money and bulk orders too
 
+DB FLOW EXPLAINED:
+GeniePay uses PostgreSQL via Supabase for persistent storage, with your wallet address as your identity, no account creation needed. 
+How it works: When you connect your wallet, GeniePay silently authenticates you with Supabase using your wallet address as a deterministic identity. 
+Supabase issues a JWT, and PostgreSQL's Row Level Security ensures you can only ever read and write your own employee data, 
+enforced at the database level, not just in the frontend. Reconnect the same wallet on any device or browser and your entire team roster is there instantly.
+
+
+
+
 🎨 Color Theme Changes:
 
 Main Background: #181522 (deep purple-black)

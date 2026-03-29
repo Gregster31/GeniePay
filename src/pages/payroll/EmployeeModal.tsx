@@ -7,7 +7,7 @@ interface EmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (employee: Omit<Employee, 'id' | 'dateAdded'>) => void;
-  onEdit?: (id: number, updates: Omit<Employee, 'id' | 'dateAdded'>) => void;
+  onEdit?: (id: string, updates: Omit<Employee, 'id' | 'dateAdded'>) => void;
   employeeToEdit?: Employee | null;
 }
 
