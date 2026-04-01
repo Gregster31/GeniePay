@@ -8,4 +8,4 @@
 | [**3.1**](https://www.youtube.com/watch?v=pa600S2OYKg) | UI Upgrade | Dashboard UI<br> Sidebar<br> Responsive Web UI<br> Typography/Color Scheme |
 | **4** | Decentralization & MVP | Implementation of QuickPay<br> Implement mass payouts via smart contracts<br> Cross plateform support<br>
 | **5** | Added Features | Settings<br> DB Implementation |
-| **6** | Invoices | Generate professional invoices and accountant-friendly files after transactions |
+| [**6**](https://www.youtube.com/watch?v=BSc4aY2lqaU) | Invoices | Generate professional invoices and accountant-friendly files after transactions |
