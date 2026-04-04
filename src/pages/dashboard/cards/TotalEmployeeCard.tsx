@@ -21,7 +21,7 @@ export const TotalEmployeeCard: React.FC<{
         <Label>Total Employees</Label>
       </div>
       <div className="flex flex-col justify-end flex-1">
-        <span className="text-[48px] font-bold tracking-tight leading-none text-white">{count}</span>
+        <span className="text-[48px] font-bold tracking-tight leading-none dark:text-white text-gray-900">{count}</span>
       {addedLastMonth > 0 && (
         <span className="text-[11px] font-bold text-cyan mt-1.5 tabular-nums">
           +{addedLastMonth} / month

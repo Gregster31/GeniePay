@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Globe, Moon, Sun, Menu } from 'lucide-react';
+import { Search, Globe, Moon, Sun, Menu, X } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface AppHeaderProps {
   onMobileMenuToggle: () => void;
+  mobileOpen?: boolean;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle, mobileOpen }) => {
   const { isDark, toggle } = useTheme();
   const { chain } = useAccount();
   const [scrolled, setScrolled] = useState(false);
@@ -22,12 +23,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle }) => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-[100] h-[72px] flex items-center justify-between gap-4 px-4 sm:px-6
-        transition-all duration-300
+        transition-all duration-300 border-b
         ${scrolled
-          ? 'border-b dark:bg-[rgba(8,6,14,0.72)] dark:border-white/[0.07] bg-[rgba(238,234,227,0.85)] border-black/[0.08]'
-          : 'bg-transparent border-transparent'
+          ? 'dark:bg-[rgba(8,6,14,0.72)] dark:border-white/[0.07] dark:shadow-none bg-white/[0.95] border-black/[0.12] shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_0_rgba(0,0,0,0.08)]'
+          : 'dark:bg-transparent dark:border-transparent dark:shadow-none bg-white/[0.88] border-black/[0.10] shadow-[0_2px_16px_rgba(0,0,0,0.08),0_1px_0_rgba(0,0,0,0.06)]'
         }`}
-      style={scrolled ? { backdropFilter: 'blur(28px) saturate(1.8)', WebkitBackdropFilter: 'blur(28px) saturate(1.8)' } : {}}
+      style={{ backdropFilter: 'blur(28px) saturate(1.8)', WebkitBackdropFilter: 'blur(28px) saturate(1.8)' }}
     >
       {/* ── Left: Logo ── */}
       <div className="flex items-center gap-2.5 shrink-0">
@@ -37,7 +38,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle }) => {
             dark:bg-white/[0.06] dark:border dark:border-white/[0.09] dark:text-white
             bg-black/[0.05] border border-black/[0.09] text-gray-800"
         >
-          <Menu size={15} />
+          {mobileOpen ? <X size={15} /> : <Menu size={15} />}
         </button>
         <img src="/geniepay_logov4.png" alt="" className="w-[28px] h-[28px] object-contain opacity-90" />
         <span className="text-[13px] font-black uppercase tracking-[0.22em] whitespace-nowrap dark:text-white text-gray-900">
@@ -87,7 +88,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle }) => {
         <div className="hidden sm:flex items-center gap-1.5 h-10 px-3.5 rounded-lg text-[13px] font-semibold tracking-wide whitespace-nowrap border
           dark:text-gray-300 dark:bg-white/[0.04] dark:border-white/[0.07]
           text-gray-700 bg-black/[0.04] border-black/[0.08]">
-          <Globe size={13} className="text-[#23DDC6]" />
+          <Globe size={13} className="dark:text-[#23DDC6] text-[#0A8B7D]" />
           <span>{chain?.name ?? 'Mainnet'}</span>
         </div>
 
@@ -119,9 +120,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle }) => {
             return (
               <button
                 onClick={openAccountModal}
-                className="flex items-center gap-2 h-10 px-4 rounded-lg text-[13px] font-semibold tracking-wide cursor-pointer whitespace-nowrap border
-                  dark:bg-white/[0.04] dark:border-white/[0.09] dark:text-gray-200
-                  bg-black/[0.04] border-black/[0.09] text-gray-800"
+                className="flex items-center gap-2 h-10 px-4 rounded-lg text-[13px] font-semibold tracking-wide cursor-pointer whitespace-nowrap
+                  dark:border dark:bg-white/[0.04] dark:border-white/[0.09] dark:text-gray-200
+                  text-gray-800"
               >
                 <span className="w-[7px] h-[7px] rounded-full bg-[#23DDC6] shadow-[0_0_5px_#23DDC6] shrink-0" />
                 {account.displayName}

@@ -1,46 +1,102 @@
-import React, {
-  useEffect, useRef, useState, useCallback, useMemo,
-} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import {
-  ArrowRight, Zap, Shield, Globe, Users,
-  FileSpreadsheet, ChevronRight, Check, Menu, X,
+  Zap, Shield, Globe, Users, FileSpreadsheet, Check,
+  ChevronLeft, ChevronRight, Menu, X, ArrowRight,
+  Github, Linkedin, Twitter, Wallet,
 } from 'lucide-react';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
-const CHAINS = [
-  { name: 'Ethereum', color: '#627eea' },
-  { name: 'Polygon',  color: '#8247e5' },
-  { name: 'Arbitrum', color: '#28a0f0' },
-  { name: 'Optimism', color: '#ff0420' },
-  { name: 'Base',     color: '#0052ff' },
-  { name: 'USDC',     color: '#2775ca' },
-  { name: 'USDT',     color: '#26a17b' },
-  { name: 'DAI',      color: '#f5ac37' },
+const FEATURED_NETWORKS = [
+  { name: 'Ethereum', color: '#627EEA', ticker: 'ETH' },
+  { name: 'Polygon',  color: '#8247E5', ticker: 'POL' },
+  { name: 'Arbitrum', color: '#28A0F0', ticker: 'ARB' },
+  { name: 'Optimism', color: '#FF0420', ticker: 'OP'  },
+  { name: 'Base',     color: '#0052FF', ticker: 'BASE'},
+  { name: 'Avalanche',color: '#E84142', ticker: 'AVAX'},
 ];
 
 const FEATURES = [
-  { icon: <Zap size={18}/>,             title: 'Instant settlement',  desc: 'Payments hit wallets in seconds, not 3 to 5 business days. No bank cut-off times, no weekends.' },
-  { icon: <Users size={18}/>,           title: 'Batch payroll',       desc: 'Pay your entire team in a single on-chain transaction. 10 or 800 employees, same one click.' },
-  { icon: <FileSpreadsheet size={18}/>, title: 'CSV import',          desc: 'Bulk-import your team from any HR tool. Paste a spreadsheet, validate wallets, run payroll.' },
-  { icon: <Globe size={18}/>,           title: 'Multi-currency',      desc: 'Pay in ETH, USDC, USDT, or DAI across Ethereum, Polygon, Arbitrum, Base, and more.' },
-  { icon: <Shield size={18}/>,          title: 'Non-custodial',       desc: 'Funds go directly from your wallet to your team. We never touch your money.' },
-  { icon: <Check size={18}/>,           title: 'Downloadable records', desc: 'Full transaction history with every payroll run. Export anytime for your own bookkeeping.' },
+  {
+    title: 'Instant Settlement',
+    description: 'Payments hit wallets in seconds, not 3 to 5 business days. No bank cut-off times, no weekends, no delays.',
+    bgImage: 'linear-gradient(135deg, #5D00F2 0%, #8B5CF6 55%, #23DDC6 100%)',
+    Icon: Zap,
+  },
+  {
+    title: 'Batch Payroll',
+    description: 'Pay your entire team in a single on-chain transaction. 10 or 800 employees, same one click.',
+    bgImage: 'linear-gradient(135deg, #4338ca 0%, #7c3aed 55%, #3b82f6 100%)',
+    Icon: Users,
+  },
+  {
+    title: 'CSV Import',
+    description: 'Bulk-import your team from any HR tool. Paste a spreadsheet, validate wallets, run payroll.',
+    bgImage: 'linear-gradient(135deg, #0ea5e9 0%, #23DDC6 55%, #6366f1 100%)',
+    Icon: FileSpreadsheet,
+  },
+  {
+    title: 'Multi-Currency',
+    description: 'Pay in ETH, USDC across Ethereum, Polygon, Arbitrum, Base, and more.',
+    bgImage: 'linear-gradient(135deg, #f97316 0%, #ef4444 55%, #ec4899 100%)',
+    Icon: Globe,
+  },
+  {
+    title: 'Non-Custodial',
+    description: 'Funds go directly from your wallet to your team. We never hold, touch, or see your money.',
+    bgImage: 'linear-gradient(135deg, #22c55e 0%, #14b8a6 55%, #0ea5e9 100%)',
+    Icon: Shield,
+  },
+  {
+    title: 'Downloadable Records',
+    description: 'Full transaction history with every payroll run. Export PDFs and CSVs for your bookkeeping.',
+    bgImage: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 55%, #d946ef 100%)',
+    Icon: Check,
+  },
 ];
 
-const STEPS = [
-  { n: '01', title: 'Connect your wallet', desc: 'Use MetaMask, Coinbase Wallet, WalletConnect, or any supported wallet. Your address is your identity. No email, no password.' },
-  { n: '02', title: 'Add your team',       desc: 'Add employees manually or bulk-import via CSV. Each person gets a wallet address and a payment amount.' },
-  { n: '03', title: 'Run payroll',         desc: 'Select employees, choose ETH or a stablecoin, confirm once in your wallet. All payments go out in a single transaction.' },
+const CASE_STUDIES = [
+  {
+    company: 'Remote-First Teams',
+    title: 'Cut payroll processing from two days of wire transfers and SWIFT headaches to a single 30-second on-chain transaction.',
+    stat: { value: '< 30s', label: 'To pay 200 employees globally' },
+    gradient: 'from-[#5D00F2] to-[#23DDC6]',
+    tag: 'Global Payroll',
+  },
+  {
+    company: 'DeFi Startups',
+    title: 'Eliminate thousands in annual payroll service fees by switching to trustless, direct on-chain batch payments.',
+    stat: { value: '$0', label: 'Platform fees, ever' },
+    gradient: 'from-indigo-600 to-purple-700',
+    tag: 'Cost Savings',
+  },
+];
+
+const STATS = [
+  { value: 23.5, suffix: 'T',  label: 'Annual cross-border business payments', prefix: '$', decimals: 1 },
+  { value: 120,  suffix: 'B+', label: 'In annual remittance fees wasted',       prefix: '$', decimals: 0 },
+  { value: 800,  suffix: '',   label: 'Max employees per transaction',           prefix: '',  decimals: 0 },
+  { value: 5,    suffix: '',   label: 'Supported blockchain networks',           prefix: '',  decimals: 0 },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOOKS
 // ─────────────────────────────────────────────────────────────────────────────
+
+const useInView = (threshold = 0.12) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) setVisible(true);
+    }, { threshold });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
+};
+
 const useCounter = (target: number, duration = 2000, decimals = 0) => {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
@@ -64,53 +120,141 @@ const useCounter = (target: number, duration = 2000, decimals = 0) => {
   return { count, ref };
 };
 
-const useInView = (threshold = 0.1) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// CONNECT BUTTON
+// ─────────────────────────────────────────────────────────────────────────────
 
-const useParallax = () => {
-  const [offset, setOffset] = useState(0);
+type BtnVariant = 'primary' | 'ghost' | 'header';
+
+function ConnectWalletButton({ variant = 'primary', className = '' }: { variant?: BtnVariant; className?: string }) {
+  const { isConnected, address } = useAccount();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const onScroll = () => setOffset(window.scrollY);
+    if (isConnected) navigate('/dashboard');
+  }, [isConnected, navigate]);
+
+  if (isConnected) {
+    const short = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connected';
+    if (variant === 'header') {
+      return (
+        <button onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 bg-white/[0.07] hover:bg-white/[0.14] text-white px-4 py-2 rounded-full text-xs font-bold border border-white/10 hover:border-white/20 transition-all">
+          <span className="w-2 h-2 rounded-full bg-[#23DDC6] animate-pulse" />
+          {short}
+        </button>
+      );
+    }
+    return (
+      <button onClick={() => navigate('/dashboard')}
+        className={`flex items-center gap-2 text-white font-black text-xs uppercase tracking-wide transition-all hover:scale-105 ${
+          variant === 'primary'
+            ? 'bg-[#5D00F2] hover:bg-[#4a00c4] px-9 py-4 rounded-full shadow-xl shadow-[#5D00F2]/40'
+            : 'bg-white/[0.06] hover:bg-white/[0.12] px-7 py-3 rounded-full border border-white/10 hover:border-white/20'
+        } ${className}`}>
+        <Wallet size={variant === 'primary' ? 16 : 14} />
+        Open App <ArrowRight size={variant === 'primary' ? 15 : 13} />
+      </button>
+    );
+  }
+
+  return (
+    <ConnectButton.Custom>
+      {({ openConnectModal }) => (
+        variant === 'header' ? (
+          <button onClick={openConnectModal}
+            className={`flex items-center gap-2 bg-[#5D00F2] hover:bg-[#4a00c4] text-white px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wide transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#5D00F2]/40 ${className}`}>
+            <Wallet size={13} /> Connect Wallet
+          </button>
+        ) : variant === 'primary' ? (
+          <div className="relative">
+            <div className="absolute -inset-[3px] rounded-full bg-gradient-to-r from-[#5D00F2] via-violet-400 to-[#23DDC6] opacity-60 blur-[6px] animate-glow-pulse" />
+            <button onClick={openConnectModal}
+              className={`relative flex items-center gap-2.5 bg-[#5D00F2] hover:bg-[#4a00c4] text-white px-9 py-4 rounded-full font-black text-sm uppercase tracking-wide transition-all hover:scale-105 shadow-xl shadow-[#5D00F2]/40 ${className}`}>
+              <Wallet size={16} /> Connect Wallet <ArrowRight size={15} />
+            </button>
+          </div>
+        ) : (
+          <button onClick={openConnectModal}
+            className={`group flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.12] text-white px-7 py-3 rounded-full text-xs font-black uppercase tracking-wide border border-white/10 hover:border-white/20 transition-all hover:scale-105 ${className}`}>
+            <Wallet size={14} /> Connect Wallet
+            <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )
+      )}
+    </ConnectButton.Custom>
+  );
+}
+
+function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-  return offset;
-};
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PARTICLE NETWORK CANVAS
-// ─────────────────────────────────────────────────────────────────────────────
-interface Particle {
-  x: number; y: number;
-  vx: number; vy: number;
-  radius: number; alpha: number;
+  const navLinks = [
+    { label: 'Features',     href: '#features'    },
+    { label: 'How It Works', href: '#how-it-works' },
+    { label: 'Networks',     href: '#networks'     },
+    { label: 'GitHub',       href: 'https://github.com/Gregster31/GeniePay', external: true },
+  ];
+
+  return (
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      scrolled ? 'bg-black/90 backdrop-blur-xl border-b border-white/[0.07] shadow-xl shadow-black/60' : 'bg-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <nav className="flex items-center justify-between">
+          <a href="/" className="flex items-center gap-2.5 group">
+            <img src="/geniepay_logov4.png" alt="GeniePay" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
+            <span className="text-white font-black uppercase tracking-[0.22em] text-sm whitespace-nowrap">GeniePay</span>
+          </a>
+
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map(({ label, href, external }) =>
+              external
+                ? <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold tracking-wide text-gray-500 hover:text-white transition-colors uppercase">{label}</a>
+                : <a key={label} href={href} className="text-xs font-semibold tracking-wide text-gray-500 hover:text-white transition-colors uppercase">{label}</a>
+            )}
+          </div>
+
+          <div className="hidden md:flex items-center gap-3">
+            <a href="https://github.com/Gregster31/GeniePay" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-white transition-colors p-1">
+              <Github size={18} />
+            </a>
+            <ConnectWalletButton variant="header" />
+          </div>
+
+          <button className="md:hidden text-white p-1" onClick={() => setMenuOpen(o => !o)}>
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </nav>
+
+        {menuOpen && (
+          <div className="md:hidden mt-4 pb-5 border-t border-white/10 pt-5 flex flex-col gap-5">
+            {navLinks.map(({ label, href, external }) =>
+              external
+                ? <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold tracking-wide text-gray-400 uppercase">{label}</a>
+                : <a key={label} href={href} className="text-xs font-semibold tracking-wide text-gray-400 uppercase" onClick={() => setMenuOpen(false)}>{label}</a>
+            )}
+            <ConnectWalletButton variant="header" />
+          </div>
+        )}
+      </div>
+    </header>
+  );
 }
 
-const ParticleCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouse = useRef({ x: -9999, y: -9999 });
-  const particles = useRef<Particle[]>([]);
-  const animRef = useRef<number>(0);
+// ─────────────────────────────────────────────────────────────────────────────
+// HERO
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const init = useCallback((w: number, h: number) => {
-    const count = Math.floor((w * h) / 14000);
-    particles.current = Array.from({ length: count }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      radius: Math.random() * 1.5 + 0.5,
-      alpha: Math.random() * 0.5 + 0.2,
-    }));
-  }, []);
+function Hero() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -118,771 +262,417 @@ const ParticleCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) =>
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const resize = () => {
-      canvas.width  = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      init(canvas.width, canvas.height);
-    };
+    let animId: number;
+    const particles: { x: number; y: number; vx: number; vy: number; r: number; op: number; cyan: boolean }[] = [];
+
+    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
     resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
+    window.addEventListener('resize', resize, { passive: true });
 
-    const onMouse = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      mouse.current = { x: e.clientX - r.left, y: e.clientY - r.top };
-    };
-    window.addEventListener('mousemove', onMouse, { passive: true });
-
-    const CONNECT_DIST = 120;
-    const MOUSE_DIST   = 150;
+    for (let i = 0; i < 90; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.28,
+        vy: (Math.random() - 0.5) * 0.28,
+        r: Math.random() * 1.8 + 0.4,
+        op: Math.random() * 0.45 + 0.1,
+        cyan: Math.random() > 0.75,
+      });
+    }
 
     const draw = () => {
-      const { width: w, height: h } = canvas;
-      ctx.clearRect(0, 0, w, h);
-
-      for (const p of particles.current) {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
-        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
-
-        const dx = p.x - mouse.current.x;
-        const dy = p.y - mouse.current.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < MOUSE_DIST) {
-          const force = (1 - dist / MOUSE_DIST) * 0.4;
-          p.vx += (dx / dist) * force * 0.05;
-          p.vy += (dy / dist) * force * 0.05;
-          const speed = Math.hypot(p.vx, p.vy);
-          if (speed > 0.8) { p.vx = (p.vx / speed) * 0.8; p.vy = (p.vy / speed) * 0.8; }
-        }
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(167,139,250,${p.alpha})`;
-        ctx.fill();
-      }
-
-      for (let i = 0; i < particles.current.length; i++) {
-        for (let j = i + 1; j < particles.current.length; j++) {
-          const a = particles.current[i];
-          const b = particles.current[j];
-          const d = Math.hypot(a.x - b.x, a.y - b.y);
-          if (d < CONNECT_DIST) {
-            const alpha = (1 - d / CONNECT_DIST) * 0.15;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const q = particles[j];
+          const dx = p.x - q.x, dy = p.y - q.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
             ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = `rgba(124,58,237,${alpha})`;
+            ctx.strokeStyle = p.cyan || q.cyan
+              ? `rgba(35,221,198,${0.14 * (1 - dist / 120)})`
+              : `rgba(93,0,242,${0.18 * (1 - dist / 120)})`;
             ctx.lineWidth = 0.5;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
             ctx.stroke();
           }
         }
       }
-
-      animRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animRef.current);
-      ro.disconnect();
-      window.removeEventListener('mousemove', onMouse);
-    };
-  }, [init]);
-
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', ...style }} />;
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// INTERACTIVE GRID CANVAS
-// ─────────────────────────────────────────────────────────────────────────────
-const GridCanvas: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouse = useRef({ x: -9999, y: -9999 });
-  const animRef = useRef<number>(0);
-
-  const onMouse = useCallback((e: MouseEvent) => {
-    const r = canvasRef.current?.getBoundingClientRect();
-    if (r) mouse.current = { x: e.clientX - r.left, y: e.clientY - r.top };
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-    window.addEventListener('mousemove', onMouse, { passive: true });
-
-    const CELL = 64, RADIUS = 200;
-    const draw = () => {
-      const { width: w, height: h } = canvas;
-      ctx.clearRect(0, 0, w, h);
-      const cols = Math.ceil(w / CELL) + 1;
-      const rows = Math.ceil(h / CELL) + 1;
-      const { x: mx, y: my } = mouse.current;
-
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const x = c * CELL, y = r * CELL;
-          const glow = Math.max(0, 1 - Math.hypot(x - mx, y - my) / RADIUS);
-          ctx.beginPath();
-          ctx.arc(x, y, 1 + glow * 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(167,139,250,${0.05 + glow * 0.7})`;
-          ctx.fill();
-        }
-      }
-      for (let r = 0; r < rows; r++) {
-        const y = r * CELL;
-        const g = ctx.createLinearGradient(0, 0, w, 0);
-        for (let c = 0; c <= cols; c++) {
-          const x = c * CELL;
-          const glow = Math.max(0, 1 - Math.hypot(x - mx, y - my) / RADIUS);
-          g.addColorStop(Math.min(x / w, 1), `rgba(124,58,237,${0.04 + glow * 0.28})`);
-        }
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y);
-        ctx.strokeStyle = g; ctx.lineWidth = 0.5; ctx.stroke();
-      }
-      for (let c = 0; c < cols; c++) {
-        const x = c * CELL;
-        const g = ctx.createLinearGradient(0, 0, 0, h);
-        for (let r = 0; r <= rows; r++) {
-          const y = r * CELL;
-          const glow = Math.max(0, 1 - Math.hypot(x - mx, y - my) / RADIUS);
-          g.addColorStop(Math.min(y / h, 1), `rgba(124,58,237,${0.04 + glow * 0.28})`);
-        }
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h);
-        ctx.strokeStyle = g; ctx.lineWidth = 0.5; ctx.stroke();
-      }
-      animRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { cancelAnimationFrame(animRef.current); ro.disconnect(); window.removeEventListener('mousemove', onMouse); };
-  }, [onMouse]);
-
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', ...style }} />;
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// WAVY LINE
-// ─────────────────────────────────────────────────────────────────────────────
-const WavyLine: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 60;
-    let t = 0;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, 60);
-      ctx.beginPath();
-      ctx.moveTo(0, 30);
-      for (let x = 0; x <= canvas.width; x += 2) {
-        const y = 30
-          + Math.sin((x / canvas.width) * Math.PI * 6 + t) * 8
-          + Math.sin((x / canvas.width) * Math.PI * 3 + t * 0.7) * 4;
-        ctx.lineTo(x, y);
-      }
-      const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
-      grad.addColorStop(0,   'rgba(124,58,237,0)');
-      grad.addColorStop(0.2, 'rgba(124,58,237,0.6)');
-      grad.addColorStop(0.5, 'rgba(167,139,250,1)');
-      grad.addColorStop(0.8, 'rgba(124,58,237,0.6)');
-      grad.addColorStop(1,   'rgba(124,58,237,0)');
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      t += 0.012;
-      animRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => cancelAnimationFrame(animRef.current);
-  }, []);
-  return <canvas ref={canvasRef} style={{ width: '100%', height: '60px', display: 'block', opacity: 0.7 }} />;
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LIVE TX FEED
-// ─────────────────────────────────────────────────────────────────────────────
-const MOCK_TXS = [
-  { addr: '0x3F4a...9c2E', amount: '$12,400', token: 'USDC', employees: 14, time: '2s ago' },
-  { addr: '0x8B1d...4f7A', amount: '$3,200',  token: 'ETH',  employees: 4,  time: '8s ago' },
-  { addr: '0xA92c...1d3F', amount: '$45,000', token: 'USDT', employees: 62, time: '15s ago' },
-  { addr: '0x1E5f...8b9C', amount: '$8,750',  token: 'DAI',  employees: 11, time: '28s ago' },
-  { addr: '0x7D3a...2e1B', amount: '$21,600', token: 'USDC', employees: 28, time: '41s ago' },
-];
-
-const LiveTxFeed: React.FC = () => {
-  const [items, setItems] = useState(MOCK_TXS);
-  useEffect(() => {
-    const id = setInterval(() => {
-      setItems(prev => {
-        const next = [...prev];
-        const fresh = { ...MOCK_TXS[Math.floor(Math.random() * MOCK_TXS.length)], time: 'just now' };
-        next.unshift(fresh);
-        return next.slice(0, 5);
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.cyan ? `rgba(35,221,198,${p.op})` : `rgba(93,0,242,${p.op})`;
+        ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
       });
-    }, 3000);
-    return () => clearInterval(id);
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(animId); };
   }, []);
 
-  const tokenColor: Record<string, string> = { USDC: '#2775ca', USDT: '#26a17b', ETH: '#627eea', DAI: '#f5ac37' };
-
   return (
-    <div style={{
-      background: 'rgba(15,13,22,0.95)',
-      border: '0.5px solid rgba(124,58,237,0.3)',
-      borderRadius: '16px',
-      overflow: 'hidden',
-      width: '100%',
-      maxWidth: '420px',
-      backdropFilter: 'blur(20px)',
-    }}>
-      <div style={{ padding: '12px 16px', borderBottom: '0.5px solid rgba(124,58,237,0.15)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22c55e', animation: 'blink 2s ease infinite' }} />
-        <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Live payroll transactions</span>
+    <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 overflow-hidden bg-black">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.035]" style={{
+        backgroundImage: 'linear-gradient(rgba(93,0,242,1) 1px, transparent 1px), linear-gradient(90deg, rgba(93,0,242,1) 1px, transparent 1px)',
+        backgroundSize: '60px 60px',
+      }} />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[520px] h-[520px] bg-[#5D00F2] rounded-full opacity-[0.20] blur-[140px] animate-drift" />
+        <div className="absolute bottom-1/4 right-1/5 w-[400px] h-[400px] bg-[#23DDC6] rounded-full opacity-[0.08] blur-[120px] animate-drift" style={{ animationDelay: '4s', animationDuration: '22s' }} />
+        <div className="absolute top-2/3 left-1/2 w-[320px] h-[320px] bg-[#5D00F2] rounded-full opacity-[0.07] blur-[100px] animate-float" style={{ animationDelay: '2s' }} />
       </div>
-      <div style={{ padding: '8px 0' }}>
-        {items.map((tx, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '10px 16px',
-            borderBottom: i < items.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none',
-            animation: i === 0 ? 'slide-in .4s ease' : 'none',
+
+      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+
+        <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-black text-white mb-6 tracking-tight leading-[1.05] animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          Pay Your Entire Team{' '}
+          <span className="bg-clip-text text-transparent animate-gradient-x" style={{
+            backgroundImage: 'linear-gradient(270deg, #5D00F2, #8B5CF6, #23DDC6, #5D00F2)',
+            backgroundSize: '300% 300%',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
-                background: `${tokenColor[tx.token]}22`,
-                border: `0.5px solid ${tokenColor[tx.token]}44`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '10px', fontWeight: 700, color: tokenColor[tx.token],
-              }}>{tx.token}</div>
-              <div>
-                <div style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{tx.amount}</div>
-                <div style={{ fontSize: '11px', color: '#4b5563', fontFamily: 'monospace' }}>{tx.addr}</div>
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '12px', color: '#a78bfa' }}>{tx.employees} employees</div>
-              <div style={{ fontSize: '11px', color: '#374151' }}>{tx.time}</div>
-            </div>
-          </div>
-        ))}
+            On-Chain.
+          </span>
+          <br />
+          <span className="text-white/50 font-semibold text-4xl md:text-6xl lg:text-7xl">Instantly.</span>
+        </h1>
+
+        <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          The blockchain payroll tool for global teams.
+          Manage and pay up to 800 employees worldwide in a single transaction and generate tax helpful documents.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <ConnectWalletButton variant="primary" />
+          <a href="https://github.com/Gregster31/GeniePay" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-white/[0.05] hover:bg-white/[0.10] text-white px-9 py-4 rounded-full font-semibold text-sm border border-white/10 hover:border-white/20 transition-all hover:scale-105">
+            <Github size={16} /> View on GitHub
+          </a>
+        </div>
+
+        <div className="flex items-center justify-center gap-2.5 flex-wrap animate-fade-in-up" style={{ animationDelay: '0.45s' }}>
+          <span className="text-[11px] text-gray-700 mr-1 uppercase tracking-wide font-semibold">Supported on</span>
+          {FEATURED_NETWORKS.map(({ name, color }) => (
+            <span key={name} className="text-[11px] font-semibold bg-white/[0.04] border rounded-full px-3 py-1 hover:opacity-100 opacity-60 transition-all cursor-default"
+              style={{ borderColor: `${color}40`, color }}>
+              {name}
+            </span>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30 animate-bounce">
+        <div className="w-px h-8 bg-gradient-to-b from-transparent to-[#5D00F2]" />
+        <div className="w-1 h-1 rounded-full bg-[#5D00F2]" />
+      </div>
+    </section>
   );
-};
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STAT CARD
+// STATS
 // ─────────────────────────────────────────────────────────────────────────────
-const StatCard: React.FC<{ value: number; suffix: string; label: string; decimals?: number }> = ({
-  value, suffix, label, decimals = 0,
-}) => {
-  const { count, ref } = useCounter(value, 2000, decimals);
+
+function StatItem({ value, suffix, label, prefix, decimals }: typeof STATS[0]) {
+  const { count, ref } = useCounter(value, 2200, decimals);
   return (
-    <div ref={ref} style={{
-      textAlign: 'center', padding: '24px 20px',
-      background: 'rgba(26,27,34,0.6)',
-      border: '0.5px solid rgba(124,58,237,0.2)',
-      borderRadius: '16px', backdropFilter: 'blur(12px)',
-    }}>
-      <div style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 700, letterSpacing: '-0.03em', color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
-        {decimals > 0 ? count.toFixed(decimals) : Math.round(count)}{suffix}
-      </div>
-      <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>{label}</div>
+    <div ref={ref} className="text-center group">
+      <p className="text-5xl md:text-6xl font-black text-white mb-2 tabular-nums group-hover:text-[#23DDC6] transition-colors duration-500">
+        {prefix}{count.toLocaleString()}{suffix}
+      </p>
+      <p className="text-gray-600 text-xs leading-snug max-w-[140px] mx-auto uppercase tracking-wide font-semibold">{label}</p>
     </div>
   );
-};
+}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FEATURE CARD
-// ─────────────────────────────────────────────────────────────────────────────
-const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; desc: string; delay: number }> = ({
-  icon, title, desc, delay,
-}) => {
+function Stats() {
   const { ref, visible } = useInView();
   return (
-    <div ref={ref} style={{
-      padding: '28px',
-      background: 'rgba(26,27,34,0.7)',
-      border: '0.5px solid rgba(124,58,237,0.15)',
-      borderRadius: '16px',
-      transition: `opacity .6s ease ${delay}ms, transform .6s ease ${delay}ms, border-color .2s, background .2s`,
-      opacity: visible ? 1 : 0,
-      transform: visible ? 'translateY(0)' : 'translateY(24px)',
-    }}
-      onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'rgba(124,58,237,0.5)'; el.style.background = 'rgba(124,58,237,0.08)'; }}
-      onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.borderColor = 'rgba(124,58,237,0.15)'; el.style.background = 'rgba(26,27,34,0.7)'; }}
-    >
-      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(124,58,237,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', color: '#a78bfa' }}>{icon}</div>
-      <div style={{ fontSize: '15px', fontWeight: 600, color: '#fff', marginBottom: '8px' }}>{title}</div>
-      <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.65 }}>{desc}</div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CHAIN TICKER
-// ─────────────────────────────────────────────────────────────────────────────
-const ChainTicker: React.FC = () => (
-  <div style={{ overflow: 'hidden', width: '100%' }}>
-    <div style={{ display: 'flex', gap: '12px', animation: 'ticker 22s linear infinite', width: 'max-content' }}>
-      {[...CHAINS, ...CHAINS, ...CHAINS].map((c, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '6px 14px', borderRadius: '99px', background: 'rgba(26,27,34,0.8)', border: '0.5px solid rgba(255,255,255,0.07)', whiteSpace: 'nowrap' }}>
-          <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: c.color }} />
-          <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 500 }}>{c.name}</span>
+    <section ref={ref} className="py-28 bg-black relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] bg-[#5D00F2] opacity-[0.05] blur-[160px] rounded-full animate-glow-pulse" />
+      </div>
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className={`text-center mb-20 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#5D00F2] mb-4">The Problem We Solve</p>
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-5 tracking-tight">
+            The global payroll problem is <span className="text-[#23DDC6]">enormous</span>
+          </h2>
+          <p className="text-gray-600 text-base max-w-xl mx-auto">
+            GeniePay eliminates fees, delays, and intermediaries for cross-border team payments.
+          </p>
         </div>
-      ))}
-    </div>
-  </div>
-);
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-6 transition-all duration-700 delay-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          {STATS.map(s => <StatItem key={s.label} {...s} />)}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SOCIAL ICONS
+// GET STARTED
 // ─────────────────────────────────────────────────────────────────────────────
-const GitHubIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>;
-const LinkedInIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>;
-const XIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MOBILE MENU
-// ─────────────────────────────────────────────────────────────────────────────
-const MobileMenu: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
-  // Lock body scroll when menu is open
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
+function GetStarted() {
+  const { ref, visible } = useInView();
 
-  if (!open) return null;
+  const steps = [
+    { n: '01', title: 'Connect your wallet',  desc: 'Use MetaMask, Brave Wallet, Coinbase Wallet, or WalletConnect. Your address is your identity.' },
+    { n: '02', title: 'Add your team',         desc: 'Add employees manually or bulk-import via CSV. Set wallet addresses and USD payment amounts. ENS names supported.' },
+    { n: '03', title: 'Run payroll',            desc: 'Select your team, choose a token, confirm once in your wallet. All payments go out in a single on-chain transaction.' },
+  ];
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      background: 'rgba(15,13,22,0.98)',
-      backdropFilter: 'blur(20px)',
-      display: 'flex', flexDirection: 'column',
-      padding: '24px',
-    }}>
-      {/* Top row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '48px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/geniepay_logov4.png" alt="GeniePay" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
-          <span style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>GeniePay</span>
-        </div>
-        <button
-          onClick={onClose}
-          style={{ background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}
-        >
-          <X size={20} />
-        </button>
-      </div>
-
-      {/* Nav links */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-        {[
-          { label: 'Features', href: '#features' },
-          { label: 'How it works', href: '#how-it-works' },
-          { label: 'Networks', href: '#networks' },
-        ].map(({ label, href }) => (
-          <a
-            key={label}
-            href={href}
-            onClick={onClose}
-            style={{
-              fontSize: '24px', fontWeight: 700, color: '#9ca3af',
-              textDecoration: 'none', padding: '12px 8px',
-              borderBottom: '0.5px solid rgba(255,255,255,0.05)',
-              transition: 'color .15s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#9ca3af')}
-          >
-            {label}
-          </a>
-        ))}
-      </div>
-
-      {/* Connect wallet at bottom */}
-      <div style={{ paddingBottom: '16px' }}>
-        <ConnectButton />
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN PAGE
-// ─────────────────────────────────────────────────────────────────────────────
-const LandingPage: React.FC = () => {
-  const { isConnected } = useAccount();
-  const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const scrollY = useParallax();
-
-  useEffect(() => { if (isConnected) navigate('/dashboard'); }, [isConnected, navigate]);
-
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', fn, { passive: true });
-    return () => window.removeEventListener('scroll', fn);
-  }, []);
-
-  const heroParallax = useMemo(() => scrollY * 0.25, [scrollY]);
-  const orbParallax  = useMemo(() => scrollY * 0.15, [scrollY]);
-
-  return (
-    <>
-      <style>{`
-        @keyframes pulse-orb {
-          0%,100%{opacity:.6;transform:translateX(-50%) scale(1) translateY(0);}
-          50%{opacity:1;transform:translateX(-50%) scale(1.07) translateY(-10px);}
-        }
-        @keyframes ticker {
-          0%{transform:translateX(0);}100%{transform:translateX(-33.33%);}
-        }
-        @keyframes gradient-shift {
-          0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}
-        }
-        @keyframes badge-pulse {
-          0%,100%{border-color:rgba(124,58,237,.4);}
-          50%{border-color:rgba(124,58,237,.9);}
-        }
-        @keyframes blink {
-          0%,100%{opacity:1;}50%{opacity:.3;}
-        }
-        @keyframes slide-in {
-          from{opacity:0;transform:translateY(-8px);}
-          to{opacity:1;transform:translateY(0);}
-        }
-        @keyframes float-up {
-          0%,100%{transform:translateY(0px);}
-          50%{transform:translateY(-16px);}
-        }
-        @keyframes spin-slow {
-          from{transform:rotate(0deg);}to{transform:rotate(360deg);}
-        }
-        @keyframes reveal-up {
-          from{opacity:0;transform:translateY(32px);}
-          to{opacity:1;transform:translateY(0);}
-        }
-        .hero-gradient-text {
-          background:linear-gradient(135deg,#fff 0%,#c4b5fd 30%,#818cf8 60%,#60a5fa 100%);
-          background-size:200% 200%;
-          -webkit-background-clip:text;
-          -webkit-text-fill-color:transparent;
-          background-clip:text;
-          animation:gradient-shift 6s ease infinite;
-        }
-        .connect-btn {
-          background:linear-gradient(135deg,#7c3aed,#4f46e5);
-          color:#fff;border:none;padding:14px 32px;border-radius:12px;
-          font-size:15px;font-weight:600;cursor:pointer;
-          display:inline-flex;align-items:center;gap:8px;
-          transition:opacity .2s,transform .2s,box-shadow .2s;
-        }
-        .connect-btn:hover{opacity:.88;transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,58,237,.35);}
-        .connect-btn:active{transform:translateY(0);}
-        .ghost-btn{
-          background:transparent;color:#9ca3af;
-          border:0.5px solid rgba(255,255,255,.1);
-          padding:14px 24px;border-radius:12px;font-size:15px;
-          cursor:pointer;transition:color .2s,border-color .2s;
-          display:inline-flex;align-items:center;gap:6px;text-decoration:none;
-        }
-        .ghost-btn:hover{color:#fff;border-color:rgba(255,255,255,.25);}
-        .nav-link{font-size:14px;color:#9ca3af;text-decoration:none;transition:color .15s;}
-        .nav-link:hover{color:#fff;}
-        .nav-links-desktop{display:flex;align-items:center;gap:32px;}
-        .nav-hamburger{display:none;}
-        .social-link{
-          display:flex;align-items:center;justify-content:center;
-          width:36px;height:36px;border-radius:8px;color:#6b7280;
-          border:0.5px solid rgba(255,255,255,.08);
-          transition:color .2s,border-color .2s,background .2s;text-decoration:none;
-        }
-        .social-link:hover{color:#a78bfa;border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.08);}
-        .hero-content{animation:reveal-up .8s ease both;}
-        .hero-content-delay{animation:reveal-up .8s ease .15s both;}
-        .hero-content-delay2{animation:reveal-up .8s ease .3s both;}
-        .hero-content-delay3{animation:reveal-up .8s ease .45s both;}
-
-        /* ── Responsive ── */
-        @media(max-width:900px){
-          .features-grid{grid-template-columns:1fr 1fr !important;}
-          .stats-grid{grid-template-columns:repeat(2,1fr) !important;}
-          .hero-split{flex-direction:column !important;}
-          .live-feed-col{display:none !important;}
-          .nav-links-desktop{display:none !important;}
-          .nav-hamburger{display:flex !important;}
-        }
-        @media(max-width:600px){
-          .features-grid{grid-template-columns:1fr !important;}
-          .stats-grid{grid-template-columns:1fr 1fr !important;}
-          .connect-btn{padding:12px 24px;font-size:14px;}
-          .ghost-btn{padding:12px 18px;font-size:14px;}
-        }
-      `}</style>
-
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-
-      <div style={{ backgroundColor:'#0f0d16',color:'#fff',minHeight:'100vh',fontFamily:'Inter,-apple-system,sans-serif',overflowX:'hidden' }}>
-
-        {/* ── Navbar ── */}
-        <nav style={{
-          position:'fixed',top:0,left:0,right:0,zIndex:100,
-          display:'flex',alignItems:'center',justifyContent:'space-between',
-          padding:'0 clamp(16px,4vw,64px)',height:'68px',
-          background: scrolled ? 'rgba(15,13,22,.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(16px)' : 'none',
-          borderBottom: scrolled ? '0.5px solid rgba(124,58,237,.15)' : 'none',
-          transition:'background .3s,backdrop-filter .3s,border-color .3s',
-        }}>
-          {/* Mobile: hamburger on the left */}
-          <button
-            className="nav-hamburger"
-            onClick={() => setMenuOpen(true)}
-            style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '0.5px solid rgba(255,255,255,0.1)',
-              borderRadius: '10px', padding: '8px',
-              cursor: 'pointer', color: '#9ca3af',
-              alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
-          </button>
-
-          {/* Logo — centered on mobile, left on desktop */}
-          <button onClick={() => navigate('/')} style={{ display:'flex',alignItems:'center',gap:'10px',background:'none',border:'none',cursor:'pointer',padding:0 }}>
-            <img src="/geniepay_logov4.png" alt="GeniePay" style={{ width:'30px',height:'30px',objectFit:'contain' }} />
-            <span style={{ fontSize:'20px',fontWeight:800,letterSpacing:'-0.02em',color:'#fff' }}>GeniePay</span>
-          </button>
-
-          {/* Desktop nav */}
-          <div className="nav-links-desktop">
-            <a href="#features"     className="nav-link">Features</a>
-            <a href="#how-it-works" className="nav-link">How it works</a>
-            <a href="#networks"     className="nav-link">Networks</a>
-            <ConnectButton />
+    <section id="how-it-works" ref={ref} className="py-28 bg-black relative overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-[#5D00F2] opacity-[0.04] blur-[180px] pointer-events-none rounded-full" />
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className={`transition-all duration-700 ${visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#23DDC6] mb-4">No upfront cost. No lock-in.</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight">
+              Get started for{' '}
+              <span className="bg-gradient-to-r from-[#5D00F2] to-violet-400 bg-clip-text text-transparent">free</span>{' '}
+              in under a minute
+            </h2>
+            <p className="text-gray-500 text-base mb-10 leading-relaxed">
+              Connect your wallet and start paying your team anywhere in the world.
+            </p>
+            <ConnectWalletButton variant="ghost" />
           </div>
-
-          {/* Mobile: connect button on the right */}
-          <div className="nav-hamburger" style={{ alignItems:'center' }}>
-            <ConnectButton showBalance={false} />
-          </div>
-        </nav>
-
-        {/* ══════════════════════════════════════════════════════════════════
-            HERO
-        ══════════════════════════════════════════════════════════════════ */}
-        <section style={{ minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'120px clamp(24px,5vw,64px) 80px',position:'relative',overflow:'hidden' }}>
-
-          <ParticleCanvas style={{ zIndex: 0 }} />
-          <GridCanvas style={{ zIndex: 1, opacity: 0.6 }} />
-
-          <img src="/world-map.svg" alt="" aria-hidden="true" style={{
-            position:'absolute',top:'50%',left:'50%',
-            transform:`translate(-50%,calc(-50% + ${heroParallax}px))`,
-            width:'90%',maxWidth:'1100px',
-            opacity:0.055,pointerEvents:'none',userSelect:'none',zIndex:1,
-            filter:'brightness(1.5)',transition:'transform 0s',
-          }} />
-
-          <div style={{
-            position:'absolute',top:'-10%',left:'50%',
-            transform:`translateX(-50%) translateY(${orbParallax}px)`,
-            width:'900px',height:'550px',borderRadius:'50%',
-            background:'radial-gradient(ellipse,rgba(124,58,237,.16) 0%,rgba(79,70,229,.06) 50%,transparent 70%)',
-            animation:'pulse-orb 8s ease-in-out infinite',
-            pointerEvents:'none',zIndex:1,
-          }} />
-
-          <div style={{
-            position:'absolute',top:'50%',left:'50%',
-            transform:`translate(-50%,-50%) translateY(${heroParallax * 0.5}px)`,
-            width:'600px',height:'600px',borderRadius:'50%',
-            border:'0.5px solid rgba(124,58,237,0.08)',
-            animation:'spin-slow 40s linear infinite',
-            pointerEvents:'none',zIndex:1,
-          }} />
-          <div style={{
-            position:'absolute',top:'50%',left:'50%',
-            transform:`translate(-50%,-50%) translateY(${heroParallax * 0.3}px)`,
-            width:'800px',height:'800px',borderRadius:'50%',
-            border:'0.5px solid rgba(124,58,237,0.05)',
-            animation:'spin-slow 60s linear infinite reverse',
-            pointerEvents:'none',zIndex:1,
-          }} />
-
-          <div style={{ position:'absolute',bottom:0,left:0,right:0,height:'220px',background:'linear-gradient(to bottom,transparent,#0f0d16)',pointerEvents:'none',zIndex:2 }} />
-
-          {/* Hero split layout */}
-          <div className="hero-split" style={{ position:'relative',zIndex:3,display:'flex',alignItems:'center',gap:'64px',maxWidth:'1200px',width:'100%' }}>
-
-            <div style={{ flex:1,textAlign:'left' }}>
-              <div className="hero-content" style={{
-                display:'inline-flex',alignItems:'center',gap:'8px',
-                padding:'6px 16px',borderRadius:'99px',
-                background:'rgba(124,58,237,.1)',
-                border:'0.5px solid rgba(124,58,237,.4)',
-                fontSize:'13px',color:'#a78bfa',
-                marginBottom:'32px',
-                animation:'badge-pulse 3s ease-in-out infinite',
-              }}>
-                <Zap size={12} style={{ color:'#7c3aed',flexShrink:0 }} />
-                {/* Updated badge copy */}
-                Free. No account. No middlemen.
-              </div>
-
-              {/* Updated headline */}
-              <h1 className="hero-gradient-text hero-content-delay" style={{ fontSize:'clamp(40px,6vw,80px)',fontWeight:800,lineHeight:1.05,letterSpacing:'-0.04em',marginBottom:'24px',display:'block' }}>
-                Pay your global<br />team in one click
-              </h1>
-
-              {/* Updated subheadline — matches README tone */}
-              <p className="hero-content-delay2" style={{ fontSize:'clamp(15px,1.8vw,18px)',color:'#6b7280',maxWidth:'480px',lineHeight:1.7,marginBottom:'40px' }}>
-                Send payroll to 800 employees or contractors worldwide in a single transaction.
-                Faster, cheaper, and entirely yours.
-              </p>
-
-              <div className="hero-content-delay3" style={{ display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap' }}>
-                <ConnectButton.Custom>
-                  {({ openConnectModal }) => (
-                    <button className="connect-btn" onClick={openConnectModal}>
-                      Connect wallet to start <ArrowRight size={16} />
-                    </button>
-                  )}
-                </ConnectButton.Custom>
-                <a href="#how-it-works" className="ghost-btn">
-                  See how it works <ChevronRight size={14} />
-                </a>
-              </div>
-
-              <div style={{ display:'flex',alignItems:'center',gap:'8px',fontSize:'13px',color:'#4b5563',marginTop:'24px',flexWrap:'wrap' }}>
-                {['No credit card','No sign-up','Open source'].map((t, i) => (
-                  <React.Fragment key={t}>
-                    {i > 0 && <span style={{ color:'#1f2937' }}>·</span>}
-                    <span style={{ display:'flex',alignItems:'center',gap:'4px' }}>
-                      <Check size={11} style={{ color:'#7c3aed' }} />{t}
-                    </span>
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-
-            <div className="live-feed-col" style={{ flexShrink:0,width:'420px',animation:'float-up 6s ease-in-out infinite' }}>
-              <LiveTxFeed />
-            </div>
-          </div>
-        </section>
-
-        <WavyLine />
-
-        {/* ── Chain ticker ── */}
-        <div id="networks" style={{ padding:'20px 0',borderBottom:'0.5px solid rgba(255,255,255,.05)',background:'rgba(26,27,34,.4)' }}>
-          <ChainTicker />
-        </div>
-
-        {/* ── Stats ── */}
-        <section style={{ padding:'80px clamp(24px,5vw,64px)' }}>
-          <div className="stats-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'16px',maxWidth:'960px',margin:'0 auto' }}>
-            <StatCard value={0}   suffix="$" label="Platform fees" />
-            <StatCard value={6}   suffix="+" label="Networks supported" />
-            <StatCard value={800} suffix="+" label="Employees per run" />
-            <StatCard value={3}   suffix="s" label="Average settlement" />
-          </div>
-        </section>
-
-        <WavyLine />
-
-        {/* ── Features ── */}
-        <section id="features" style={{ padding:'80px clamp(24px,5vw,64px)',background:'rgba(26,27,34,.2)' }}>
-          <div style={{ maxWidth:'960px',margin:'0 auto' }}>
-            <div style={{ textAlign:'center',marginBottom:'56px' }}>
-              <div style={{ fontSize:'11px',fontWeight:600,color:'#7c3aed',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:'12px' }}>Features</div>
-              {/* Updated section headline */}
-              <h2 style={{ fontSize:'clamp(26px,4vw,42px)',fontWeight:700,letterSpacing:'-0.03em',color:'#fff',marginBottom:'12px' }}>Everything your payroll needs</h2>
-              <p style={{ fontSize:'15px',color:'#6b7280',maxWidth:'480px',margin:'0 auto' }}>Built for teams of 1 to 800. No friction, no middlemen, no surprises.</p>
-            </div>
-            <div className="features-grid" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'16px' }}>
-              {FEATURES.map((f, i) => <FeatureCard key={f.title} {...f} delay={i * 80} />)}
-            </div>
-          </div>
-        </section>
-
-        {/* ── How it works ── */}
-        <section id="how-it-works" style={{ padding:'80px clamp(24px,5vw,64px)' }}>
-          <div style={{ maxWidth:'640px',margin:'0 auto' }}>
-            <div style={{ textAlign:'center',marginBottom:'56px' }}>
-              <div style={{ fontSize:'11px',fontWeight:600,color:'#7c3aed',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:'12px' }}>How it works</div>
-              <h2 style={{ fontSize:'clamp(26px,4vw,42px)',fontWeight:700,letterSpacing:'-0.03em',color:'#fff' }}>Up and running in 3 steps</h2>
-            </div>
-            {STEPS.map((step, i) => (
-              <div key={step.n} style={{ display:'flex',gap:'20px' }}>
-                <div style={{ display:'flex',flexDirection:'column',alignItems:'center',flexShrink:0 }}>
-                  <div style={{ width:'40px',height:'40px',borderRadius:'50%',background:'linear-gradient(135deg,#7c3aed,#4f46e5)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:700,color:'#fff' }}>{step.n}</div>
-                  {i < STEPS.length - 1 && <div style={{ width:'1px',flex:1,minHeight:'40px',background:'linear-gradient(to bottom,rgba(124,58,237,.5),rgba(124,58,237,.05))',margin:'8px 0' }} />}
+          <div className={`space-y-4 transition-all duration-700 delay-200 ${visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
+            {steps.map((step, i) => (
+              <div key={step.n} className="flex gap-5 p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-[#5D00F2]/50 hover:bg-white/[0.04] transition-all duration-300 group"
+                style={{ transitionDelay: `${i * 80}ms` }}>
+                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#5D00F2]/15 group-hover:bg-[#5D00F2]/25 flex items-center justify-center transition-colors">
+                  <span className="text-[#5D00F2] font-black text-xs">{step.n}</span>
                 </div>
-                <div style={{ paddingBottom: i < STEPS.length - 1 ? '40px' : 0, paddingTop:'8px' }}>
-                  <div style={{ fontSize:'17px',fontWeight:600,color:'#fff',marginBottom:'8px' }}>{step.title}</div>
-                  <div style={{ fontSize:'14px',color:'#6b7280',lineHeight:1.7 }}>{step.desc}</div>
+                <div>
+                  <h3 className="text-white font-bold mb-1.5 text-sm">{step.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{step.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-        </section>
-
-        <WavyLine />
-
-        {/* ── CTA ── */}
-        <section style={{ padding:'120px clamp(24px,5vw,64px)',textAlign:'center',position:'relative',overflow:'hidden' }}>
-          <ParticleCanvas style={{ zIndex:0 }} />
-          <GridCanvas    style={{ zIndex:1, opacity:0.6 }} />
-          <div style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:'600px',height:'400px',borderRadius:'50%',background:'radial-gradient(ellipse,rgba(124,58,237,.14) 0%,transparent 70%)',pointerEvents:'none',zIndex:1 }} />
-          <div style={{ position:'relative',zIndex:2 }}>
-            {/* Updated CTA copy */}
-            <h2 style={{ fontSize:'clamp(30px,5vw,56px)',fontWeight:800,letterSpacing:'-0.03em',color:'#fff',marginBottom:'16px',lineHeight:1.1 }}>Ready to pay your team?</h2>
-            <p style={{ fontSize:'16px',color:'#6b7280',maxWidth:'400px',margin:'0 auto 36px',lineHeight:1.7 }}>No sign-up. No fees. Connect your wallet and go.</p>
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
-                <button className="connect-btn" onClick={openConnectModal} style={{ fontSize:'16px',padding:'16px 40px' }}>
-                  Get started for free <ArrowRight size={18} />
-                </button>
-              )}
-            </ConnectButton.Custom>
-            <div style={{ fontSize:'12px',color:'#374151',marginTop:'16px' }}>Works with MetaMask, Coinbase Wallet, Rainbow, and 100+ wallets</div>
-          </div>
-        </section>
-
-        {/* ── Footer ── */}
-        <footer style={{ padding:'24px clamp(24px,5vw,64px)',borderTop:'0.5px solid rgba(255,255,255,.05)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'16px' }}>
-          <div style={{ display:'flex',alignItems:'center',gap:'10px' }}>
-            <img src="/geniepay_logov4.png" alt="GeniePay" style={{ width:'20px',height:'20px',objectFit:'contain',opacity:.6 }} />
-            <span style={{ fontSize:'13px',color:'#4b5563' }}>GeniePay · 2025</span>
-          </div>
-          <div style={{ display:'flex',alignItems:'center',gap:'8px' }}>
-            <a href="https://github.com/Gregster31/GeniePay"         target="_blank" rel="noopener noreferrer" className="social-link" title="GitHub"><GitHubIcon /></a>
-            <a href="https://www.linkedin.com/company/geniepayworks" target="_blank" rel="noopener noreferrer" className="social-link" title="LinkedIn"><LinkedInIcon /></a>
-            <a href="https://x.com/pay_genie"                       target="_blank" rel="noopener noreferrer" className="social-link" title="X"><XIcon /></a>
-          </div>
-        </footer>
-
+        </div>
       </div>
-    </>
+    </section>
   );
-};
+}
 
-export default LandingPage;
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE CARDS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FeatureCards() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canLeft,  setCanLeft]  = useState(false);
+  const [canRight, setCanRight] = useState(true);
+  const { ref, visible } = useInView();
+
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanLeft(scrollLeft > 0);
+    setCanRight(scrollLeft < scrollWidth - clientWidth - 8);
+  };
+
+  return (
+    <section id="features" ref={ref} className="py-28 bg-black">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`flex items-end justify-between mb-12 gap-6 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#5D00F2] mb-3">Everything You Need</p>
+            <h2 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tight">
+              Built for on-chain payroll<br />
+              <span className="bg-gradient-to-r from-[#5D00F2] to-[#23DDC6] bg-clip-text text-transparent">from day one</span>
+            </h2>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            {(['left', 'right'] as const).map(dir => {
+              const enabled = dir === 'left' ? canLeft : canRight;
+              return (
+                <button key={dir}
+                  onClick={() => scrollRef.current?.scrollBy({ left: dir === 'left' ? -330 : 330, behavior: 'smooth' })}
+                  disabled={!enabled}
+                  className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+                    enabled ? 'border-white/20 hover:bg-white/10 text-white' : 'border-white/[0.05] text-gray-800 cursor-not-allowed'
+                  }`}>
+                  {dir === 'left' ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div ref={scrollRef} onScroll={checkScroll}
+          className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {FEATURES.map(f => {
+            const Icon = f.Icon;
+            return (
+              <div key={f.title}
+                className="flex-shrink-0 w-72 h-[17rem] rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group snap-start hover:-translate-y-2 transition-transform duration-300 cursor-default"
+                style={{ background: f.bgImage }}>
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="w-11 h-11 rounded-xl bg-black/25 flex items-center justify-center">
+                  <Icon size={20} className="text-white" />
+                </div>
+                <div className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-white text-lg leading-none">+</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-black text-base mb-2 tracking-tight">{f.title}</h3>
+                  <p className="text-white/70 text-sm leading-relaxed">{f.description}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CASE STUDIES
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CaseStudies() {
+  const { ref, visible } = useInView();
+  return (
+    <section ref={ref} className="py-28 bg-black">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className={`text-center mb-20 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#5D00F2] mb-3">Real-World Impact</p>
+          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">How teams use GeniePay</h2>
+        </div>
+        <div className="space-y-24">
+          {CASE_STUDIES.map((cs, i) => (
+            <div key={cs.company}
+              className={`grid grid-cols-1 lg:grid-cols-2 gap-14 items-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-14'}`}
+              style={{ transitionDelay: `${i * 150}ms` }}>
+              <div className={i % 2 === 1 ? 'lg:order-2' : ''}>
+                <span className="inline-block text-[10px] font-black text-[#23DDC6] tracking-[0.18em] uppercase mb-4 bg-[#23DDC6]/10 px-3 py-1 rounded-full border border-[#23DDC6]/20">{cs.tag}</span>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-8 leading-tight">{cs.title}</h3>
+                <div>
+                  <p className="text-5xl font-black text-white mb-1">{cs.stat.value}</p>
+                  <p className="text-gray-600 text-xs uppercase tracking-wide font-semibold">{cs.stat.label}</p>
+                </div>
+              </div>
+              <div className={i % 2 === 1 ? 'lg:order-1' : ''}>
+                <div className={`rounded-2xl p-10 bg-gradient-to-br ${cs.gradient} aspect-video flex flex-col items-center justify-center gap-3 relative overflow-hidden`}>
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
+                  <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{cs.company}</p>
+                  <p className="text-white text-5xl font-black relative z-10">{cs.stat.value}</p>
+                  <p className="text-white/60 text-sm relative z-10">{cs.stat.label}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CTA
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CTA() {
+  const { ref, visible } = useInView();
+  return (
+    <section ref={ref} className="py-36 bg-black relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <div className="relative">
+          <div className="w-[600px] h-[600px] bg-[#5D00F2] rounded-full opacity-[0.10] blur-[180px] animate-glow-pulse" />
+          <div className="absolute inset-0 w-[600px] h-[600px] bg-[#23DDC6] rounded-full opacity-[0.03] blur-[140px] scale-75 animate-float" />
+        </div>
+      </div>
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.04]">
+        <div className="w-[800px] h-[800px] rounded-full animate-spin-slow"
+          style={{ background: 'conic-gradient(from 0deg, #5D00F2, #23DDC6, #5D00F2)', WebkitMaskImage: 'radial-gradient(transparent 60%, black 61%)' }} />
+      </div>
+      <div className={`max-w-3xl mx-auto px-6 text-center relative z-10 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#5D00F2] mb-4">Get Started Today</p>
+        <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
+          Ready to modernize<br />
+          <span className="bg-gradient-to-r from-[#5D00F2] via-violet-400 to-[#23DDC6] bg-clip-text text-transparent">your payroll?</span>
+        </h2>
+        <p className="text-gray-500 text-base mb-12 leading-relaxed">
+          Join the future of global payroll. No fees, no middlemen, no delays.
+          Pay your entire team directly from your wallet, in seconds.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <ConnectWalletButton variant="primary" />
+          <a href="https://github.com/Gregster31/GeniePay" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.10] text-white px-10 py-4 rounded-full font-semibold text-sm border border-white/10 hover:border-white/20 transition-all hover:scale-105">
+            <Github size={18} /> Star on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FOOTER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function Footer() {
+  const footerLinks = [
+    { label: 'GitHub',           href: 'https://github.com/Gregster31/GeniePay' },
+    { label: 'LinkedIn',         href: 'https://www.linkedin.com/company/geniepayworks' },
+    { label: 'Twitter',          href: 'https://x.com/pay_genie' },
+    { label: 'BUSL-1.1 License', href: 'https://github.com/Gregster31/GeniePay/blob/main/LICENSE' },
+  ];
+
+  return (
+    <footer className="border-t border-white/[0.05] bg-black">
+      <div className="max-w-7xl mx-auto px-6 py-14">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-10">
+          <a href="/" className="flex items-center gap-2.5 group">
+            <img src="/geniepay_logov4.png" alt="GeniePay" className="w-7 h-7 object-contain opacity-70 group-hover:opacity-100 transition-opacity" />
+            <span className="text-white font-black uppercase tracking-[0.22em] text-sm">GeniePay</span>
+          </a>
+          <div className="flex items-center gap-5">
+            <a href="https://github.com/Gregster31/GeniePay" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-white transition-colors"><Github size={18} /></a>
+            <a href="https://www.linkedin.com/company/geniepayworks" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-white transition-colors"><Linkedin size={18} /></a>
+            <a href="https://x.com/pay_genie" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-white transition-colors"><Twitter size={18} /></a>
+          </div>
+          <p className="text-gray-700 text-xs uppercase tracking-wide font-semibold">2025 GeniePay. All rights reserved.</p>
+        </div>
+        <div className="pt-8 border-t border-white/[0.04] flex flex-wrap justify-center gap-6 text-[11px] text-gray-700 uppercase tracking-wide font-semibold">
+          {footerLinks.map(({ label, href }) => (
+            <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition-colors">{label}</a>
+          ))}
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROOT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function LandingPage() {
+  return (
+    <main className="min-h-screen bg-black">
+      <Header />
+      <Hero />
+      <Stats />
+      <GetStarted />
+      <FeatureCards />
+      <CaseStudies />
+      <CTA />
+      <Footer />
+    </main>
+  );
+}

@@ -44,14 +44,14 @@ export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayro
       {/* Big balance */}
       <div className="mb-[18px]">
         {loading ? (
-          <div className="w-36 h-8 rounded-lg bg-white/[0.06] animate-pulse" />
+          <div className="w-36 h-8 rounded-lg dark:bg-white/[0.06] bg-black/[0.06] animate-pulse" />
         ) : bE ? (
           <span className="text-red-400 text-[13px]">Failed to load</span>
         ) : (
           <>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[13px] font-semibold text-gray-500">USD</span>
-              <span className="text-[48px] font-bold tracking-tight leading-none text-white">
+              <span className="text-[48px] font-bold tracking-tight leading-none dark:text-white text-gray-900">
                 {formatCurrency(walletUsd)}
               </span>
             </div>
@@ -66,7 +66,7 @@ export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayro
           <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Payroll coverage</span>
           <span className="text-[11px] text-gray-500">{payPct.toFixed(0)}% of wallet</span>
         </div>
-        <div className="h-2 rounded-full bg-white/[0.07] overflow-hidden flex">
+        <div className="h-2 rounded-full dark:bg-white/[0.07] bg-black/[0.07] overflow-hidden flex">
           {insufficient ? (
             <div className="flex-1 bg-gradient-to-r from-red-500 to-red-400 shadow-[0_0_10px_rgba(239,68,68,0.4)]" />
           ) : (
@@ -96,14 +96,14 @@ export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayro
       </div>
 
       {/* Footer */}
-      <div className="mt-auto pt-4 border-t border-white/[0.07] flex justify-between items-end">
+      <div className="mt-auto pt-4 border-t dark:border-white/[0.07] border-black/[0.07] flex justify-between items-end">
         <div>
           <span className="text-[11px] text-gray-500 block">Monthly payroll</span>
-          <span className="text-[20px] font-bold tracking-tight text-white mt-0.5 block">{formatCurrency(monthlyPayroll)}</span>
+          <span className="text-[20px] font-bold tracking-tight dark:text-white text-gray-900 mt-0.5 block">{formatCurrency(monthlyPayroll)}</span>
         </div>
         <div className="text-right">
           <span className="text-[11px] text-gray-500 block">Total wallet</span>
-          <span className="text-[20px] font-bold tracking-tight text-white mt-0.5 block">{formatCurrency(walletUsd)}</span>
+          <span className="text-[20px] font-bold tracking-tight dark:text-white text-gray-900 mt-0.5 block">{formatCurrency(walletUsd)}</span>
         </div>
       </div>
 

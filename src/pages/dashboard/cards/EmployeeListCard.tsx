@@ -19,7 +19,7 @@ export const EmployeeListCard: React.FC<{ employees: Employee[]; onClick: () => 
 
   return (
     <Card className="!p-0 overflow-hidden">
-      <div className="flex justify-between items-center px-[18px] py-3.5 border-b border-white/[0.07]">
+      <div className="flex justify-between items-center px-[18px] py-3.5 border-b dark:border-white/[0.07] border-black/[0.07]">
         <Label>Latest Employees Added</Label>
         <button onClick={onClick} className="flex items-center gap-1 text-[11px] font-medium text-[#23DDC6] bg-transparent border-none cursor-pointer p-0">
           View all <ExternalLink size={10} />
@@ -36,13 +36,13 @@ export const EmployeeListCard: React.FC<{ employees: Employee[]; onClick: () => 
         </div>
       ) : recent.map(emp => (
         <div key={emp.id} onClick={onClick}
-          className="flex items-center gap-3 px-[18px] py-3 border-b border-white/[0.04] cursor-pointer hover:bg-white/[0.025] transition-colors">
+          className="flex items-center gap-3 px-[18px] py-3 border-b dark:border-white/[0.04] border-black/[0.05] cursor-pointer dark:hover:bg-white/[0.025] hover:bg-black/[0.03] transition-colors">
           <div className="w-[34px] h-[34px] rounded-[9px] shrink-0 flex items-center justify-center bg-[#5D00F2]/15 border border-[#5D00F2]/25 text-[13px] font-bold text-purple-300">
             {emp.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex justify-between mb-1">
-              <span className="text-[13px] font-semibold text-white truncate">{emp.name}</span>
+              <span className="text-[13px] font-semibold dark:text-white text-gray-900 truncate">{emp.name}</span>
               <span className="text-[11px] text-gray-500 shrink-0 ml-2">{age(emp.dateAdded)}</span>
             </div>
             <div className="flex justify-between">

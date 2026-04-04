@@ -6,7 +6,7 @@ import { useAccount } from "wagmi";
 
 export const WalletCard: React.FC = () => {
   const { address, isConnected } = useAccount();
-  const { copy, copiedValue: cp } = useCopyToClipboard();
+  const { copy, copiedKey: cp } = useCopyToClipboard();
 
   return (
     <Card>
@@ -14,9 +14,9 @@ export const WalletCard: React.FC = () => {
         <Label>Connected Wallet</Label>
         {isConnected && address && (
           <div className="flex gap-0.5">
-            <button onClick={() => copy(address)}
-              className={`p-1 rounded flex items-center bg-transparent border-none cursor-pointer transition-colors ${cp === address ? 'text-[#23DDC6]' : 'text-gray-500 hover:text-white'}`}>
-              {cp === address ? <Check size={13} /> : <Copy size={13} />}
+            <button onClick={() => copy('wallet', address)}
+              className={`p-1 rounded flex items-center bg-transparent border-none cursor-pointer transition-colors ${cp === 'wallet' ? 'text-[#23DDC6]' : 'text-gray-500 hover:text-white'}`}>
+              {cp === 'wallet' ? <Check size={13} /> : <Copy size={13} />}
             </button>
             <a href={`https://etherscan.io/address/${address}`} target="_blank" rel="noopener noreferrer"
               className="p-1 rounded flex items-center text-gray-500 hover:text-white transition-colors">

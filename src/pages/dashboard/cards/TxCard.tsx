@@ -21,7 +21,7 @@ export const TxCard: React.FC<{ onClick: () => void }> = ({ onClick }) => {
 
   return (
     <Card className="!p-0 overflow-hidden">
-      <div className="flex justify-between items-center px-[18px] py-3.5 border-b border-white/[0.07]">
+      <div className="flex justify-between items-center px-[18px] py-3.5 border-b dark:border-white/[0.07] border-black/[0.07]">
         <Label>Latest Transactions</Label>
         <button onClick={onClick} className="flex items-center gap-1 text-[11px] font-medium text-[#23DDC6] bg-transparent border-none cursor-pointer p-0">
           View all <ExternalLink size={10} />
@@ -37,8 +37,8 @@ export const TxCard: React.FC<{ onClick: () => void }> = ({ onClick }) => {
       ) : (
         receipts.map(tx => (
           <div key={tx.id} onClick={onClick}
-            className="flex items-center gap-3 px-[18px] py-3 border-b border-white/[0.04] cursor-pointer hover:bg-white/[0.025] transition-colors">
-            <div className="p-1.5 rounded-lg bg-white/[0.05] shrink-0">
+            className="flex items-center gap-3 px-[18px] py-3 border-b dark:border-white/[0.04] border-black/[0.05] cursor-pointer dark:hover:bg-white/[0.025] hover:bg-black/[0.03] transition-colors">
+            <div className="p-1.5 rounded-lg dark:bg-white/[0.05] bg-black/[0.05] shrink-0">
               <ArrowLeftRight size={13} className="text-gray-500" />
             </div>
             <div className="flex-1 min-w-0">
@@ -48,11 +48,11 @@ export const TxCard: React.FC<{ onClick: () => void }> = ({ onClick }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Hash</span>
-                <span className="text-[11px] font-mono text-gray-300">{sliceAddress(tx.txHash)}</span>
+                <span className="text-[11px] font-mono dark:text-gray-300 text-gray-700">{sliceAddress(tx.txHash)}</span>
               </div>
               <div className="flex justify-between mt-0.5">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">Amount</span>
-                <span className="text-[12px] font-medium text-gray-300">{formatCurrency(tx.totalUsd)}</span>
+                <span className="text-[12px] font-medium dark:text-gray-300 text-gray-700">{formatCurrency(tx.totalUsd)}</span>
               </div>
             </div>
           </div>
