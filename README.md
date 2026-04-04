@@ -13,7 +13,7 @@
 </p>
 
 <a href="https://geniepay.ca" target="_blank" rel="noopener noreferrer">
-  <img width="1175" height="723" alt="image" src="https://github.com/user-attachments/assets/5e535958-f1dd-4a82-a20f-e5d82ed8e2dc" />
+  <img width="1885" height="801" alt="image" src="https://github.com/user-attachments/assets/7a46f4bd-f7dc-4e2b-bbc1-e57b432b8fa6" />
 </a>
 
 **GeniePay** is a free, self-custody crypto payroll tool. Connect your wallet and pay up to 800 employees or contractors worldwide in a single transaction. No fees. No middlemen. No account needed.
