@@ -54,8 +54,8 @@ const InputField: React.FC<InputFieldProps> = ({
   ...props
 }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-300 mb-2">
-      {label} {required && <span className="text-red-400">*</span>}
+    <label className="block text-[11px] font-semibold uppercase tracking-widest text-[#6f6b77] mb-1.5">
+      {label}{required && <span className="text-red-400 ml-0.5 normal-case tracking-normal">*</span>}
     </label>
     <input
       type={type}
@@ -63,13 +63,17 @@ const InputField: React.FC<InputFieldProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full px-4 py-2 rounded-lg bg-white/5 border text-white placeholder-gray-500
-        focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors
-        ${name === 'walletAddress' ? 'font-mono text-sm' : ''}`}
-      style={{ borderColor: error ? '#ef4444' : 'rgba(124, 58, 237, 0.3)' }}
+      className={[
+        'w-full px-3.5 py-2.5 rounded-lg bg-[#1c1b22] text-white text-sm',
+        'placeholder-[#44414c] outline-none transition-all',
+        name === 'walletAddress' ? 'font-mono' : '',
+        error
+          ? 'border border-red-500/50 focus:border-red-500/60 focus:ring-1 focus:ring-red-500/15'
+          : 'border border-[#2e2d38] focus:border-purple/40 focus:ring-1 focus:ring-purple/10',
+      ].join(' ')}
       {...props}
     />
-    {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
+    {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
   </div>
 );
 
@@ -113,7 +117,6 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
   const validate = (): boolean => {
     const newErrors: Partial<FormData> = {};
-
     if (!form.name.trim()) newErrors.name = 'Name is required';
     if (!form.walletAddress.trim()) {
       newErrors.walletAddress = 'Wallet address is required';
@@ -124,7 +127,6 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     if (!form.payUsd || parseFloat(form.payUsd) <= 0) {
       newErrors.payUsd = 'Pay must be greater than 0';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -132,7 +134,6 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-
     const payload: Omit<Employee, 'id' | 'dateAdded'> = {
       name: form.name.trim(),
       email: form.email.trim() || undefined,
@@ -141,13 +142,11 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       department: form.department.trim() || undefined,
       payUsd: parseFloat(form.payUsd),
     };
-
     if (isEditMode && employeeToEdit) {
       onEdit!(employeeToEdit.id, payload);
     } else {
       onAdd(payload);
     }
-
     handleClose();
   };
 
@@ -158,109 +157,56 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div
-        className="w-full max-w-2xl rounded-2xl shadow-2xl"
-        style={{
-          backgroundColor: 'rgba(26, 27, 34, 0.95)',
-          border: '1px solid rgba(124, 58, 237, 0.3)',
-        }}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl bg-[#15141a] border border-[#2e2d38]">
+
         {/* Header */}
-        <div
-          className="flex items-center justify-between p-6 border-b"
-          style={{ borderColor: 'rgba(124, 58, 237, 0.2)' }}
-        >
-          <h2 className="text-2xl font-bold text-white">
-            {isEditMode ? 'Edit Employee' : 'Add New Employee'}
-          </h2>
+        <div className="flex items-center justify-between px-6 py-4 bg-[#1a1821] border-b border-[#2e2d38]">
+          <div>
+            <h2 className="text-sm font-semibold text-white">
+              {isEditMode ? 'Edit Employee' : 'Add Employee'}
+            </h2>
+            <p className="text-xs text-[#6f6b77] mt-0.5">
+              {isEditMode ? 'Update employee details' : 'Add a new team member to payroll'}
+            </p>
+          </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6f6b77] hover:text-white hover:bg-white/[0.06] transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <InputField
-            label="Name"
-            name="name"
-            value={form.name}
-            error={errors.name}
-            onChange={handleChange}
-            required
-            placeholder="Genie Pay"
-          />
-
-          <InputField
-            label="Email"
-            name="email"
-            value={form.email}
-            error={errors.email}
-            onChange={handleChange}
-            type="email"
-            placeholder="genie.pay@genie.com"
-          />
-
-          <InputField
-            label="Wallet Address"
-            name="walletAddress"
-            value={form.walletAddress}
-            error={errors.walletAddress}
-            onChange={handleChange}
-            required
-            placeholder="0x..."
-          />
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
 
           <div className="grid grid-cols-2 gap-4">
-            <InputField
-              label="Role"
-              name="role"
-              value={form.role}
-              error={errors.role}
-              onChange={handleChange}
-              required
-              placeholder="Developer"
-            />
-            <InputField
-              label="Department"
-              name="department"
-              value={form.department}
-              error={errors.department}
-              onChange={handleChange}
-              placeholder="Engineering"
-            />
+            <InputField label="Full Name" name="name" value={form.name} error={errors.name} onChange={handleChange} required placeholder="Jane Smith" />
+            <InputField label="Email" name="email" value={form.email} error={errors.email} onChange={handleChange} type="email" placeholder="jane@example.com" />
           </div>
 
-          <InputField
-            label="Monthly Pay (USD)"
-            name="payUsd"
-            value={form.payUsd}
-            error={errors.payUsd}
-            onChange={handleChange}
-            type="number"
-            required
-            placeholder="1000"
-            min="0"
-            step="0.01"
-          />
+          <InputField label="Wallet Address" name="walletAddress" value={form.walletAddress} error={errors.walletAddress} onChange={handleChange} required placeholder="0x…" />
+
+          <div className="grid grid-cols-2 gap-4">
+            <InputField label="Role" name="role" value={form.role} error={errors.role} onChange={handleChange} required placeholder="Developer" />
+            <InputField label="Department" name="department" value={form.department} error={errors.department} onChange={handleChange} placeholder="Engineering" />
+          </div>
+
+          <InputField label="Monthly Pay (USD)" name="payUsd" value={form.payUsd} error={errors.payUsd} onChange={handleChange} type="number" required placeholder="5,000" min="0" step="0.01" />
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={handleClose}
-              className="px-6 py-2 rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#9ca3af' }}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-[#6f6b77] hover:text-white bg-white/[0.04] hover:bg-white/[0.07] border border-[#2e2d38] transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: '#7c3aed', color: 'white' }}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-purple hover:bg-purple/90 transition-all"
             >
               {isEditMode ? 'Save Changes' : 'Add Employee'}
             </button>
