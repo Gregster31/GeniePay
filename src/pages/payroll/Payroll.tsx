@@ -9,12 +9,9 @@ import { BatchPaymentModal } from '@/pages/payroll/BatchPaymentModal';
 import { CSVImportModal } from '@/pages/payroll/CsvImportModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageShell } from '@/components/layout/PageShell';
-import { usePageTheme } from '@/hooks/usePageTheme';
 
 export const Payroll: React.FC = () => {
   const { employees, addEmployee, updateEmployee, removeEmployee } = useAuth();
-  const { heading, subtext } = usePageTheme();
-
   const [selectedIds, setSelectedIds]           = useState<string[]>([]);
   const [showAddModal, setShowAddModal]          = useState(false);
   const [showBatchModal, setShowBatchModal]      = useState(false);

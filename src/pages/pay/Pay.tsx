@@ -6,7 +6,7 @@ import { Card } from '@/components/ui';
 import { usePayment } from '@/hooks/usePayment';
 import { useEthPrice } from '@/hooks/useEthPrice';
 import { useGlobalBalance } from '@/hooks/useGlobalBalance';
-import { useEnsResolution } from '@/hooks/useENSResolution';
+import { useEnsResolution } from '@/hooks/useEnsResolution';
 import { ethToUsd, usdToEth } from '@/utils/EthUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/Format';

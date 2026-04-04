@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Download, Printer, Trash2, ExternalLink, Loader2, FileX, Copy, CheckCircle2 } from 'lucide-react';
+import { Download, Printer, Trash2, ExternalLink, Loader2, FileX } from 'lucide-react';
 import { fetchReceipts, deleteReceipt } from '@/services/ReceiptService';
 import { openReceiptPdf, downloadReceiptHtml } from '@/utils/ReceiptPdf';
 import type { Receipt } from '@/models/ReceiptModel';
@@ -8,28 +8,12 @@ import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { formatCurrency, formatDateLong } from '@/utils/Format';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { PageShell } from '@/components/layout/PageShell';
+import { CopyBtn } from '@/components/ui/CopyBtn';
 
 const TYPE_LABELS: Record<string, string> = {
   quickpay: 'Quick Pay',
   payroll:  'Batch Payroll',
 };
-
-// ─── Copy button ──────────────────────────────────────────────────────────────
-
-function CopyBtn({ id, value, copiedKey, onCopy }: { id: string; value: string; copiedKey: string | null; onCopy: (key: string, v: string) => void }) {
-  return (
-    <button
-      onClick={() => onCopy(id, value)}
-      className="shrink-0 text-gray-400 dark:text-[#6f6b77] hover:text-gray-700 dark:hover:text-[#c4bfce] transition-colors"
-    >
-      {copiedKey === id
-        ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-        : <Copy className="w-3.5 h-3.5" />}
-    </button>
-  );
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export const Documents: React.FC = () => {
   const queryClient = useQueryClient();

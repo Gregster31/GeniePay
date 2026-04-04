@@ -22,7 +22,15 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({ isOpen, onClose,
   const [fileName, setFileName] = useState('');
   const [result, setResult] = useState<CSVParseResult>({ valid: [], errors: [] });
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
   const processFile = useCallback((file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      setFileName(file.name);
+      setResult({ valid: [], errors: [{ row: 0, message: 'File is too large. Maximum allowed size is 5 MB.' }] });
+      setStep(ImportStep.Preview);
+      return;
+    }
     setFileName(file.name);
     const reader = new FileReader();
     reader.onload = (e) => {

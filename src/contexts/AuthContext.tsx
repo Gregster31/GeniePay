@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const data = await fetchEmployees();
           setEmployees(data);
         } catch (err) {
-          console.error('Supabase auth/fetch failed:', err);
+          if (import.meta.env.DEV) console.error('Supabase auth/fetch failed:', err);
         } finally {
           setIsLoading(false);
           setIsLoadingEmployees(false);

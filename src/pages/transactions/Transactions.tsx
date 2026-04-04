@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import {
-  Copy, ArrowRight, ArrowLeft, Loader2, CheckCircle2,
+  ArrowRight, ArrowLeft, Loader2,
   ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ExternalLink,
 } from 'lucide-react';
 import { fetchTransactions, getExplorerUrl, type Transaction } from '@/utils/Blockscout';
@@ -11,6 +11,7 @@ import { formatDate } from '@/utils/Format';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { ErrorPage } from '@/pages/ErrorPage';
 import { PageShell } from '@/components/layout/PageShell';
+import { CopyBtn } from '@/components/ui/CopyBtn';
 
 const PAGE_SIZE = 20;
 
@@ -68,21 +69,6 @@ function Pagination({ currentPage, onPageChange, hasMore }: PaginationProps) {
         <ChevronsRight className="w-4 h-4" />
       </button>
     </div>
-  );
-}
-
-// ─── Copy button ──────────────────────────────────────────────────────────────
-
-function CopyBtn({ id, value, copiedKey, onCopy }: { id: string; value: string; copiedKey: string | null; onCopy: (key: string, v: string) => void }) {
-  return (
-    <button
-      onClick={() => onCopy(id, value)}
-      className="shrink-0 text-gray-400 dark:text-[#6f6b77] hover:text-gray-700 dark:hover:text-[#c4bfce] transition-colors"
-    >
-      {copiedKey === id
-        ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-        : <Copy className="w-3.5 h-3.5" />}
-    </button>
   );
 }
 
