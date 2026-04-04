@@ -182,8 +182,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
 
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="Full Name" name="name" value={form.name} error={errors.name} onChange={handleChange} required placeholder="Jane Smith" />
-            <InputField label="Email" name="email" value={form.email} error={errors.email} onChange={handleChange} type="email" placeholder="jane@example.com" />
+            <InputField label="Full Name" name="name" value={form.name} error={errors.name} onChange={handleChange} required placeholder="Genie Pay" />
+            <InputField label="Email" name="email" value={form.email} error={errors.email} onChange={handleChange} type="email" placeholder="genie@pay.ca" />
           </div>
 
           <InputField label="Wallet Address" name="walletAddress" value={form.walletAddress} error={errors.walletAddress} onChange={handleChange} required placeholder="0x…" />
