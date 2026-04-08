@@ -11,14 +11,14 @@ export function ConnectWalletButton({ variant = 'primary', className = '' }: { v
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isConnected) navigate('/dashboard');
+    if (isConnected) navigate('/');
   }, [isConnected, navigate]);
 
   if (isConnected) {
     const short = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connected';
     if (variant === 'header') {
       return (
-        <button onClick={() => navigate('/dashboard')}
+        <button onClick={() => navigate('/')}
           className="flex items-center gap-2 bg-white/[0.07] hover:bg-white/[0.14] text-white px-4 py-2 rounded-full text-xs font-bold border border-white/10 hover:border-white/20 transition-all">
           <span className="w-2 h-2 rounded-full bg-[#23DDC6] animate-pulse" />
           {short}
@@ -26,7 +26,7 @@ export function ConnectWalletButton({ variant = 'primary', className = '' }: { v
       );
     }
     return (
-      <button onClick={() => navigate('/dashboard')}
+      <button onClick={() => navigate('/')}
         className={`flex items-center gap-2 text-white font-black text-xs uppercase tracking-wide transition-all hover:scale-105 ${
           variant === 'primary'
             ? 'bg-[#5D00F2] hover:bg-[#4a00c4] px-9 py-4 rounded-full shadow-xl shadow-[#5D00F2]/40'

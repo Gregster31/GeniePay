@@ -54,7 +54,7 @@ const InputField: React.FC<InputFieldProps> = ({
   ...props
 }) => (
   <div>
-    <label className="block text-[11px] font-semibold uppercase tracking-widest text-[#6f6b77] mb-1.5">
+    <label className="block text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-[#6f6b77] mb-1.5">
       {label}{required && <span className="text-red-400 ml-0.5 normal-case tracking-normal">*</span>}
     </label>
     <input
@@ -64,16 +64,19 @@ const InputField: React.FC<InputFieldProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       className={[
-        'w-full px-3.5 py-2.5 rounded-lg bg-[#1c1b22] text-white text-sm',
-        'placeholder-[#44414c] outline-none transition-all',
+        'w-full px-3.5 py-2.5 rounded-lg text-sm',
+        'bg-gray-100 dark:bg-[#1c1b22]',
+        'text-gray-900 dark:text-white',
+        'placeholder-gray-400 dark:placeholder-[#44414c]',
+        'outline-none transition-all',
         name === 'walletAddress' ? 'font-mono' : '',
         error
           ? 'border border-red-500/50 focus:border-red-500/60 focus:ring-1 focus:ring-red-500/15'
-          : 'border border-[#2e2d38] focus:border-purple/40 focus:ring-1 focus:ring-purple/10',
+          : 'border border-gray-200 dark:border-[#2e2d38] focus:border-purple/40 focus:ring-1 focus:ring-purple/10',
       ].join(' ')}
       {...props}
     />
-    {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
+    {error && <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{error}</p>}
   </div>
 );
 
@@ -158,21 +161,21 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl bg-[#15141a] border border-[#2e2d38]">
+      <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-[#15141a] border border-gray-200 dark:border-[#2e2d38]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#1a1821] border-b border-[#2e2d38]">
+        <div className="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-[#1a1821] border-b border-gray-200 dark:border-[#2e2d38]">
           <div>
-            <h2 className="text-sm font-semibold text-white">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
               {isEditMode ? 'Edit Employee' : 'Add Employee'}
             </h2>
-            <p className="text-xs text-[#6f6b77] mt-0.5">
+            <p className="text-xs text-gray-500 dark:text-[#6f6b77] mt-0.5">
               {isEditMode ? 'Update employee details' : 'Add a new team member to payroll'}
             </p>
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6f6b77] hover:text-white hover:bg-white/[0.06] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-[#6f6b77] hover:text-gray-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.06] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -200,7 +203,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-[#6f6b77] hover:text-white bg-white/[0.04] hover:bg-white/[0.07] border border-[#2e2d38] transition-all"
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 dark:text-[#6f6b77] hover:text-gray-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.04] hover:bg-black/[0.07] dark:hover:bg-white/[0.07] border border-gray-200 dark:border-[#2e2d38] transition-all"
             >
               Cancel
             </button>

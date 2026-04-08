@@ -12,10 +12,9 @@ import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { ErrorPage } from '@/pages/ErrorPage';
 import { PageShell } from '@/components/layout/PageShell';
 import { CopyBtn } from '@/components/ui/CopyBtn';
+import { DEMO_TRANSACTIONS } from '@/data/demoData';
 
 const PAGE_SIZE = 20;
-
-// ─── Pagination ───────────────────────────────────────────────────────────────
 
 interface PaginationProps {
   currentPage: number;
@@ -72,19 +71,19 @@ function Pagination({ currentPage, onPageChange, hasMore }: PaginationProps) {
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export const History: React.FC = () => {
-  const { address, chain } = useAccount();
+  const { address, chain, isConnected } = useAccount();
   const [page, setPage] = useState(1);
   const { copy, copiedKey } = useCopyToClipboard();
 
-  const { data: transactions = [], isLoading, error } = useQuery({
+  const { data: fetchedTransactions = [], isLoading, error } = useQuery({
     queryKey: ['transactions', address, chain?.id, page],
     queryFn: () => fetchTransactions(address!, page, PAGE_SIZE, chain?.id),
     enabled: !!address,
     staleTime: 30_000,
   });
+
+  const transactions: Transaction[] = isConnected ? fetchedTransactions : DEMO_TRANSACTIONS;
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1) return;
@@ -94,7 +93,7 @@ export const History: React.FC = () => {
 
   if (error) return <ErrorPage />;
 
-  const hasMore = transactions.length === PAGE_SIZE;
+  const hasMore = isConnected && transactions.length === PAGE_SIZE;
 
   return (
     <PageShell
@@ -107,8 +106,18 @@ export const History: React.FC = () => {
       </div>
 
       {/* Table card */}
-      <div className="rounded-xl border border-gray-200 dark:border-[#2e2d38] bg-white dark:bg-[#15141a] overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="relative rounded-xl border border-gray-200 dark:border-[#2e2d38] bg-white dark:bg-[#15141a] overflow-hidden">
+
+        {!isConnected && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm bg-black/20 dark:bg-[#0f0e17]/45">
+            <div className="text-center px-6 py-5 rounded-2xl shadow-xl bg-white dark:bg-[#15141a] border border-[#5D00F2]/25">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">Connect your wallet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">to view your transaction history</p>
+            </div>
+          </div>
+        )}
+
+        <div className={`overflow-x-auto${!isConnected ? ' pointer-events-none select-none' : ''}`}>
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 dark:bg-[#1a1821] border-b border-gray-200 dark:border-[#2e2d38]">

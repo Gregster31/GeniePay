@@ -26,14 +26,18 @@ export const WalletCard: React.FC = () => {
         )}
       </div>
 
-      <div
-        className="rounded-lg px-3 py-2 flex items-center"
-        style={{ backgroundColor: 'rgba(26,27,34,0.6)', border: '1px solid rgba(124,58,237,0.2)' }}
-      >
-        <p className="font-mono text-[13px] font-medium tracking-wide text-gray-200">
-          {sliceAddress(address)}
-        </p>
-      </div>
+      {isConnected && address ? (
+        <div className="rounded-lg px-3 py-2 flex items-center bg-gray-100 dark:bg-[#1a1b22]/60 border border-purple-200 dark:border-[#7c3aed]/20">
+          <p className="font-mono text-[13px] font-medium tracking-wide text-gray-700 dark:text-gray-200">
+            {sliceAddress(address)}
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-lg px-3 py-2 flex items-center gap-2 bg-gray-100 dark:bg-[#1a1b22]/60 border border-gray-200 dark:border-gray-700/50">
+          <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0" />
+          <p className="text-[13px] text-gray-400 dark:text-gray-500">Not connected</p>
+        </div>
+      )}
     </Card>
   );
 };

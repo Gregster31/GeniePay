@@ -1,0 +1,131 @@
+import type { Employee } from '@/models/EmployeeModel';
+import type { Receipt } from '@/models/ReceiptModel';
+import type { Transaction } from '@/utils/Blockscout';
+
+export const DEMO_EMPLOYEES: Employee[] = [
+  {
+    id: 'demo-1',
+    name: 'Alex Rivera',
+    walletAddress: '0xA1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0',
+    role: 'Engineer',
+    payUsd: 4500,
+    dateAdded: new Date('2026-01-15'),
+    department: 'Engineering',
+  },
+  {
+    id: 'demo-2',
+    name: 'Jordan Kim',
+    walletAddress: '0xE5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4',
+    role: 'Designer',
+    payUsd: 3800,
+    dateAdded: new Date('2026-02-03'),
+    department: 'Design',
+  },
+  {
+    id: 'demo-3',
+    name: 'Morgan Chen',
+    walletAddress: '0xC9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4E5F6A7B8',
+    role: 'Marketing',
+    payUsd: 3200,
+    dateAdded: new Date('2026-02-20'),
+    department: 'Marketing',
+  },
+];
+
+export const DEMO_RECEIPTS: Receipt[] = [
+  {
+    id: 'demo-r1',
+    type: 'payroll',
+    txHash: '0xabc1def2abc3def4abc5def6abc7def8abc9def0abc1def2abc3def4abc5def6',
+    network: 'Ethereum',
+    currency: 'ETH',
+    totalUsd: 11500,
+    totalCrypto: 3.82,
+    from: '0xDEMO0000000000000000000000000000DEMO0001',
+    recipients: [
+      { name: 'Alex Rivera', address: '0xA1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0', amountUsd: 4500 },
+      { name: 'Jordan Kim',  address: '0xE5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4', amountUsd: 3800 },
+      { name: 'Morgan Chen', address: '0xC9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4E5F6A7B8', amountUsd: 3200 },
+    ],
+    createdAt: new Date('2026-04-01'),
+  },
+  {
+    id: 'demo-r2',
+    type: 'quickpay',
+    txHash: '0x123a456b789c012d345e678f901a234b567c890d123e456f789a012b345c678d',
+    network: 'Polygon',
+    currency: 'ETH',
+    totalUsd: 850,
+    totalCrypto: 0.28,
+    from: '0xDEMO0000000000000000000000000000DEMO0001',
+    recipients: [
+      { name: 'Alex Rivera', address: '0xA1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0', amountUsd: 850 },
+    ],
+    createdAt: new Date('2026-03-28'),
+  },
+  {
+    id: 'demo-r3',
+    type: 'payroll',
+    txHash: '0x789c012d345e678f901a234b567c890d123e456f789a012b345c678d901e234f',
+    network: 'Arbitrum',
+    currency: 'ETH',
+    totalUsd: 22750,
+    totalCrypto: 7.54,
+    from: '0xDEMO0000000000000000000000000000DEMO0001',
+    recipients: [
+      { name: 'Alex Rivera', address: '0xA1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0', amountUsd: 4500 },
+      { name: 'Jordan Kim',  address: '0xE5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4', amountUsd: 3800 },
+      { name: 'Morgan Chen', address: '0xC9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4E5F6A7B8', amountUsd: 3200 },
+      { name: 'Sam Torres',  address: '0xF1E2D3C4B5A6978869504132231445566778899AA', amountUsd: 5250 },
+      { name: 'Casey Park',  address: '0x1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B', amountUsd: 6000 },
+    ],
+    createdAt: new Date('2026-03-15'),
+  },
+];
+
+export const DEMO_TRANSACTIONS: Transaction[] = [
+  {
+    hash: '0xfa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0fa1b2c3d4e5f6a7b8c9d0e',
+    from: '0xDEMO0000000000000000000000000000DEMO0001',
+    to: '0xA1B2C3D4E5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0',
+    value: '0.12',
+    timestamp: new Date('2026-04-01'),
+    gasFee: '420000',
+    network: 'Ethereum',
+    usdValue: '362.40',
+    chainId: 1,
+  },
+  {
+    hash: '0xde4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0fa1b2c3d4e5f6a7b8c9d0e1f2a3b',
+    from: '0xDEMO0000000000000000000000000000DEMO0001',
+    to: '0xE5F6A7B8C9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4',
+    value: '0.09',
+    timestamp: new Date('2026-03-28'),
+    gasFee: '315000',
+    network: 'Ethereum',
+    usdValue: '271.80',
+    chainId: 1,
+  },
+  {
+    hash: '0xbc7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0fa1b2c3d4e5f6a',
+    from: '0xC9D0E1F2A3B4C5D6E7F8A9B0A1B2C3D4E5F6A7B8',
+    to: '0xDEMO0000000000000000000000000000DEMO0001',
+    value: '0.25',
+    timestamp: new Date('2026-03-20'),
+    gasFee: '210000',
+    network: 'Ethereum',
+    usdValue: '754.50',
+    chainId: 1,
+  },
+  {
+    hash: '0x0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0fa1b2c3d4e5f6a7b8c9d0e',
+    from: '0xDEMO0000000000000000000000000000DEMO0001',
+    to: '0xF3A4B5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1A2',
+    value: '1.50',
+    timestamp: new Date('2026-03-15'),
+    gasFee: '630000',
+    network: 'Ethereum',
+    usdValue: '4527.00',
+    chainId: 1,
+  },
+];

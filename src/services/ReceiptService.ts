@@ -90,6 +90,8 @@ export const saveReceipt = async (
 };
 
 export const deleteReceipt = async (id: string): Promise<void> => {
-  const { error } = await supabase.from('receipts').delete().eq('id', id);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  const { error } = await supabase.from('receipts').delete().eq('id', id).eq('owner_id', user.id);
   if (error) throw new Error(error.message);
 };

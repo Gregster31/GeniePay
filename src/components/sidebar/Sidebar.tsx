@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Send, Users, FileText, ChevronLeft, ChevronRight, ArrowRightLeft } from 'lucide-react';
 
 const NAV = [
-  { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { id: 'dashboard', label: 'Dashboard', path: '/', icon: LayoutDashboard },
   { id: 'pay',       label: 'Quick Pay', path: '/pay',       icon: Send            },
   { id: 'payroll',   label: 'Payroll',   path: '/payroll',   icon: Users           },
   { id: 'documents', label: 'Documents', path: '/documents', icon: FileText        },
@@ -21,7 +21,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isMobile }) => {
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path: string) =>
-    location.pathname === path || location.pathname.startsWith(path + '/');
+    path === '/'
+      ? location.pathname === '/'
+      : location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
     <div
