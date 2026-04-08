@@ -79,6 +79,8 @@ export const updateEmployee = async (
   id: string,
   updates: Omit<Employee, 'id' | 'dateAdded'>,
 ): Promise<Employee> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
   const { data, error } = await supabase
     .from('employees')
     .update({
@@ -90,6 +92,7 @@ export const updateEmployee = async (
       department:     updates.department ?? null,
     })
     .eq('id', id)
+    .eq('owner_id', user.id)
     .select()
     .single();
 
@@ -98,6 +101,8 @@ export const updateEmployee = async (
 };
 
 export const deleteEmployee = async (id: string): Promise<void> => {
-  const { error } = await supabase.from('employees').delete().eq('id', id);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  const { error } = await supabase.from('employees').delete().eq('id', id).eq('owner_id', user.id);
   if (error) throw new Error(error.message);
 };

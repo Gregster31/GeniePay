@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { UserPlus, Send, Copy, CheckCircle2, FileUp, Pencil, Trash2, Check, Layers, ChevronDown, ChevronRight } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import type { Employee } from '@/models/EmployeeModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { formatCurrency, formatDate } from '@/utils/Format';
@@ -9,13 +10,19 @@ import { BatchPaymentModal } from '@/pages/payroll/BatchPaymentModal';
 import { CSVImportModal } from '@/pages/payroll/CsvImportModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageShell } from '@/components/layout/PageShell';
+import { WalletGateModal } from '@/components/ui/WalletGateModal';
+import { DEMO_EMPLOYEES } from '@/data/demoData';
 
 export const Payroll: React.FC = () => {
+  const { isConnected }                         = useAccount();
   const { employees, addEmployee, updateEmployee, removeEmployee } = useAuth();
+  const displayedEmployees                      = isConnected ? employees : DEMO_EMPLOYEES;
   const [selectedIds, setSelectedIds]           = useState<string[]>([]);
   const [showAddModal, setShowAddModal]          = useState(false);
   const [showBatchModal, setShowBatchModal]      = useState(false);
   const [showCSVModal, setShowCSVModal]          = useState(false);
+  const [showGateModal, setShowGateModal]        = useState(false);
+  const [gateAction, setGateAction]              = useState('');
   const [employeeToEdit, setEmployeeToEdit]      = useState<Employee | null>(null);
   const [employeeToDelete, setEmployeeToDelete]  = useState<Employee | null>(null);
   const [isDeleting, setIsDeleting]              = useState(false);
@@ -23,30 +30,35 @@ export const Payroll: React.FC = () => {
   const [collapsedDepts, setCollapsedDepts]      = useState<Set<string>>(new Set());
   const { copy, copiedKey: copiedAddress }       = useCopyToClipboard();
 
+  const openGated = (action: string, onConnected: () => void) => {
+    if (!isConnected) { setGateAction(action); setShowGateModal(true); return; }
+    onConnected();
+  };
+
   const selectedEmployees = employees.filter(emp => selectedIds.includes(emp.id));
   const totalAmount       = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
-  const allSelected       = employees.length > 0 && selectedIds.length === employees.length;
+  const allSelected       = displayedEmployees.length > 0 && selectedIds.length === displayedEmployees.length;
   const hasSelection      = selectedIds.length > 0;
 
   const toggleEmployee  = (id: string) =>
     setSelectedIds(prev => prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]);
   const toggleSelectAll = () =>
-    setSelectedIds(allSelected ? [] : employees.map(e => e.id));
+    setSelectedIds(allSelected ? [] : displayedEmployees.map(e => e.id));
 
   // Department grouping
   const grouped = useMemo(() => {
     const map = new Map<string, Employee[]>();
-    for (const emp of employees) {
-      const dept = emp.department?.trim() || 'Uncategorized';
-      if (!map.has(dept)) map.set(dept, []);
-      map.get(dept)!.push(emp);
+    for (const emp of displayedEmployees) {
+      const deptKey = emp.department?.trim() || 'Uncategorized';
+      if (!map.has(deptKey)) map.set(deptKey, []);
+      map.get(deptKey)!.push(emp);
     }
     return [...map.entries()].sort(([a], [b]) => {
       if (a === 'Uncategorized') return 1;
       if (b === 'Uncategorized') return -1;
       return a.localeCompare(b);
     });
-  }, [employees]);
+  }, [displayedEmployees]);
 
   const toggleDept = (dept: string, deptEmployees: Employee[]) => {
     const ids = deptEmployees.map(e => e.id);
@@ -90,11 +102,15 @@ export const Payroll: React.FC = () => {
 
   const actions = (
     <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
-      <button onClick={() => setShowCSVModal(true)} className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+      <button
+        onClick={() => openGated('import employees', () => setShowCSVModal(true))}
+        className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
         style={{ backgroundColor: 'rgba(93,0,242,0.08)', border: '1px solid rgba(93,0,242,0.25)', color: '#a78bfa' }}>
         <FileUp className="w-4 h-4 shrink-0" /> Import CSV
       </button>
-      <button onClick={() => setShowAddModal(true)} className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+      <button
+        onClick={() => openGated('add an employee', () => setShowAddModal(true))}
+        className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all"
         style={{ backgroundColor: 'rgba(93,0,242,0.10)', border: '1px solid rgba(93,0,242,0.30)', color: '#a78bfa' }}>
         <UserPlus className="w-4 h-4 shrink-0" /> Add Employee
       </button>
@@ -109,11 +125,17 @@ export const Payroll: React.FC = () => {
         <Layers className="w-4 h-4 shrink-0" />
         {groupByDept ? 'Ungrouped' : 'By Dept'}
       </button>
-      <button onClick={() => setShowBatchModal(true)} disabled={!hasSelection}
+      <button
+        onClick={() => openGated('run payroll', () => setShowBatchModal(true))}
+        disabled={isConnected && !hasSelection}
         className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ backgroundColor: hasSelection ? 'rgba(93,0,242,0.9)' : 'rgba(255,255,255,0.05)', border: hasSelection ? '1px solid rgba(93,0,242,0.5)' : '1px solid rgba(255,255,255,0.1)', color: hasSelection ? '#fff' : '#6b7280' }}>
+        style={{
+          backgroundColor: (isConnected && hasSelection) ? 'rgba(93,0,242,0.9)' : !isConnected ? 'rgba(93,0,242,0.9)' : 'rgba(255,255,255,0.05)',
+          border: (isConnected && hasSelection) ? '1px solid rgba(93,0,242,0.5)' : !isConnected ? '1px solid rgba(93,0,242,0.5)' : '1px solid rgba(255,255,255,0.1)',
+          color: (isConnected && !hasSelection) ? '#6b7280' : '#fff',
+        }}>
         <Send className="w-4 h-4 shrink-0" />
-        {hasSelection ? `Run Payroll (${selectedIds.length})` : 'Run Payroll'}
+        {isConnected && hasSelection ? `Run Payroll (${selectedIds.length})` : 'Run Payroll'}
       </button>
     </div>
   );
@@ -122,8 +144,19 @@ export const Payroll: React.FC = () => {
     <PageShell title="Payroll" subtitle="Manage employees and run batch payments" actions={actions}>
 
       {/* Table card */}
-      <div className="rounded-xl border border-gray-200 dark:border-[#2e2d38] bg-white dark:bg-[#15141a] overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="relative rounded-xl border border-gray-200 dark:border-[#2e2d38] bg-white dark:bg-[#15141a] overflow-hidden">
+
+        {/* Blur overlay for unconnected users */}
+        {!isConnected && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm bg-black/20 dark:bg-[#0f0e17]/45">
+            <div className="text-center px-6 py-5 rounded-2xl shadow-xl bg-white dark:bg-[#15141a] border border-[#5D00F2]/25">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">Connect your wallet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">to manage your employees</p>
+            </div>
+          </div>
+        )}
+
+        <div className={`overflow-x-auto${!isConnected ? ' pointer-events-none select-none' : ''}`}>
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 dark:bg-[#1a1821] border-b border-gray-200 dark:border-[#2e2d38]">
@@ -152,7 +185,7 @@ export const Payroll: React.FC = () => {
             </thead>
 
             <tbody>
-              {employees.length === 0 ? (
+              {displayedEmployees.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
@@ -286,9 +319,9 @@ export const Payroll: React.FC = () => {
                   );
                 })
               ) : (
-                employees.map((employee, index) => {
+                displayedEmployees.map((employee, index) => {
                   const isSelected = selectedIds.includes(employee.id);
-                  const isLast = index === employees.length - 1;
+                  const isLast = index === displayedEmployees.length - 1;
                   return (
                     <tr
                       key={employee.id}
@@ -407,6 +440,12 @@ export const Payroll: React.FC = () => {
       </div>
 
       {/* Modals */}
+      <WalletGateModal
+        isOpen={showGateModal}
+        onClose={() => setShowGateModal(false)}
+        action={gateAction}
+      />
+
       <EmployeeModal
         isOpen={showAddModal || Boolean(employeeToEdit)}
         onClose={() => { setShowAddModal(false); setEmployeeToEdit(null); }}

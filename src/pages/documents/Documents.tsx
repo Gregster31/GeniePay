@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Download, Printer, Trash2, ExternalLink, Loader2, FileX } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import { fetchReceipts, deleteReceipt } from '@/services/ReceiptService';
 import { openReceiptPdf, downloadReceiptHtml } from '@/utils/ReceiptPdf';
 import type { Receipt } from '@/models/ReceiptModel';
@@ -9,6 +10,7 @@ import { formatCurrency, formatDateLong } from '@/utils/Format';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { PageShell } from '@/components/layout/PageShell';
 import { CopyBtn } from '@/components/ui/CopyBtn';
+import { DEMO_RECEIPTS } from '@/data/demoData';
 
 const TYPE_LABELS: Record<string, string> = {
   quickpay: 'Quick Pay',
@@ -16,15 +18,19 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export const Documents: React.FC = () => {
+  const { isConnected } = useAccount();
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { copy, copiedKey } = useCopyToClipboard();
 
-  const { data: receipts = [], isLoading } = useQuery({
+  const { data: fetchedReceipts = [], isLoading } = useQuery({
     queryKey: ['receipts'],
     queryFn: fetchReceipts,
+    enabled: isConnected,
     staleTime: 60_000,
   });
+
+  const receipts: Receipt[] = isConnected ? fetchedReceipts : DEMO_RECEIPTS;
 
   const deleteMutation = useMutation({
     mutationFn: deleteReceipt,
@@ -37,8 +43,18 @@ export const Documents: React.FC = () => {
   return (
     <PageShell title="Documents" subtitle="Payment receipts and transaction records">
 
-      <div className="rounded-xl border border-gray-200 dark:border-[#2e2d38] bg-white dark:bg-[#15141a] overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="relative rounded-xl border border-gray-200 dark:border-[#2e2d38] bg-white dark:bg-[#15141a] overflow-hidden">
+
+        {!isConnected && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm bg-black/20 dark:bg-[#0f0e17]/45">
+            <div className="text-center px-6 py-5 rounded-2xl shadow-xl bg-white dark:bg-[#15141a] border border-[#5D00F2]/25">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">Connect your wallet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">to view your payment receipts</p>
+            </div>
+          </div>
+        )}
+
+        <div className={`overflow-x-auto${!isConnected ? ' pointer-events-none select-none' : ''}`}>
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 dark:bg-[#1a1821] border-b border-gray-200 dark:border-[#2e2d38]">

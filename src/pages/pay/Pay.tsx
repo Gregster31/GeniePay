@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/Format';
 import { saveReceipt } from '@/services/ReceiptService';
 import { useQueryClient } from '@tanstack/react-query';
+import { WalletGateModal } from '@/components/ui/WalletGateModal';
 
 type Currency = 'ETH' | 'USD';
 
@@ -29,6 +30,7 @@ const Pay: React.FC = () => {
   const [showSuccess, setShowSuccess]     = useState(false);
   const [showDropdown, setShowDropdown]   = useState(false);
   const [selectedName, setSelectedName]   = useState('');
+  const [showGateModal, setShowGateModal] = useState(false);
   const dropdownRef                       = useRef<HTMLDivElement>(null);
   const [pendingReceipt, setPendingReceipt] = useState<{
     recipient: string; ethAmount: number; usdAmount: number;
@@ -71,6 +73,7 @@ const Pay: React.FC = () => {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isConnected) { setShowGateModal(true); return; }
     if (!recipient || ethAmount <= 0 || ethAmount > maxBal) return;
     setPendingReceipt({ recipient, ethAmount, usdAmount });
     sendPayment({ recipientAddress: recipient, amount: ethAmount.toString() });
@@ -108,13 +111,6 @@ const Pay: React.FC = () => {
             {sendError && !sendErrorDetails?.message?.toLowerCase().includes('user rejected') && (
               <div className="p-3 rounded-xl bg-red-500/8 border border-red-500/20">
                 <p className="text-[13px] text-red-400">{sendErrorDetails?.message ?? 'Transaction failed. Please try again.'}</p>
-              </div>
-            )}
-
-            {/* Not connected */}
-            {!isConnected && (
-              <div className="p-3 rounded-xl dark:bg-white/[0.04] dark:border-white/[0.08] bg-black/[0.03] border border-black/[0.07]">
-                <p className="text-[13px] text-gray-500">Connect your wallet to send payments.</p>
               </div>
             )}
 
@@ -220,7 +216,7 @@ const Pay: React.FC = () => {
 
             {/* Send */}
             <button onClick={handleSend}
-              disabled={isProcessing || !recipient || ethAmount <= 0 || ethAmount > maxBal || !isConnected}
+              disabled={isProcessing || (isConnected && (!recipient || ethAmount <= 0 || ethAmount > maxBal))}
               className="w-full py-3.5 px-4 rounded-xl font-semibold text-[14px] tracking-wide transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed bg-purple hover:bg-purple/90 text-white"
               style={{ boxShadow: '0 4px 20px rgba(93,0,242,0.35)' }}>
               {isProcessing
@@ -232,6 +228,12 @@ const Pay: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      <WalletGateModal
+        isOpen={showGateModal}
+        onClose={() => setShowGateModal(false)}
+        action="send a payment"
+      />
     </div>
   );
 };
