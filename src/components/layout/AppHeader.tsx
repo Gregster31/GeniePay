@@ -41,13 +41,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle, mobile
           {mobileOpen ? <X size={15} /> : <Menu size={15} />}
         </button>
         <img src="/geniepay_logov4.png" alt="" className="w-[28px] h-[28px] object-contain opacity-90" />
-        <span className="text-[13px] font-black uppercase tracking-[0.22em] whitespace-nowrap dark:text-white text-gray-900">
+        <span className="hidden sm:inline text-[13px] font-black uppercase tracking-[0.22em] whitespace-nowrap dark:text-white text-gray-900">
           GeniePay
         </span>
       </div>
 
       {/* ── Right: Controls ── */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
 
         {/* Search — hidden on mobile, visible md+ */}
         <div className="relative hidden md:block">
@@ -95,16 +95,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle, mobile
         {/* Wallet */}
         <ConnectButton.Custom>
           {({ account, chain: c, openAccountModal, openChainModal, openConnectModal, mounted }) => {
-            if (!mounted) return <div className="opacity-0 w-[140px]" />;
+            if (!mounted) return <div className="opacity-0 w-8 sm:w-[140px]" />;
 
             if (!account || !c) return (
               <button
                 onClick={openConnectModal}
-                className="h-10 px-5 rounded-lg text-[12px] font-black tracking-[0.10em] uppercase cursor-pointer whitespace-nowrap border-none
+                className="h-10 px-3 sm:px-5 rounded-lg text-[12px] font-black tracking-[0.10em] uppercase cursor-pointer whitespace-nowrap border-none
                   bg-[#5D00F2] text-white shadow-[0_0_18px_rgba(93,0,242,0.45)]
                   hover:shadow-[0_0_26px_rgba(93,0,242,0.65)] transition-shadow duration-200"
               >
-                Connect Wallet
+                <span className="sm:hidden">Connect</span>
+                <span className="hidden sm:inline">Connect Wallet</span>
               </button>
             );
 
