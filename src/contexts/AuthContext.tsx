@@ -1,8 +1,9 @@
 import React, {
   createContext, useContext, useState,
-  useCallback, useRef, useEffect,
+  useCallback, useEffect,
 } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Employee } from '@/models/EmployeeModel';
 import {
   signInWithWallet,
@@ -27,26 +28,25 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { address, isConnected, status } = useAccount();
+  const { address, status } = useAccount();
   const { disconnect } = useDisconnect();
-
-  // Prevent the disconnect handler from firing on a page reload (wagmi
-  // briefly reports 'disconnected' before reconnecting from storage).
-  const didExplicitLogout = useRef(false);
+  const queryClient = useQueryClient();
 
   const [isLoading,          setIsLoading]          = useState(false);
+  const [isAuthenticated,    setIsAuthenticated]    = useState(false);
   const [employees,          setEmployees]          = useState<Employee[]>([]);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
   useEffect(() => {
     if (status === 'connected' && address) {
-      didExplicitLogout.current = false;
-
       (async () => {
+        setIsAuthenticated(false);
+        queryClient.removeQueries({ queryKey: ['receipts'] });
         setIsLoading(true);
         setIsLoadingEmployees(true);
         try {
           await signInWithWallet(address);
+          setIsAuthenticated(true);
           const data = await fetchEmployees();
           setEmployees(data);
         } catch (err) {
@@ -58,14 +58,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })();
     }
 
-    if (status === 'disconnected' && didExplicitLogout.current) {
+    if (status === 'disconnected') {
+      setIsAuthenticated(false);
       setEmployees([]);
-      didExplicitLogout.current = false;
     }
-  }, [status, address]);
+  }, [status, address, queryClient]);
 
   const logout = useCallback(async () => {
-    didExplicitLogout.current = true;
     await signOutWallet();
     disconnect();
   }, [disconnect]);
@@ -87,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{
-      isAuthenticated: isConnected,
+      isAuthenticated,
       isLoading,
       logout,
       employees,

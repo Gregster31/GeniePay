@@ -8,6 +8,7 @@ import type { Receipt } from '@/models/ReceiptModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { formatCurrency, formatDateLong } from '@/utils/Format';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { useAuth } from '@/contexts/AuthContext';
 import { PageShell } from '@/components/layout/PageShell';
 import { CopyBtn } from '@/components/ui/CopyBtn';
 import { DEMO_RECEIPTS } from '@/data/demoData';
@@ -19,6 +20,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export const Documents: React.FC = () => {
   const { isConnected } = useAccount();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { copy, copiedKey } = useCopyToClipboard();
@@ -26,7 +28,7 @@ export const Documents: React.FC = () => {
   const { data: fetchedReceipts = [], isLoading } = useQuery({
     queryKey: ['receipts'],
     queryFn: fetchReceipts,
-    enabled: isConnected,
+    enabled: isAuthenticated,
     staleTime: 60_000,
   });
 

@@ -103,7 +103,7 @@ const Pay: React.FC = () => {
             {showSuccess && (
               <div className="p-3 rounded-xl bg-[#23DDC6]/8 border border-[#23DDC6]/20 flex items-center gap-2.5">
                 <CheckCircle className="w-4 h-4 text-[#23DDC6] shrink-0" />
-                <span className="text-[13px] text-[#23DDC6]">Payment sent — receipt saved to Documents.</span>
+                <span className="text-[13px] text-[#23DDC6]">Payment sent, receipt saved to Documents.</span>
               </div>
             )}
 

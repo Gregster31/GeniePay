@@ -18,8 +18,8 @@ export const useEnsResolution = (input: string) => {
     setResolved(null);
     setError(false);
 
-    if (!val || isAddress(val)) return;
-    if (!val.includes('.')) return;
+    if (!val || isAddress(val)) { setLoading(false); return; }
+    if (!val.includes('.'))     { setLoading(false); return; }
 
     clearTimeout(timer.current);
     setLoading(true);
