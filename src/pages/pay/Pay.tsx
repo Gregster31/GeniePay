@@ -203,12 +203,12 @@ const Pay: React.FC = () => {
                     : <Search className="w-3.5 h-3.5 text-gray-600 shrink-0" />
                   }
                   <input type="text" value={ensInput} onChange={e => { setEnsInput(e.target.value); setSelectedName(''); }}
-                    placeholder="0x… address or ENS name"
+                    placeholder="0x… address or domain"
                     className={`${inputBase} text-[13px] font-mono`} />
                 </div>
                 {ensResolved && <p className="text-[11px] text-[#23DDC6] mt-1.5 font-mono">{ensResolved}</p>}
-                {ensError    && <p className="text-[11px] text-red-400 mt-1.5">ENS name not found</p>}
-                {ensInput && !ensInput.endsWith('.eth') && !isAddress(ensInput) && !ensLoading &&
+                {ensError    && <p className="text-[11px] text-red-400 mt-1.5">Domain name not found</p>}
+                {ensInput && !ensInput.includes('.') && !isAddress(ensInput) && !ensLoading &&
                   <p className="text-[11px] text-red-400 mt-1.5">Invalid address</p>
                 }
               </div>
