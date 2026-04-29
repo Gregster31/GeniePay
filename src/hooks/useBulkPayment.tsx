@@ -174,6 +174,8 @@ export function useBulkPayment() {
 
     try {
       setError(null);
+      const client = publicClient;
+      if (!client) throw new Error('No public client, wallet may have disconnected');
       const addresses = getAddresses(currency)!;
       const decimals = TOKEN_DECIMALS[currency] || 18;
       const recipients = employees.map(e => e.walletAddress as Address);
@@ -193,12 +195,12 @@ export function useBulkPayment() {
           value: total,
         });
         setPaymentHash(hash);
-        await publicClient!.waitForTransactionReceipt({ hash: hash as `0x${string}`, confirmations: 1, pollingInterval: 1000 });
+        await client.waitForTransactionReceipt({ hash: hash as `0x${string}`, confirmations: 1, pollingInterval: 1000 });
         setCurrentStep('success');
         return hash;
       }
 
-      const allowance = await publicClient!.readContract({
+      const allowance = await client.readContract({
         address: addresses.tokenAddress!,
         abi: ERC20_ABI,
         functionName: 'allowance',
@@ -214,7 +216,7 @@ export function useBulkPayment() {
           args: [addresses.disperseAddress, total],
         });
         setApprovalHash(approveHash);
-        await publicClient!.waitForTransactionReceipt({ hash: approveHash as `0x${string}` });
+        await client.waitForTransactionReceipt({ hash: approveHash as `0x${string}` });
         setCurrentStep('approved');
       }
 
@@ -226,7 +228,7 @@ export function useBulkPayment() {
         args: [addresses.tokenAddress!, recipients, amounts],
       });
       setPaymentHash(hash);
-      await publicClient!.waitForTransactionReceipt({ hash: hash as `0x${string}`, confirmations: 1, pollingInterval: 1000 });
+      await client.waitForTransactionReceipt({ hash: hash as `0x${string}`, confirmations: 1, pollingInterval: 1000 });
       setCurrentStep('success');
       return hash;
 

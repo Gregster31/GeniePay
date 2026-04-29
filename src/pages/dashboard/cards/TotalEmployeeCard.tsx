@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, Label } from "@/components/ui";
 import type { Employee } from "@/models/EmployeeModel";
 
@@ -6,11 +7,11 @@ export const TotalEmployeeCard: React.FC<{
   employees: Employee[];
   onClick: () => void;
 }> = ({ count, employees, onClick }) => {
-  const addedLastMonth = employees.filter((e) => {
+  const addedLastMonth = React.useMemo(() => {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - 1);
-    return e.dateAdded >= cutoff;
-  }).length;
+    return employees.filter(e => e.dateAdded >= cutoff).length;
+  }, [employees]);
 
   return (
     <Card

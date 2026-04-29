@@ -17,6 +17,7 @@ export const useGlobalBalance = () => {
       enabled: !!address && isConnected,
       // Automatically refetches on new blocks
       refetchInterval: 12000, // Every 12 seconds (Ethereum block time)
+      staleTime: 12_000,      // Treat data as fresh for the same window to avoid focus-refetch double-fetching
     }
   });
 

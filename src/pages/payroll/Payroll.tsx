@@ -35,10 +35,14 @@ export const Payroll: React.FC = () => {
     onConnected();
   };
 
-  const selectedEmployees = employees.filter(emp => selectedIds.includes(emp.id));
+  // Use displayedEmployees as source so demo IDs and real IDs never mix
+  const selectedEmployees = displayedEmployees.filter(emp => selectedIds.includes(emp.id));
   const totalAmount       = selectedEmployees.reduce((sum, emp) => sum + emp.payUsd, 0);
   const allSelected       = displayedEmployees.length > 0 && selectedIds.length === displayedEmployees.length;
   const hasSelection      = selectedIds.length > 0;
+
+  // Clear selection when switching between demo and real data
+  React.useEffect(() => { setSelectedIds([]); }, [isConnected]);
 
   const toggleEmployee  = (id: string) =>
     setSelectedIds(prev => prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]);

@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 
 export const usePaymentSchedule = () => {
-  const [frequency, setFrequency] = useState<'bi-weekly' | 'monthly'>(() => 
-    (localStorage.getItem('paymentFrequency') as 'bi-weekly' | 'monthly') || 'monthly'
-  );
+  const [frequency, setFrequency] = useState<'bi-weekly' | 'monthly'>(() => {
+    const raw = localStorage.getItem('paymentFrequency');
+    return raw === 'bi-weekly' || raw === 'monthly' ? raw : 'monthly';
+  });
 
   const save = (freq: 'bi-weekly' | 'monthly') => {
     setFrequency(freq);

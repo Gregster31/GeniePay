@@ -19,14 +19,14 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export const Documents: React.FC = () => {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { copy, copiedKey } = useCopyToClipboard();
 
   const { data: fetchedReceipts = [], isLoading } = useQuery({
-    queryKey: ['receipts'],
+    queryKey: ['receipts', address],
     queryFn: fetchReceipts,
     enabled: isAuthenticated,
     staleTime: 60_000,
@@ -36,7 +36,7 @@ export const Documents: React.FC = () => {
 
   const deleteMutation = useMutation({
     mutationFn: deleteReceipt,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['receipts'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['receipts', address] }),
     onSettled: () => setDeletingId(null),
   });
 

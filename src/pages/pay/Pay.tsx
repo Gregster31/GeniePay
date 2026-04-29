@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, CheckCircle, ArrowUpDown, Search, ChevronDown, User } from 'lucide-react';
+import { Send, Loader2, CheckCircle, ArrowUpDown, Search, ChevronDown, User, AlertCircle } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { isAddress } from 'viem';
 import { Card } from '@/components/ui';
@@ -10,6 +10,7 @@ import { useEnsResolution } from '@/hooks/useEnsResolution';
 import { ethToUsd, usdToEth } from '@/utils/EthUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/Format';
+import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { saveReceipt } from '@/services/ReceiptService';
 import { useQueryClient } from '@tanstack/react-query';
 import { WalletGateModal } from '@/components/ui/WalletGateModal';
@@ -31,9 +32,13 @@ const Pay: React.FC = () => {
   const [showDropdown, setShowDropdown]   = useState(false);
   const [selectedName, setSelectedName]   = useState('');
   const [showGateModal, setShowGateModal] = useState(false);
+  const [receiptSaveError, setReceiptSaveError] = useState(false);
   const dropdownRef                       = useRef<HTMLDivElement>(null);
+
+  // Capture sender context at send time to avoid stale values on confirmation
   const [pendingReceipt, setPendingReceipt] = useState<{
     recipient: string; ethAmount: number; usdAmount: number;
+    from: string; network: string;
   } | null>(null);
 
   const { address: recipient, resolved: ensResolved, loading: ensLoading, error: ensError } = useEnsResolution(ensInput);
@@ -48,23 +53,44 @@ const Pay: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Clear pending receipt if wallet disconnects mid-payment
+  useEffect(() => {
+    if (!isConnected) setPendingReceipt(null);
+  }, [isConnected]);
+
+  // On confirmation: save receipt using context captured at send time
   useEffect(() => {
     if (isConfirmed && txHash && pendingReceipt) {
       setShowSuccess(true);
+      setReceiptSaveError(false);
       setAmount(''); setEnsInput(''); setSelectedName('');
       setTimeout(() => setShowSuccess(false), 3000);
-      const recipientName = employees.find(e => e.walletAddress.toLowerCase() === pendingReceipt.recipient.toLowerCase())?.name;
+
+      const recipientName = employees.find(
+        e => e.walletAddress.toLowerCase() === pendingReceipt.recipient.toLowerCase()
+      )?.name;
+
       saveReceipt({
-        type: 'quickpay', txHash, network: chain?.name ?? 'Ethereum', currency: 'ETH',
-        totalUsd: pendingReceipt.usdAmount, totalCrypto: pendingReceipt.ethAmount,
-        from: address ?? '',
-        recipients: [{ name: recipientName, address: pendingReceipt.recipient, amountEth: pendingReceipt.ethAmount, amountUsd: pendingReceipt.usdAmount }],
+        type: 'quickpay',
+        txHash,
+        network: pendingReceipt.network,
+        currency: 'ETH',
+        totalUsd: pendingReceipt.usdAmount,
+        totalCrypto: pendingReceipt.ethAmount,
+        from: pendingReceipt.from,
+        recipients: [{
+          name: recipientName,
+          address: pendingReceipt.recipient,
+          amountEth: pendingReceipt.ethAmount,
+          amountUsd: pendingReceipt.usdAmount,
+        }],
       })
-        .then(() => queryClient.invalidateQueries({ queryKey: ['receipts'] }))
-        .catch(console.error);
+        .then(() => queryClient.invalidateQueries({ queryKey: ['receipts', address] }))
+        .catch(() => setReceiptSaveError(true));
+
       setPendingReceipt(null);
     }
-  }, [isConfirmed, txHash, pendingReceipt, chain, address, employees, queryClient]);
+  }, [isConfirmed, txHash, pendingReceipt, employees, queryClient, address]);
 
   const maxBal    = parseFloat(formattedBalance);
   const numAmount = parseFloat(amount) || 0;
@@ -75,7 +101,14 @@ const Pay: React.FC = () => {
     e.preventDefault();
     if (!isConnected) { setShowGateModal(true); return; }
     if (!recipient || ethAmount <= 0 || ethAmount > maxBal) return;
-    setPendingReceipt({ recipient, ethAmount, usdAmount });
+    // Capture sender context now — address/chain may change by confirmation time
+    setPendingReceipt({
+      recipient,
+      ethAmount,
+      usdAmount,
+      from: address ?? '',
+      network: chain?.name ?? 'Ethereum',
+    });
     sendPayment({ recipientAddress: recipient, amount: ethAmount.toString() });
   };
 
@@ -107,7 +140,17 @@ const Pay: React.FC = () => {
               </div>
             )}
 
-            {/* Error */}
+            {/* Receipt save error (payment succeeded but receipt failed) */}
+            {receiptSaveError && (
+              <div className="p-3 rounded-xl bg-yellow-500/8 border border-yellow-500/20 flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 text-yellow-500 shrink-0" />
+                <span className="text-[13px] text-yellow-600 dark:text-yellow-400">
+                  Payment sent but receipt could not be saved — screenshot your tx hash.
+                </span>
+              </div>
+            )}
+
+            {/* Tx Error */}
             {sendError && !sendErrorDetails?.message?.toLowerCase().includes('user rejected') && (
               <div className="p-3 rounded-xl bg-red-500/8 border border-red-500/20">
                 <p className="text-[13px] text-red-400">{sendErrorDetails?.message ?? 'Transaction failed. Please try again.'}</p>
@@ -184,7 +227,7 @@ const Pay: React.FC = () => {
                             {emp.role && <p className="text-[11px] text-gray-500 mt-0.5">{emp.role}</p>}
                           </div>
                           <span className="text-[11px] font-mono text-gray-500 shrink-0 ml-3">
-                            {emp.walletAddress.slice(0, 6)}…{emp.walletAddress.slice(-4)}
+                            {sliceAddress(emp.walletAddress)}
                           </span>
                         </button>
                       ))}

@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 import { usePaymentSchedule } from '@/hooks/usePaymentSchedule';
 import { useAuth } from '@/contexts/AuthContext';
+import { DEMO_EMPLOYEES } from '@/data/demoData';
 import { WalletCard } from './cards/ConnectedWalletCard';
 import { TxCard } from './cards/TxCard';
 import { BalanceCard } from './cards/WalletBalanceCard';
@@ -12,8 +14,10 @@ import { Footer } from '@/components/layout/Footer';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { employees } = useAuth();
+  const { isConnected } = useAccount();
+  const { employees: realEmployees } = useAuth();
   const { frequency, save, daysUntilNext, nextPaymentDate } = usePaymentSchedule();
+  const employees = isConnected ? realEmployees : DEMO_EMPLOYEES;
   const payroll = useMemo(() => employees.reduce((s, e) => s + (e.payUsd || 0), 0), [employees]);
 
   return (

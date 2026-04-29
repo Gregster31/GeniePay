@@ -17,6 +17,7 @@ import {
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  authError: string | null;
   logout: () => void;
   employees: Employee[];
   isLoadingEmployees: boolean;
@@ -34,33 +35,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [isLoading,          setIsLoading]          = useState(false);
   const [isAuthenticated,    setIsAuthenticated]    = useState(false);
+  const [authError,          setAuthError]          = useState<string | null>(null);
   const [employees,          setEmployees]          = useState<Employee[]>([]);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
   useEffect(() => {
     if (status === 'connected' && address) {
+      let cancelled = false;
+
       (async () => {
         setIsAuthenticated(false);
+        setAuthError(null);
         queryClient.removeQueries({ queryKey: ['receipts'] });
         setIsLoading(true);
         setIsLoadingEmployees(true);
         try {
           await signInWithWallet(address);
+          if (cancelled) return;
           setIsAuthenticated(true);
           const data = await fetchEmployees();
+          if (cancelled) return;
           setEmployees(data);
         } catch (err) {
+          if (cancelled) return;
+          const msg = err instanceof Error ? err.message : 'Authentication failed';
+          setAuthError(msg);
           if (import.meta.env.DEV) console.error('Supabase auth/fetch failed:', err);
         } finally {
-          setIsLoading(false);
-          setIsLoadingEmployees(false);
+          if (!cancelled) {
+            setIsLoading(false);
+            setIsLoadingEmployees(false);
+          }
         }
       })();
+
+      return () => { cancelled = true; };
     }
 
     if (status === 'disconnected') {
       setIsAuthenticated(false);
+      setAuthError(null);
       setEmployees([]);
+      queryClient.removeQueries({ queryKey: ['receipts'] });
     }
   }, [status, address, queryClient]);
 
@@ -88,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       isAuthenticated,
       isLoading,
+      authError,
       logout,
       employees,
       isLoadingEmployees,
