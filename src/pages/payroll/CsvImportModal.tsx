@@ -72,7 +72,6 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({ isOpen, onClose,
     URL.revokeObjectURL(url);
   }, []);
 
-  // Early return AFTER all hooks
   if (!isOpen) return null;
 
   const { valid, errors } = result;

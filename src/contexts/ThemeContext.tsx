@@ -5,12 +5,11 @@ interface ThemeCtxValue {
   toggle: () => void;
 }
 
-const ThemeCtx = createContext<ThemeCtxValue>({ isDark: true, toggle: () => {} });
+const ThemeCtx = createContext<ThemeCtxValue>({ isDark: false, toggle: () => {} });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
-  // Apply to <html> so Tailwind dark: variants work everywhere
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark',  isDark);

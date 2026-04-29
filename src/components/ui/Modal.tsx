@@ -59,7 +59,6 @@ export const Modal: React.FC<Modal> = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose, closeOnEscape]);
 
-  // Handle body scroll prevention
   useEffect(() => {
     if (!preventBodyScroll) return;
 
@@ -74,14 +73,12 @@ export const Modal: React.FC<Modal> = ({
     };
   }, [isOpen, preventBodyScroll]);
 
-  // Handle outside click
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (closeOnOutsideClick && event.target === overlayRef.current) {
       onClose();
     }
   };
 
-  // Focus management
   useEffect(() => {
     if (isOpen && modalRef.current) {
       modalRef.current.focus();

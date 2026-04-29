@@ -12,7 +12,6 @@ export const usePaymentSchedule = () => {
 
   const { daysUntilNext, nextDate } = useMemo(() => {
     const now = new Date();
-    // now.setDate(1); // ← TESTING: Set to 1st
     const today = now.getDate();
     const next = new Date(now);
 
