@@ -72,8 +72,8 @@ export const CalendarCard: React.FC<{
       </div>
 
       <div className="mt-3 pt-3 border-t border-white/[0.09] flex justify-between">
-        <span className="text-[11px] text-gray-500">Next payment</span>
-        <span className="text-[12px] font-semibold text-white">{nextPaymentDate}</span>
+        <span className="text-[11px] text-gray-600 dark:text-gray-500">Next payment</span>
+        <span className="text-[12px] font-semibold dark:text-white text-gray-900">{nextPaymentDate}</span>
       </div>
     </Card>
   );

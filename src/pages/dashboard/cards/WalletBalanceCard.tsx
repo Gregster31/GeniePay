@@ -26,10 +26,8 @@ export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayro
         <Label>Wallet Balance</Label>
         <div className="flex items-center gap-2">
           {monthlyPayroll > 0 && !loading && (
-            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
-              insufficient
-                ? 'bg-red-500/10 border-red-500/25 text-red-400'
-                : 'bg-[#23DDC6]/10 border-[#23DDC6]/30 text-[#23DDC6]'
+            <span className={`text-[11px] font-semibold ${
+              insufficient ? 'text-orange-400' : 'text-[#23DDC6]'
             }`}>
               {insufficient ? 'Insufficient' : 'Sufficient'}
             </span>
@@ -68,7 +66,7 @@ export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayro
         </div>
         <div className="h-2 rounded-full dark:bg-white/[0.07] bg-black/[0.07] overflow-hidden flex">
           {insufficient ? (
-            <div className="flex-1 bg-gradient-to-r from-red-500 to-red-400 shadow-[0_0_10px_rgba(239,68,68,0.4)]" />
+            <div className="flex-1 bg-gradient-to-r from-orange-400 to-amber-300 shadow-[0_0_10px_rgba(251,146,60,0.3)]" />
           ) : (
             <>
               {payPct > 0 && (
