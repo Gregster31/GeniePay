@@ -15,3 +15,10 @@
 • Always use @/ paths
 • Named exports only
 • Group: external → @/ → relative
+
+Commit prefix	                                Version bump	    Changelog section
+fix:	                                        patch (1.0.x)	    Bug Fixes
+feat:	                                        minor (1.x.0)	    Features
+feat!: or BREAKING CHANGE:	                    major (x.0.0)	    ⚠ Breaking Changes
+chore:, docs:, style:, refactor:, test:, ci:	none	            omitted entirely
+perf:	                                        patch	            Performance Improvements

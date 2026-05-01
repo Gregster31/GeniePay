@@ -1,7 +1,9 @@
 import { Card, Label } from "@/components/ui";
 import { ExternalLink, ArrowLeftRight, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useAccount } from "wagmi";
 import { fetchReceipts } from "@/services/ReceiptService";
+import { useAuth } from "@/contexts/AuthContext";
 import { sliceAddress } from "@/utils/WalletAddressSlicer";
 import { formatCurrency } from "@/utils/Format";
 
@@ -13,10 +15,13 @@ const timeAgo = (date: Date) => {
 };
 
 export const TxCard: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+  const { address } = useAccount();
+  const { isAuthenticated } = useAuth();
   const { data: receipts = [], isLoading } = useQuery({
-    queryKey: ['receipts'],
+    queryKey: ['receipts', address],
     queryFn: fetchReceipts,
     staleTime: 60_000,
+    enabled: isAuthenticated,
   });
 
   return (
@@ -43,7 +48,7 @@ export const TxCard: React.FC<{ onClick: () => void }> = ({ onClick }) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between mb-1">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#23DDC6]/10 text-[#23DDC6] border border-[#23DDC6]/20 uppercase tracking-wider">Sucess</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#23DDC6]/10 text-[#23DDC6] border border-[#23DDC6]/20 uppercase tracking-wider">Success</span>
                 <span className="text-[11px] text-gray-500">{timeAgo(tx.createdAt)}</span>
               </div>
               <div className="flex justify-between">

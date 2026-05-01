@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, AlertCircle, CheckCircle2, Loader2, ExternalLink, Send, Zap } from 'lucide-react';
 import { useBulkPayment } from '@/hooks/useBulkPayment';
 import { useAccount } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import { saveReceipt } from '@/services/ReceiptService';
+import { formatCurrency } from '@/utils/Format';
+import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import type { Employee } from '@/models/EmployeeModel';
 
 interface BatchPaymentModalProps {
@@ -19,7 +21,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
   employees,
   totalAmount,
 }) => {
-  const { chain, address } = useAccount();
+  const { chain, address, status } = useAccount();
   const queryClient = useQueryClient();
 
   const {
@@ -38,6 +40,10 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
   const [gasSavings, setGasSavings] = useState('60%');
   const [selectedCurrency, setSelectedCurrency] = useState<'ETH' | 'USDC'>('ETH');
   const [receiptSaved, setReceiptSaved] = useState(false);
+  const [receiptError, setReceiptError] = useState(false);
+
+  // Capture ethPrice at execution time so receipt reflects the rate used for the tx
+  const executionEthPriceRef = useRef(ethPrice);
 
   useEffect(() => {
     if (employees.length > 0) {
@@ -45,10 +51,23 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
     }
   }, [employees.length, estimateGasSavings]);
 
+  // Auto-close/reset if wallet disconnects mid-payment
+  useEffect(() => {
+    if (status === 'disconnected' && isProcessing) {
+      reset();
+      setReceiptSaved(false);
+      setReceiptError(false);
+      onClose();
+    }
+  }, [status, isProcessing, reset, onClose]);
+
   useEffect(() => {
     if (isSuccess && paymentHash && !receiptSaved) {
       setReceiptSaved(true);
-      const totalCrypto = selectedCurrency === 'ETH' ? totalAmount / ethPrice : totalAmount;
+      setReceiptError(false);
+      const capturedEthPrice = executionEthPriceRef.current;
+      const totalCrypto = selectedCurrency === 'ETH' ? totalAmount / capturedEthPrice : totalAmount;
+
       saveReceipt({
         type: 'payroll',
         txHash: paymentHash,
@@ -61,46 +80,46 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
           name: emp.name,
           address: emp.walletAddress,
           amountUsd: emp.payUsd,
-          amountEth: selectedCurrency === 'ETH' ? emp.payUsd / ethPrice : emp.payUsd,
+          amountEth: selectedCurrency === 'ETH' ? emp.payUsd / capturedEthPrice : emp.payUsd,
         })),
       })
-        .then(() => queryClient.invalidateQueries({ queryKey: ['receipts'] }))
-        .catch(console.error);
-
-      setTimeout(() => {
-        reset();
-        setReceiptSaved(false);
-        onClose();
-      }, 3000);
+        .then(() => queryClient.invalidateQueries({ queryKey: ['receipts', address] }))
+        .catch(() => setReceiptError(true))
+        .finally(() => {
+          setTimeout(() => {
+            reset();
+            setReceiptSaved(false);
+            onClose();
+          }, 3000);
+        });
     }
-  }, [isSuccess, paymentHash, receiptSaved, selectedCurrency, totalAmount, ethPrice, chain, address, employees, reset, onClose, queryClient]);
+  }, [isSuccess, paymentHash, receiptSaved, selectedCurrency, totalAmount, chain, address, employees, reset, onClose, queryClient]);
 
   const handleClose = () => {
     if (!isProcessing) {
       reset();
       setReceiptSaved(false);
+      setReceiptError(false);
       onClose();
     }
   };
 
   const handleConfirm = async () => {
+    executionEthPriceRef.current = ethPrice;
     try {
       await execute({ employees, currency: selectedCurrency });
-    } catch (err) {
-      console.error('Payment failed:', err);
+    } catch {
+      // error state is set inside useBulkPayment
     }
   };
-
-  const fmt = (amount: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
   const fmtEth = (usd: number) => (usd / ethPrice).toFixed(6);
 
   const totalDisplay = selectedCurrency === 'ETH'
     ? `${(totalAmount / ethPrice).toFixed(6)} ETH`
-    : fmt(totalAmount);
+    : formatCurrency(totalAmount);
 
-  const shortenHash = (hash: string) => `${hash.slice(0, 6)}…${hash.slice(-4)}`;
+  const explorerBase = chain?.blockExplorers?.default.url ?? 'https://etherscan.io';
 
   if (!isOpen) return null;
 
@@ -139,11 +158,11 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1">{fmt(totalAmount)} sent successfully</p>
+                  <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1">{formatCurrency(totalAmount)} sent successfully</p>
                   <div className="flex items-center gap-2">
-                    <code className="text-xs font-mono text-gray-500 dark:text-[#6f6b77]">{shortenHash(paymentHash)}</code>
+                    <code className="text-xs font-mono text-gray-500 dark:text-[#6f6b77]">{sliceAddress(paymentHash)}</code>
                     <a
-                      href={`https://etherscan.io/tx/${paymentHash}`}
+                      href={`${explorerBase}/tx/${paymentHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 transition-colors"
@@ -152,6 +171,18 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                     </a>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Receipt save error */}
+          {receiptError && (
+            <div className="p-4 rounded-xl bg-yellow-500/[0.08] border border-yellow-500/20">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                  Payment sent but receipt could not be saved — screenshot your tx hash.
+                </p>
               </div>
             </div>
           )}
@@ -183,7 +214,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                   </p>
                   {(approvalHash || paymentHash) && (
                     <a
-                      href={`https://etherscan.io/tx/${paymentHash || approvalHash}`}
+                      href={`${explorerBase}/tx/${paymentHash || approvalHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-purple-500 dark:text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 mt-1.5 inline-flex items-center gap-1 transition-colors"
@@ -232,7 +263,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                   </div>
                   <p className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{totalDisplay}</p>
                   {selectedCurrency === 'ETH' && (
-                    <p className="text-xs text-gray-500 dark:text-[#6f6b77] mt-1">≈ {fmt(totalAmount)}</p>
+                    <p className="text-xs text-gray-500 dark:text-[#6f6b77] mt-1">≈ {formatCurrency(totalAmount)}</p>
                   )}
                 </div>
                 <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#1a1821] border border-gray-200 dark:border-[#2e2d38]">
@@ -258,10 +289,10 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-[#8b6cf7]">
-                            {selectedCurrency === 'ETH' ? `${fmtEth(emp.payUsd)} ETH` : fmt(emp.payUsd)}
+                            {selectedCurrency === 'ETH' ? `${fmtEth(emp.payUsd)} ETH` : formatCurrency(emp.payUsd)}
                           </p>
                           {selectedCurrency === 'ETH' && (
-                            <p className="text-xs text-gray-500 dark:text-[#6f6b77]">≈ {fmt(emp.payUsd)}</p>
+                            <p className="text-xs text-gray-500 dark:text-[#6f6b77]">≈ {formatCurrency(emp.payUsd)}</p>
                           )}
                         </div>
                       </div>

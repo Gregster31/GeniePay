@@ -33,9 +33,13 @@ const toReceipt = (row: ReceiptRow): Receipt => ({
 });
 
 export const fetchReceipts = async (): Promise<Receipt[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('receipts')
     .select('*')
+    .eq('owner_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);

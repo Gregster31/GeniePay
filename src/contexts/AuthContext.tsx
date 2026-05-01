@@ -1,8 +1,9 @@
 import React, {
   createContext, useContext, useState,
-  useCallback, useRef, useEffect,
+  useCallback, useEffect,
 } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Employee } from '@/models/EmployeeModel';
 import {
   signInWithWallet,
@@ -16,6 +17,7 @@ import {
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  authError: string | null;
   logout: () => void;
   employees: Employee[];
   isLoadingEmployees: boolean;
@@ -27,45 +29,58 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { address, isConnected, status } = useAccount();
+  const { address, status } = useAccount();
   const { disconnect } = useDisconnect();
-
-  // Prevent the disconnect handler from firing on a page reload (wagmi
-  // briefly reports 'disconnected' before reconnecting from storage).
-  const didExplicitLogout = useRef(false);
+  const queryClient = useQueryClient();
 
   const [isLoading,          setIsLoading]          = useState(false);
+  const [isAuthenticated,    setIsAuthenticated]    = useState(false);
+  const [authError,          setAuthError]          = useState<string | null>(null);
   const [employees,          setEmployees]          = useState<Employee[]>([]);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
   useEffect(() => {
     if (status === 'connected' && address) {
-      didExplicitLogout.current = false;
+      let cancelled = false;
 
       (async () => {
+        setIsAuthenticated(false);
+        setAuthError(null);
+        queryClient.removeQueries({ queryKey: ['receipts'] });
         setIsLoading(true);
         setIsLoadingEmployees(true);
         try {
           await signInWithWallet(address);
+          if (cancelled) return;
+          setIsAuthenticated(true);
           const data = await fetchEmployees();
+          if (cancelled) return;
           setEmployees(data);
         } catch (err) {
+          if (cancelled) return;
+          const msg = err instanceof Error ? err.message : 'Authentication failed';
+          setAuthError(msg);
           if (import.meta.env.DEV) console.error('Supabase auth/fetch failed:', err);
         } finally {
-          setIsLoading(false);
-          setIsLoadingEmployees(false);
+          if (!cancelled) {
+            setIsLoading(false);
+            setIsLoadingEmployees(false);
+          }
         }
       })();
+
+      return () => { cancelled = true; };
     }
 
-    if (status === 'disconnected' && didExplicitLogout.current) {
+    if (status === 'disconnected') {
+      setIsAuthenticated(false);
+      setAuthError(null);
       setEmployees([]);
-      didExplicitLogout.current = false;
+      queryClient.removeQueries({ queryKey: ['receipts'] });
     }
-  }, [status, address]);
+  }, [status, address, queryClient]);
 
   const logout = useCallback(async () => {
-    didExplicitLogout.current = true;
     await signOutWallet();
     disconnect();
   }, [disconnect]);
@@ -87,8 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{
-      isAuthenticated: isConnected,
+      isAuthenticated,
       isLoading,
+      authError,
       logout,
       employees,
       isLoadingEmployees,

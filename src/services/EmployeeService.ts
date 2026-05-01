@@ -42,9 +42,13 @@ export const signOutWallet = async (): Promise<void> => {
 };
 
 export const fetchEmployees = async (): Promise<Employee[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('employees')
     .select('*')
+    .eq('owner_id', user.id)
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);
