@@ -24,17 +24,20 @@ const toEmployee = (row: EmployeeRow): Employee => ({
   dateAdded: new Date(row.created_at),
 });
 
-export const signInWithWallet = async (address: string): Promise<void> => {
-  const email    = `${address.toLowerCase()}@geniepay.wallet`;
-  const password = `gp_${address.toLowerCase()}_${import.meta.env.VITE_SUPABASE_ANON_KEY.slice(-8)}`;
+export const signInWithWallet = async (
+  address: string,
+  signMessage: (args: { message: string }) => Promise<string>,
+): Promise<void> => {
+  const email = `${address.toLowerCase()}@geniepay.wallet`;
+  const sig = await signMessage({
+    message: 'GeniePay Authentication\n\nSign to verify wallet ownership. No gas required.',
+  });
+  const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sig));
+  const password = Array.from(new Uint8Array(hashBuf))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    // First time : create the account
-    const { error: signUpError } = await supabase.auth.signUp({ email, password });
-    if (signUpError) throw new Error(signUpError.message);
-  }
+  if (error) throw new Error(error.message);
 };
 
 export const signOutWallet = async (): Promise<void> => {

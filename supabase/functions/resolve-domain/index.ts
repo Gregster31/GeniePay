@@ -1,7 +1,11 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 
+// Restrict to the deployed app origin; set APP_ORIGIN in Supabase Edge Function secrets
+// for local dev set APP_ORIGIN=http://localhost:5173
+const ALLOWED_ORIGIN = Deno.env.get('APP_ORIGIN') ?? 'https://geniepay.ca';
+
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 

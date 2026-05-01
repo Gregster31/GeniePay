@@ -3,6 +3,7 @@ import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, type Address } from 'viem';
 import type { Employee } from '@/models/EmployeeModel';
 import { useEthPrice } from '@/hooks/useEthPrice';
+import { isValidEthAddress } from '@/utils/EthUtils';
 
 const DISPERSE_CONTRACTS: Record<number, Address> = {
   1:        '0xD152f549545093347A162Dce210e7293f1452150',
@@ -140,6 +141,10 @@ export function useBulkPayment() {
 
     const wallets = employees.map(e => e.walletAddress.toLowerCase());
     if (new Set(wallets).size !== wallets.length) return 'Duplicate wallet addresses detected';
+
+    const invalidAddresses = employees.filter(e => !isValidEthAddress(e.walletAddress));
+    if (invalidAddresses.length > 0)
+      return `Invalid wallet address for: ${invalidAddresses.map(e => e.name).join(', ')}`;
 
     const decimals = TOKEN_DECIMALS[currency] || 18;
     const total = employees.reduce((sum, emp) => {

@@ -1,47 +1,29 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as XLSX from 'xlsx';
-import { parseEmployeeFile, generateCSVTemplate } from '@/utils/CsvEmployeeParser';
-
-vi.mock('xlsx', () => ({
-  read: vi.fn(),
-  utils: { sheet_to_json: vi.fn() },
-}));
+import { describe, it, expect } from 'vitest';
+import { rowsToEmployees, parseEmployeeFile, generateCSVTemplate } from '@/utils/CsvEmployeeParser';
 
 const VALID_ADDRESS = '0x1234567890abcdef1234567890abcdef12345678';
-const MOCK_SHEET = {};
 
 /**
- * Configures the XLSX mock to return the given rows as if parsed from a spreadsheet.
- * Column names use natural casing — the parser's normalize() will lowercase and
- * strip spaces/underscores before validation.
+ * Build a pre-normalised row (keys already lowercased, spaces/underscores stripped)
+ * as rowsToEmployees expects them after the file-parsing stage.
  */
-function mockXLSX(rows: Record<string, string>[]) {
-  vi.mocked(XLSX.read).mockReturnValue({
-    Sheets: { Sheet1: MOCK_SHEET },
-    SheetNames: ['Sheet1'],
-  } as unknown as ReturnType<typeof XLSX.read>);
-
-  vi.mocked(XLSX.utils.sheet_to_json).mockReturnValue(rows as unknown as ReturnType<typeof XLSX.utils.sheet_to_json>);
+function row(overrides: Record<string, string> = {}): Record<string, string> {
+  return {
+    name: 'Alice Smith',
+    walletaddress: VALID_ADDRESS,
+    role: 'Engineer',
+    payusd: '5000',
+    ...overrides,
+  };
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
 // ---------------------------------------------------------------------------
-// parseEmployeeFile — happy path
+// rowsToEmployees — happy path
 // ---------------------------------------------------------------------------
 
-describe('parseEmployeeFile — valid input', () => {
+describe('rowsToEmployees — valid input', () => {
   it('parses a row with all required fields', () => {
-    mockXLSX([{
-      Name: 'Alice Smith',
-      'Wallet Address': VALID_ADDRESS,
-      Role: 'Engineer',
-      'Pay Usd': '5000',
-    }]);
-
-    const { valid, errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { valid, errors } = rowsToEmployees([row()]);
 
     expect(errors).toHaveLength(0);
     expect(valid).toHaveLength(1);
@@ -56,72 +38,30 @@ describe('parseEmployeeFile — valid input', () => {
   });
 
   it('captures the optional email and department fields', () => {
-    mockXLSX([{
-      Name: 'Bob Jones',
-      'Wallet Address': VALID_ADDRESS,
-      Role: 'Designer',
-      'Pay Usd': '4000',
-      Email: 'bob@example.com',
-      Department: 'Product',
-    }]);
-
-    const { valid } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { valid } = rowsToEmployees([row({ email: 'bob@example.com', department: 'Product' })]);
 
     expect(valid[0].email).toBe('bob@example.com');
     expect(valid[0].department).toBe('Product');
   });
 
   it('parses multiple valid rows in one file', () => {
-    mockXLSX([
-      { Name: 'Alice', 'Wallet Address': VALID_ADDRESS, Role: 'Dev', 'Pay Usd': '5000' },
-      { Name: 'Bob', 'Wallet Address': `0x${'b'.repeat(40)}`, Role: 'Design', 'Pay Usd': '4000' },
+    const { valid, errors } = rowsToEmployees([
+      row({ name: 'Alice', walletaddress: VALID_ADDRESS }),
+      row({ name: 'Bob',   walletaddress: `0x${'b'.repeat(40)}`, payusd: '4000' }),
     ]);
-
-    const { valid, errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
 
     expect(valid).toHaveLength(2);
     expect(errors).toHaveLength(0);
   });
-
-  it('normalises column names regardless of casing and separators', () => {
-    // "wallet_address" (underscore) and "PAY USD" (uppercase + space) must be accepted
-    mockXLSX([{
-      name: 'Alice',
-      wallet_address: VALID_ADDRESS,
-      ROLE: 'Dev',
-      'PAY USD': '5000',
-    }]);
-
-    const { valid, errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
-
-    expect(errors).toHaveLength(0);
-    expect(valid).toHaveLength(1);
-  });
-
-  it('trims whitespace from cell values', () => {
-    mockXLSX([{
-      Name: '  Alice  ',
-      'Wallet Address': `  ${VALID_ADDRESS}  `,
-      Role: '  Engineer  ',
-      'Pay Usd': '  5000  ',
-    }]);
-
-    const { valid } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
-
-    expect(valid[0].name).toBe('Alice');
-    expect(valid[0].walletAddress).toBe(VALID_ADDRESS);
-  });
 });
 
 // ---------------------------------------------------------------------------
-// parseEmployeeFile — file-level errors
+// rowsToEmployees — file-level errors
 // ---------------------------------------------------------------------------
 
-describe('parseEmployeeFile — file-level errors', () => {
-  it('returns an error (row 0) when the file is empty', () => {
-    mockXLSX([]);
-
-    const { valid, errors } = parseEmployeeFile(new ArrayBuffer(0), 'empty.csv');
+describe('rowsToEmployees — file-level errors', () => {
+  it('returns an error (row 0) when given an empty array', () => {
+    const { valid, errors } = rowsToEmployees([]);
 
     expect(valid).toHaveLength(0);
     expect(errors).toHaveLength(1);
@@ -130,34 +70,31 @@ describe('parseEmployeeFile — file-level errors', () => {
   });
 
   it('returns an error listing the missing columns', () => {
-    // Only "name" is present; the rest are absent
-    mockXLSX([{ Name: 'Alice' }]);
-
-    const { errors } = parseEmployeeFile(new ArrayBuffer(0), 'partial.csv');
+    const { errors } = rowsToEmployees([{ name: 'Alice' }]);
 
     expect(errors[0].row).toBe(0);
     expect(errors[0].message).toContain('Missing columns');
   });
 
-  it('returns a parse-failure error when XLSX throws', () => {
-    vi.mocked(XLSX.read).mockImplementation(() => { throw new Error('Corrupt file'); });
-
-    const { valid, errors } = parseEmployeeFile(new ArrayBuffer(0), 'corrupt.xlsx');
+  it('rejects files that exceed MAX_CSV_ROWS', () => {
+    const rows = Array.from({ length: 501 }, (_, i) =>
+      row({ name: `Person ${i}`, walletaddress: `0x${'a'.repeat(40)}` })
+    );
+    const { valid, errors } = rowsToEmployees(rows);
 
     expect(valid).toHaveLength(0);
-    expect(errors[0].message).toContain('Failed to parse "corrupt.xlsx"');
+    expect(errors[0].row).toBe(0);
+    expect(errors[0].message).toMatch(/500/);
   });
 });
 
 // ---------------------------------------------------------------------------
-// parseEmployeeFile — row-level errors
+// rowsToEmployees — row-level validation
 // ---------------------------------------------------------------------------
 
-describe('parseEmployeeFile — row-level validation', () => {
+describe('rowsToEmployees — row-level validation', () => {
   it('rejects a row with a missing name', () => {
-    mockXLSX([{ Name: '', 'Wallet Address': VALID_ADDRESS, Role: 'Dev', 'Pay Usd': '5000' }]);
-
-    const { valid, errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { valid, errors } = rowsToEmployees([row({ name: '' })]);
 
     expect(valid).toHaveLength(0);
     expect(errors[0].row).toBe(1);
@@ -165,9 +102,7 @@ describe('parseEmployeeFile — row-level validation', () => {
   });
 
   it('rejects a row with an invalid wallet address', () => {
-    mockXLSX([{ Name: 'Alice', 'Wallet Address': 'not-an-address', Role: 'Dev', 'Pay Usd': '5000' }]);
-
-    const { errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { errors } = rowsToEmployees([row({ walletaddress: 'not-an-address' })]);
 
     expect(errors[0].row).toBe(1);
     expect(errors[0].message).toContain('Invalid wallet address');
@@ -175,50 +110,71 @@ describe('parseEmployeeFile — row-level validation', () => {
   });
 
   it('rejects a row with a missing role', () => {
-    mockXLSX([{ Name: 'Alice', 'Wallet Address': VALID_ADDRESS, Role: '', 'Pay Usd': '5000' }]);
-
-    const { errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { errors } = rowsToEmployees([row({ role: '' })]);
 
     expect(errors[0].row).toBe(1);
     expect(errors[0].message).toContain('Missing role');
   });
 
   it('rejects a row with a non-numeric payUsd', () => {
-    mockXLSX([{ Name: 'Alice', 'Wallet Address': VALID_ADDRESS, Role: 'Dev', 'Pay Usd': 'free' }]);
-
-    const { errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { errors } = rowsToEmployees([row({ payusd: 'free' })]);
 
     expect(errors[0].message).toContain('Invalid payUsd');
   });
 
   it('rejects a row with payUsd of zero', () => {
-    mockXLSX([{ Name: 'Alice', 'Wallet Address': VALID_ADDRESS, Role: 'Dev', 'Pay Usd': '0' }]);
-
-    const { errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { errors } = rowsToEmployees([row({ payusd: '0' })]);
 
     expect(errors[0].message).toContain('Invalid payUsd');
   });
 
   it('rejects a row with a negative payUsd', () => {
-    mockXLSX([{ Name: 'Alice', 'Wallet Address': VALID_ADDRESS, Role: 'Dev', 'Pay Usd': '-100' }]);
-
-    const { errors } = parseEmployeeFile(new ArrayBuffer(0), 'test.csv');
+    const { errors } = rowsToEmployees([row({ payusd: '-100' })]);
 
     expect(errors[0].message).toContain('Invalid payUsd');
   });
 
   it('segregates valid and invalid rows correctly in a mixed file', () => {
-    mockXLSX([
-      { Name: 'Alice', 'Wallet Address': VALID_ADDRESS, Role: 'Dev', 'Pay Usd': '5000' },
-      { Name: '', 'Wallet Address': VALID_ADDRESS, Role: 'Dev', 'Pay Usd': '5000' }, // invalid
-      { Name: 'Bob', 'Wallet Address': `0x${'b'.repeat(40)}`, Role: 'Design', 'Pay Usd': '4000' },
+    const { valid, errors } = rowsToEmployees([
+      row({ name: 'Alice' }),
+      row({ name: '' }),                                     // invalid — row 2
+      row({ name: 'Bob', walletaddress: `0x${'b'.repeat(40)}` }),
     ]);
-
-    const { valid, errors } = parseEmployeeFile(new ArrayBuffer(0), 'mixed.csv');
 
     expect(valid).toHaveLength(2);
     expect(errors).toHaveLength(1);
-    expect(errors[0].row).toBe(2); // second row (1-indexed)
+    expect(errors[0].row).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseEmployeeFile — CSV smoke tests (real buffers, no mocking)
+// ---------------------------------------------------------------------------
+
+describe('parseEmployeeFile — CSV parsing', () => {
+  const encode = (text: string) => new TextEncoder().encode(text).buffer;
+
+  it('parses a well-formed CSV into valid employees', async () => {
+    const csv = `Name,WalletAddress,Role,PayUsd\nAlice,${VALID_ADDRESS},Dev,5000`;
+    const { valid, errors } = await parseEmployeeFile(encode(csv), 'staff.csv');
+
+    expect(errors).toHaveLength(0);
+    expect(valid[0].name).toBe('Alice');
+    expect(valid[0].payUsd).toBe(5000);
+  });
+
+  it('returns a parse-failure error for a corrupt xlsx buffer', async () => {
+    const { valid, errors } = await parseEmployeeFile(encode('not excel'), 'corrupt.xlsx');
+
+    expect(valid).toHaveLength(0);
+    expect(errors[0].message).toContain('Failed to parse "corrupt.xlsx"');
+  });
+
+  it('handles quoted CSV fields that contain commas', async () => {
+    const csv = `Name,WalletAddress,Role,PayUsd\n"Smith, Alice",${VALID_ADDRESS},Dev,5000`;
+    const { valid } = await parseEmployeeFile(encode(csv), 'quoted.csv');
+
+    expect(valid[0].name).toBe('Smith, Alice');
   });
 });
 

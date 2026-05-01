@@ -33,8 +33,8 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({ isOpen, onClose,
     }
     setFileName(file.name);
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const parsed = parseEmployeeFile(e.target?.result as ArrayBuffer, file.name);
+    reader.onload = async (e) => {
+      const parsed = await parseEmployeeFile(e.target?.result as ArrayBuffer, file.name);
       setResult(parsed);
       setStep(ImportStep.Preview);
     };

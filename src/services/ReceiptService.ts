@@ -69,7 +69,7 @@ export const saveReceipt = async (
   // Delete oldest if at cap
   if (existing && existing.length >= MAX_RECEIPTS) {
     const oldest = existing[0];
-    await supabase.from('receipts').delete().eq('id', oldest.id);
+    await supabase.from('receipts').delete().eq('id', oldest.id).eq('owner_id', user.id);
   }
 
   const { data, error } = await supabase

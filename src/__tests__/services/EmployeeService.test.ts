@@ -10,6 +10,7 @@ vi.mock('@/lib/supabase', () => {
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
     signOut: vi.fn(),
+    updateUser: vi.fn(),
   };
   return { supabase: { auth, from: vi.fn() } };
 });
@@ -46,6 +47,9 @@ function makeChain(resolved: { data: unknown; error: { message: string } | null 
   }
   return chain;
 }
+
+// A mock signMessage that returns a deterministic fake signature
+const mockSignMessage = vi.fn().mockResolvedValue(`0x${'a'.repeat(130)}`);
 
 const USER_ID = 'user-abc-123';
 const VALID_ADDRESS = `0x${'a'.repeat(40)}`;
@@ -93,7 +97,7 @@ describe('signInWithWallet', () => {
       error: null,
     });
 
-    await expect(signInWithWallet(VALID_ADDRESS)).resolves.toBeUndefined();
+    await expect(signInWithWallet(VALID_ADDRESS, mockSignMessage)).resolves.toBeUndefined();
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledOnce();
     expect(supabase.auth.signUp).not.toHaveBeenCalled();
   });
@@ -108,7 +112,7 @@ describe('signInWithWallet', () => {
       error: null,
     });
 
-    await expect(signInWithWallet(VALID_ADDRESS)).resolves.toBeUndefined();
+    await expect(signInWithWallet(VALID_ADDRESS, mockSignMessage)).resolves.toBeUndefined();
     expect(supabase.auth.signUp).toHaveBeenCalledOnce();
   });
 
@@ -122,7 +126,7 @@ describe('signInWithWallet', () => {
       error: { message: 'Email already registered' },
     });
 
-    await expect(signInWithWallet(VALID_ADDRESS)).rejects.toThrow('Email already registered');
+    await expect(signInWithWallet(VALID_ADDRESS, mockSignMessage)).rejects.toThrow('Email already registered');
   });
 
   it('derives the email from the wallet address (lowercase)', async () => {
@@ -131,7 +135,7 @@ describe('signInWithWallet', () => {
       error: null,
     });
 
-    await signInWithWallet('0xABCDEF1234567890abcdef1234567890ABCDEF12');
+    await signInWithWallet('0xABCDEF1234567890abcdef1234567890ABCDEF12', mockSignMessage);
 
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith(
       expect.objectContaining({

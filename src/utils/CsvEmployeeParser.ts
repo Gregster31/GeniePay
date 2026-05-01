@@ -1,6 +1,8 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import type { Employee } from '@/models/EmployeeModel';
 import { isValidEthAddress } from './EthUtils';
+
+export const MAX_CSV_ROWS = 500;
 
 export interface CSVParseResult {
   valid: Omit<Employee, 'id' | 'dateAdded'>[];
@@ -11,12 +13,15 @@ export const ACCEPTED_EXTENSIONS = '.csv,.xlsx,.xls';
 
 const normalize = (s: string) => s.toLowerCase().replace(/[\s_]/g, '');
 
-const rowsToEmployees = (rows: Record<string, string>[]): CSVParseResult => {
+export const rowsToEmployees = (rows: Record<string, string>[]): CSVParseResult => {
   const valid: CSVParseResult['valid'] = [];
   const errors: CSVParseResult['errors'] = [];
 
   if (rows.length === 0)
     return { valid, errors: [{ row: 0, message: 'File is empty or missing data rows.' }] };
+
+  if (rows.length > MAX_CSV_ROWS)
+    return { valid, errors: [{ row: 0, message: `File exceeds the ${MAX_CSV_ROWS}-row limit (${rows.length} rows found). Split your file and re-import.` }] };
 
   const required = ['name', 'walletaddress', 'role', 'payusd'];
   const missing = required.filter(r => !(r in rows[0]));
@@ -50,18 +55,71 @@ const rowsToEmployees = (rows: Record<string, string>[]): CSVParseResult => {
   return { valid, errors };
 };
 
-export const parseEmployeeFile = (buffer: ArrayBuffer, fileName: string): CSVParseResult => {
+// RFC 4180-compliant CSV line parser (handles quoted fields with embedded commas)
+const parseCSVLine = (line: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+};
+
+export const parseEmployeeFile = async (buffer: ArrayBuffer, fileName: string): Promise<CSVParseResult> => {
   try {
-    const workbook = XLSX.read(buffer, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const ext = fileName.split('.').pop()?.toLowerCase();
 
-    const rawRows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { raw: false, defval: '' });
+    if (ext === 'csv') {
+      // ExcelJS CSV support requires Node.js streams; parse as text in the browser instead
+      const text = new TextDecoder().decode(buffer);
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length === 0)
+        return { valid: [], errors: [{ row: 0, message: 'File is empty or missing data rows.' }] };
 
-    const rows = rawRows.map((row: { [s: string]: unknown; } | ArrayLike<unknown>) =>
-      Object.fromEntries(Object.entries(row).map(([k, v]) => [normalize(k), v.trim()]))
-    );
+      const headerCols = parseCSVLine(lines[0]).map(h => normalize(h));
+      const rawRows = lines.slice(1).map(line => {
+        const cols = parseCSVLine(line);
+        const obj: Record<string, string> = {};
+        headerCols.forEach((h, i) => { obj[h] = cols[i] ?? ''; });
+        return obj;
+      });
+      return rowsToEmployees(rawRows);
+    }
 
-    return rowsToEmployees(rows);
+    // Excel formats (.xlsx / .xls)
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+
+    const sheet = workbook.worksheets[0];
+    if (!sheet) return { valid: [], errors: [{ row: 0, message: 'No sheet found.' }] };
+
+    const headers: Record<number, string> = {};
+    sheet.getRow(1).eachCell((cell, col) => {
+      headers[col] = normalize(String(cell.value ?? ''));
+    });
+
+    const rawRows: Record<string, string>[] = [];
+    sheet.eachRow((row, rowNum) => {
+      if (rowNum === 1) return;
+      const obj: Record<string, string> = {};
+      row.eachCell((cell, col) => {
+        if (headers[col]) obj[headers[col]] = String(cell.value ?? '').trim();
+      });
+      rawRows.push(obj);
+    });
+
+    return rowsToEmployees(rawRows);
   } catch {
     return { valid: [], errors: [{ row: 0, message: `Failed to parse "${fileName}". Make sure it is a valid CSV or Excel file.` }] };
   }

@@ -90,7 +90,7 @@ export const Payroll: React.FC = () => {
     setEmployeeToEdit(null);
   };
   const handleCSVImport = async (imported: Omit<Employee, 'id' | 'dateAdded'>[]) => {
-    for (const emp of imported) await addEmployee(emp);
+    await Promise.all(imported.map(emp => addEmployee(emp)));
   };
   const handleDeleteConfirm = async () => {
     if (!employeeToDelete) return;

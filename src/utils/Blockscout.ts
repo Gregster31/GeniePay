@@ -48,7 +48,16 @@ async function fetchFromNetwork(
     const data = await res.json();
     if (data.status !== '1' || !data.result) return [];
 
-    return data.result.map((tx: any) => ({
+    interface BlockscoutTx {
+      hash: string;
+      from: string;
+      to: string | null;
+      value: string;
+      timeStamp: string;
+      gasUsed: string;
+    }
+
+    return data.result.map((tx: BlockscoutTx) => ({
       hash: tx.hash,
       from: tx.from,
       to: tx.to || '',

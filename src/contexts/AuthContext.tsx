@@ -2,7 +2,7 @@ import React, {
   createContext, useContext, useState,
   useCallback, useEffect,
 } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Employee } from '@/models/EmployeeModel';
 import {
@@ -31,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { address, status } = useAccount();
   const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   const queryClient = useQueryClient();
 
   const [isLoading,          setIsLoading]          = useState(false);
@@ -50,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(true);
         setIsLoadingEmployees(true);
         try {
-          await signInWithWallet(address);
+          await signInWithWallet(address, signMessageAsync);
           if (cancelled) return;
           setIsAuthenticated(true);
           const data = await fetchEmployees();
