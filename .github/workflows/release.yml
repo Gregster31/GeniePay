@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   release-please:
-    name: Release Please
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +19,10 @@ jobs:
           release-type: node
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Auto-merge release PR
-        if: ${{ steps.release.outputs.pr }}
-        run: gh pr merge --auto --squash "$PR_URL"
+      - name: Enable auto-merge for release PR
+        if: ${{ steps.release.outputs.pr_url }}
+        run: gh pr merge --auto --squash "${{ steps.release.outputs.pr_url }}"
         env:
-          PR_URL: ${{ fromJSON(steps.release.outputs.pr).html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/checkout@v4
