@@ -15,3 +15,17 @@
 • Always use @/ paths
 • Named exports only
 • Group: external → @/ → relative
+
+
+CONVENTIONAL COMMITS — PREFIX REFERENCE
+========================================
+
+PREFIX              VERSION BUMP        CHANGELOG
+------              ------------        ---------
+feat:               minor (0.x.0)       ✅ yes
+fix:                patch (0.0.x)       ✅ yes
+chore:              none                ❌ no
+docs:               none                ❌ no
+refactor:           none                ❌ no
+feat!:              major (x.0.0)       ✅ yes
+BREAKING CHANGE     major (x.0.0)       ✅ yes
