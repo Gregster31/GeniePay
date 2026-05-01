@@ -16,16 +16,9 @@
 • Named exports only
 • Group: external → @/ → relative
 
-
-CONVENTIONAL COMMITS — PREFIX REFERENCE
-========================================
-
-PREFIX              VERSION BUMP        CHANGELOG
-------              ------------        ---------
-feat:               minor (0.x.0)       ✅ yes
-fix:                patch (0.0.x)       ✅ yes
-chore:              none                ❌ no
-docs:               none                ❌ no
-refactor:           none                ❌ no
-feat!:              major (x.0.0)       ✅ yes
-BREAKING CHANGE     major (x.0.0)       ✅ yes
+Commit prefix	                                Version bump	    Changelog section
+fix:	                                        patch (1.0.x)	    Bug Fixes
+feat:	                                        minor (1.x.0)	    Features
+feat!: or BREAKING CHANGE:	                    major (x.0.0)	    ⚠ Breaking Changes
+chore:, docs:, style:, refactor:, test:, ci:	none	            omitted entirely
+perf:	                                        patch	            Performance Improvements
