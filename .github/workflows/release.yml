@@ -27,7 +27,7 @@ jobs:
           PR_URL: ${{ fromJSON(steps.release.outputs.pr).html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ steps.release.outputs.release_created }}
 
       - uses: actions/setup-node@v6
