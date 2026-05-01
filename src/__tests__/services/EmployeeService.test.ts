@@ -8,9 +8,7 @@ vi.mock('@/lib/supabase', () => {
   const auth = {
     getUser: vi.fn(),
     signInWithPassword: vi.fn(),
-    signUp: vi.fn(),
     signOut: vi.fn(),
-    updateUser: vi.fn(),
   };
   return { supabase: { auth, from: vi.fn() } };
 });
@@ -91,7 +89,7 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('signInWithWallet', () => {
-  it('signs in with an existing account on first try', async () => {
+  it('resolves when signInWithPassword succeeds', async () => {
     vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
       data: {} as never,
       error: null,
@@ -99,34 +97,15 @@ describe('signInWithWallet', () => {
 
     await expect(signInWithWallet(VALID_ADDRESS, mockSignMessage)).resolves.toBeUndefined();
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledOnce();
-    expect(supabase.auth.signUp).not.toHaveBeenCalled();
   });
 
-  it('falls back to signUp when sign-in fails (first-time user)', async () => {
+  it('throws when signInWithPassword fails', async () => {
     vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
       data: {} as never,
       error: { message: 'Invalid login credentials' },
     });
-    vi.mocked(supabase.auth.signUp).mockResolvedValue({
-      data: {} as never,
-      error: null,
-    });
 
-    await expect(signInWithWallet(VALID_ADDRESS, mockSignMessage)).resolves.toBeUndefined();
-    expect(supabase.auth.signUp).toHaveBeenCalledOnce();
-  });
-
-  it('throws when both signIn and signUp fail', async () => {
-    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
-      data: {} as never,
-      error: { message: 'Invalid login credentials' },
-    });
-    vi.mocked(supabase.auth.signUp).mockResolvedValue({
-      data: {} as never,
-      error: { message: 'Email already registered' },
-    });
-
-    await expect(signInWithWallet(VALID_ADDRESS, mockSignMessage)).rejects.toThrow('Email already registered');
+    await expect(signInWithWallet(VALID_ADDRESS, mockSignMessage)).rejects.toThrow('Invalid login credentials');
   });
 
   it('derives the email from the wallet address (lowercase)', async () => {
@@ -141,6 +120,19 @@ describe('signInWithWallet', () => {
       expect.objectContaining({
         email: '0xabcdef1234567890abcdef1234567890abcdef12@geniepay.wallet',
       }),
+    );
+  });
+
+  it('calls signMessage with the authentication prompt', async () => {
+    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
+      data: {} as never,
+      error: null,
+    });
+
+    await signInWithWallet(VALID_ADDRESS, mockSignMessage);
+
+    expect(mockSignMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('GeniePay Authentication') }),
     );
   });
 });
