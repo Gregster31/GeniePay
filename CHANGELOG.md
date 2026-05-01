@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.1](https://github.com/Gregster31/GeniePay/compare/v2.8.0...v2.8.1) (2026-05-01)
+
+
+### Bug Fixes
+
+* workflow action ([7c80a99](https://github.com/Gregster31/GeniePay/commit/7c80a99964f3354919b337a4874b14405b0e8ab6))
+* workflow action ([583f2c5](https://github.com/Gregster31/GeniePay/commit/583f2c508eb24765e7e6bd3654b94eb47b54f74b))
+
 ## [2.8.0](https://github.com/Gregster31/GeniePay/compare/v2.7.0...v2.8.0) (2026-05-01)
 
 
