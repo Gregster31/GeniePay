@@ -47,7 +47,7 @@ const RAW_ROW = {
   total_crypto: 0.2,
   gas_fee: '0.001',
   from_address: `0x${'a'.repeat(40)}`,
-  recipients: [{ address: `0x${'b'.repeat(40)}`, amountEth: 0.2, amountUsd: 500 }],
+  recipients: [{ address: `0x${'b'.repeat(40)}`, amountCrypto: 0.2, amountUsd: 500 }],
   created_at: '2024-03-01T12:00:00Z',
 };
 
@@ -60,7 +60,7 @@ const RECEIPT_INPUT: Omit<Receipt, 'id' | 'createdAt'> = {
   totalCrypto: 0.2,
   gasFee: '0.001',
   from: `0x${'a'.repeat(40)}`,
-  recipients: [{ address: `0x${'b'.repeat(40)}`, amountEth: 0.2, amountUsd: 500 }],
+  recipients: [{ address: `0x${'b'.repeat(40)}`, amountCrypto: 0.2, amountUsd: 500 }],
 };
 
 function mockAuth(user: { id: string } | null = { id: USER_ID }) {

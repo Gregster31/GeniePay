@@ -1,35 +1,47 @@
 import { useMemo } from 'react';
 import { useAccount, useBalance } from 'wagmi';
-import { formatEther } from 'viem';
+import { formatEther, formatUnits } from 'viem';
+import type { TokenSymbol } from '@/config/tokenConfig';
+import { getTokenAddress, TOKEN_DECIMALS } from '@/config/tokenConfig';
 
-export const useGlobalBalance = () => {
-  const { address, isConnected } = useAccount();
-  
-  const { 
-    data: balanceData, 
-    isError, 
+export const useGlobalBalance = (token: TokenSymbol = 'ETH') => {
+  const { address, isConnected, chain } = useAccount();
+
+  const tokenAddress = useMemo(() => {
+    if (!chain || token === 'ETH') return undefined;
+    const addr = getTokenAddress(chain.id, token);
+    return addr && addr !== 'native' ? addr : undefined;
+  }, [chain, token]);
+
+  const {
+    data: balanceData,
+    isError,
     isLoading,
     refetch,
     error
   } = useBalance({
     address: address,
+    token: tokenAddress,
     query: {
       enabled: !!address && isConnected,
-      // Automatically refetches on new blocks
-      refetchInterval: 12000, // Every 12 seconds (Ethereum block time)
-      staleTime: 12_000,      // Treat data as fresh for the same window to avoid focus-refetch double-fetching
+      refetchInterval: 12000,
+      staleTime: 12_000,
     }
   });
 
   const formattedBalance = useMemo(() => {
     if (!balanceData || !isConnected) return '0.0000';
-    return parseFloat(formatEther(balanceData.value)).toFixed(4);
-  }, [balanceData, isConnected]);
+    if (token === 'ETH') {
+      return parseFloat(formatEther(balanceData.value)).toFixed(4);
+    }
+    const decimals = TOKEN_DECIMALS[token];
+    return parseFloat(formatUnits(balanceData.value, decimals)).toFixed(4);
+  }, [balanceData, isConnected, token]);
 
   return {
     balance: balanceData?.value,
     formattedBalance,
-    symbol: balanceData?.symbol || 'ETH',
+    symbol: token,
     isLoading: isLoading && isConnected,
     isError: isError && isConnected,
     error: error || null,

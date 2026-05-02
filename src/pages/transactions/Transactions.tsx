@@ -242,7 +242,7 @@ export const History: React.FC = () => {
                           style={{ color: isSent ? '#f87171' : '#4ade80' }}
                         >
                           {isSent ? `−${tx.value}` : `+${tx.value}`}
-                          <span className="ml-1 text-xs font-normal text-gray-400 dark:text-[#6f6b77]">ETH</span>
+                          <span className="ml-1 text-xs font-normal text-gray-400 dark:text-[#6f6b77]">{tx.tokenSymbol}</span>
                         </span>
                       </td>
 

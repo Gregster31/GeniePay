@@ -27,7 +27,7 @@ export function buildReceiptHtml(receipt: Receipt): string {
           ${r.amountUsd !== undefined ? formatCurrency(r.amountUsd) : '—'}
         </td>
         <td style="padding:10px 12px;border-bottom:1px solid #2a2438;color:#9ca3af;font-size:13px;text-align:right;">
-          ${r.amountEth !== undefined ? `${r.amountEth.toFixed(6)} ${escapeHtml(receipt.currency)}` : '—'}
+          ${r.amountCrypto !== undefined ? `${r.amountCrypto.toFixed(6)} ${escapeHtml(receipt.currency)}` : '—'}
         </td>
       </tr>`,
     )

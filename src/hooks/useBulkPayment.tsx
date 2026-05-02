@@ -2,56 +2,10 @@ import { useState, useCallback } from 'react';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, type Address } from 'viem';
 import type { Employee } from '@/models/EmployeeModel';
+import type { TokenSymbol } from '@/config/tokenConfig';
+import { DISPERSE_CONTRACTS, TOKEN_ADDRESSES, TOKEN_DECIMALS } from '@/config/tokenConfig';
 import { useEthPrice } from '@/hooks/useEthPrice';
 import { isValidEthAddress } from '@/utils/EthUtils';
-
-const DISPERSE_CONTRACTS: Record<number, Address> = {
-  1:        '0xD152f549545093347A162Dce210e7293f1452150',
-  11155111: '0xD152f549545093347A162Dce210e7293f1452150',
-  56:       '0xD152f549545093347A162Dce210e7293f1452150',
-  137:      '0xD152f549545093347A162Dce210e7293f1452150',
-  10:       '0xD152f549545093347A162Dce210e7293f1452150',
-  42161:    '0x692B5A7eCcCaD243a07535E8C24b0e7433238c6a',
-  8453:     '0xD152f549545093347A162Dce210e7293f1452150',
-};
-
-const TOKEN_ADDRESSES: Record<number, Record<string, Address | 'native'>> = {
-  1: {
-    ETH:  'native',
-    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-    DAI:  '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-  },
-  11155111: {
-    ETH:  'native',
-    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
-  },
-  137: {
-    USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-    USDT: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-    DAI:  '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
-  },
-  42161: {
-    USDC: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
-    USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-    DAI:  '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
-  },
-  10: {
-    USDC: '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
-    DAI:  '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
-  },
-  8453: {
-    USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  },
-  56: {
-    USDC: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-    USDT: '0x55d398326f99059fF775485246999027B3197955',
-  },
-};
-
-const TOKEN_DECIMALS: Record<string, number> = {
-  ETH: 18, USDC: 6, USDT: 6, DAI: 18,
-};
 
 const DISPERSE_ABI = [
   {
@@ -108,7 +62,7 @@ type PaymentStep = 'idle' | 'approving' | 'approved' | 'sending' | 'success' | '
 
 interface BulkPaymentParams {
   employees: Employee[];
-  currency: string;
+  currency: TokenSymbol;
 }
 
 export function useBulkPayment() {
@@ -122,7 +76,7 @@ export function useBulkPayment() {
   const [paymentHash, setPaymentHash] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
 
-  const getAddresses = useCallback((currency: string) => {
+  const getAddresses = useCallback((currency: TokenSymbol) => {
     if (!chain) return null;
     const disperseAddress = DISPERSE_CONTRACTS[chain.id];
     if (!disperseAddress) return null;
@@ -132,7 +86,7 @@ export function useBulkPayment() {
     return { tokenAddress, disperseAddress, isNative: false };
   }, [chain]);
 
-  const validate = useCallback(async (employees: Employee[], currency: string): Promise<string | null> => {
+  const validate = useCallback(async (employees: Employee[], currency: TokenSymbol): Promise<string | null> => {
     if (!address || !chain || !publicClient) return 'Please connect your wallet';
     if (employees.length === 0) return 'No employees selected';
 
@@ -146,7 +100,7 @@ export function useBulkPayment() {
     if (invalidAddresses.length > 0)
       return `Invalid wallet address for: ${invalidAddresses.map(e => e.name).join(', ')}`;
 
-    const decimals = TOKEN_DECIMALS[currency] || 18;
+    const decimals = TOKEN_DECIMALS[currency];
     const total = employees.reduce((sum, emp) => {
       const amount = addresses.isNative ? emp.payUsd / ethPrice : emp.payUsd;
       return sum + parseUnits(amount.toString(), decimals);
@@ -182,7 +136,7 @@ export function useBulkPayment() {
       const client = publicClient;
       if (!client) throw new Error('No public client, wallet may have disconnected');
       const addresses = getAddresses(currency)!;
-      const decimals = TOKEN_DECIMALS[currency] || 18;
+      const decimals = TOKEN_DECIMALS[currency];
       const recipients = employees.map(e => e.walletAddress as Address);
       const amounts = employees.map(e => {
         const amount = addresses.isNative ? e.payUsd / ethPrice : e.payUsd;
@@ -275,7 +229,7 @@ export function useBulkPayment() {
     validate,
     reset,
     estimateGasSavings,
-    getTokenAddress:    (currency: string) => getAddresses(currency)?.tokenAddress,
+    getTokenAddress:    (currency: TokenSymbol) => getAddresses(currency)?.tokenAddress,
     getDisperseAddress: () => chain ? DISPERSE_CONTRACTS[chain.id] : undefined,
   };
 }

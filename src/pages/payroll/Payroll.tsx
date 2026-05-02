@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { UserPlus, Send, Copy, CheckCircle2, FileUp, Pencil, Trash2, Check, Layers, ChevronDown, ChevronRight } from 'lucide-react';
+import { UserPlus, Send, Copy, CheckCircle2, FileUp, Pencil, Trash2, Check, Layers, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import type { Employee } from '@/models/EmployeeModel';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
@@ -12,9 +12,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PageShell } from '@/components/layout/PageShell';
 import { WalletGateModal } from '@/components/ui/WalletGateModal';
 import { DEMO_EMPLOYEES } from '@/data/demoData';
+import { isChainSupported } from '@/config/tokenConfig';
 
 export const Payroll: React.FC = () => {
-  const { isConnected }                         = useAccount();
+  const { isConnected, chain }                  = useAccount();
+  const isUnsupported = isConnected && chain && !isChainSupported(chain.id);
   const { employees, addEmployee, updateEmployee, removeEmployee } = useAuth();
   const displayedEmployees                      = isConnected ? employees : DEMO_EMPLOYEES;
   const [selectedIds, setSelectedIds]           = useState<string[]>([]);
@@ -131,12 +133,13 @@ export const Payroll: React.FC = () => {
       </button>
       <button
         onClick={() => openGated('run payroll', () => setShowBatchModal(true))}
-        disabled={isConnected && !hasSelection}
+        disabled={isUnsupported || (isConnected && !hasSelection)}
+        title={isUnsupported ? 'Switch to a supported network to continue' : undefined}
         className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
-          backgroundColor: (isConnected && hasSelection) ? 'rgba(93,0,242,0.9)' : !isConnected ? 'rgba(93,0,242,0.9)' : 'rgba(255,255,255,0.05)',
-          border: (isConnected && hasSelection) ? '1px solid rgba(93,0,242,0.5)' : !isConnected ? '1px solid rgba(93,0,242,0.5)' : '1px solid rgba(255,255,255,0.1)',
-          color: (isConnected && !hasSelection) ? '#6b7280' : '#fff',
+          backgroundColor: (isConnected && hasSelection && !isUnsupported) ? 'rgba(93,0,242,0.9)' : !isConnected ? 'rgba(93,0,242,0.9)' : 'rgba(255,255,255,0.05)',
+          border: (isConnected && hasSelection && !isUnsupported) ? '1px solid rgba(93,0,242,0.5)' : !isConnected ? '1px solid rgba(93,0,242,0.5)' : '1px solid rgba(255,255,255,0.1)',
+          color: (isConnected && (!hasSelection || isUnsupported)) ? '#6b7280' : '#fff',
         }}>
         <Send className="w-4 h-4 shrink-0" />
         {isConnected && hasSelection ? `Run Payroll (${selectedIds.length})` : 'Run Payroll'}
@@ -146,6 +149,16 @@ export const Payroll: React.FC = () => {
 
   return (
     <PageShell title="Payroll" subtitle="Manage employees and run batch payments" actions={actions}>
+
+      {/* Unsupported chain warning */}
+      {isUnsupported && (
+        <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span className="text-[13px] text-amber-400">
+            Unsupported network. Switch to Ethereum, Arbitrum, Optimism, Base, Polygon, BNB, or Sepolia to run payroll.
+          </span>
+        </div>
+      )}
 
       {/* Table card */}
       <div className="relative rounded-xl border border-gray-200 dark:border-[#2e2d38] bg-white dark:bg-[#15141a] overflow-hidden">

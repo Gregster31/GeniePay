@@ -7,25 +7,32 @@ import { usePayment } from '@/hooks/usePayment';
 import { useEthPrice } from '@/hooks/useEthPrice';
 import { useGlobalBalance } from '@/hooks/useGlobalBalance';
 import { useEnsResolution } from '@/hooks/useEnsResolution';
-import { ethToUsd, usdToEth } from '@/utils/EthUtils';
+import { tokenToUsd, usdToToken } from '@/utils/EthUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatCurrency } from '@/utils/Format';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import { saveReceipt } from '@/services/ReceiptService';
 import { useQueryClient } from '@tanstack/react-query';
 import { WalletGateModal } from '@/components/ui/WalletGateModal';
+import type { TokenSymbol } from '@/config/tokenConfig';
+import { getSupportedTokens, isChainSupported } from '@/config/tokenConfig';
+import { useSelectedToken } from '@/contexts/TokenContext';
 
-type Currency = 'ETH' | 'USD';
+type DisplayCurrency = 'TOKEN' | 'USD';
 
 const Pay: React.FC = () => {
   const { chain, address }          = useAccount();
   const { employees }               = useAuth();
-  const { formattedBalance, isConnected } = useGlobalBalance();
   const { ethPrice }                = useEthPrice();
   const queryClient                 = useQueryClient();
   const { sendPayment, isProcessing, isConfirmed, txHash, sendError, sendErrorDetails } = usePayment();
 
-  const [currency, setCurrency]           = useState<Currency>('ETH');
+  const supportedTokens = getSupportedTokens(chain?.id);
+  const { selectedToken, setSelectedToken } = useSelectedToken();
+  const [displayCurrency, setDisplayCurrency] = useState<DisplayCurrency>('TOKEN');
+
+  const { formattedBalance, isConnected } = useGlobalBalance(selectedToken);
+
   const [amount, setAmount]               = useState('');
   const [ensInput, setEnsInput]           = useState('');
   const [showSuccess, setShowSuccess]     = useState(false);
@@ -35,10 +42,9 @@ const Pay: React.FC = () => {
   const [receiptSaveError, setReceiptSaveError] = useState(false);
   const dropdownRef                       = useRef<HTMLDivElement>(null);
 
-  // Capture sender context at send time to avoid stale values on confirmation
   const [pendingReceipt, setPendingReceipt] = useState<{
-    recipient: string; ethAmount: number; usdAmount: number;
-    from: string; network: string;
+    recipient: string; cryptoAmount: number; usdAmount: number;
+    from: string; network: string; currency: TokenSymbol;
   } | null>(null);
 
   const { address: recipient, resolved: ensResolved, loading: ensLoading, error: ensError } = useEnsResolution(ensInput);
@@ -53,12 +59,10 @@ const Pay: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Clear pending receipt if wallet disconnects mid-payment
   useEffect(() => {
     if (!isConnected) setPendingReceipt(null);
   }, [isConnected]);
 
-  // On confirmation: save receipt using context captured at send time
   useEffect(() => {
     if (isConfirmed && txHash && pendingReceipt) {
       setShowSuccess(true);
@@ -74,14 +78,14 @@ const Pay: React.FC = () => {
         type: 'quickpay',
         txHash,
         network: pendingReceipt.network,
-        currency: 'ETH',
+        currency: pendingReceipt.currency,
         totalUsd: pendingReceipt.usdAmount,
-        totalCrypto: pendingReceipt.ethAmount,
+        totalCrypto: pendingReceipt.cryptoAmount,
         from: pendingReceipt.from,
         recipients: [{
           name: recipientName,
           address: pendingReceipt.recipient,
-          amountEth: pendingReceipt.ethAmount,
+          amountCrypto: pendingReceipt.cryptoAmount,
           amountUsd: pendingReceipt.usdAmount,
         }],
       })
@@ -92,24 +96,25 @@ const Pay: React.FC = () => {
     }
   }, [isConfirmed, txHash, pendingReceipt, employees, queryClient, address]);
 
-  const maxBal    = parseFloat(formattedBalance);
-  const numAmount = parseFloat(amount) || 0;
-  const ethAmount = currency === 'ETH' ? numAmount : usdToEth(numAmount, ethPrice);
-  const usdAmount = currency === 'USD' ? numAmount : ethToUsd(numAmount, ethPrice);
+  const maxBal       = parseFloat(formattedBalance);
+  const numAmount    = parseFloat(amount) || 0;
+  const cryptoAmount = displayCurrency === 'TOKEN' ? numAmount : usdToToken(numAmount, selectedToken, ethPrice);
+  const usdAmount    = displayCurrency === 'USD'   ? numAmount : tokenToUsd(numAmount, selectedToken, ethPrice);
+  const isUnsupported = isConnected && chain && !isChainSupported(chain.id);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isConnected) { setShowGateModal(true); return; }
-    if (!recipient || ethAmount <= 0 || ethAmount > maxBal) return;
-    // Capture sender context now — address/chain may change by confirmation time
+    if (!recipient || cryptoAmount <= 0 || cryptoAmount > maxBal) return;
     setPendingReceipt({
       recipient,
-      ethAmount,
+      cryptoAmount,
       usdAmount,
       from: address ?? '',
       network: chain?.name ?? 'Ethereum',
+      currency: selectedToken,
     });
-    sendPayment({ recipientAddress: recipient, amount: ethAmount.toString() });
+    sendPayment({ recipientAddress: recipient, amount: cryptoAmount.toString(), currency: selectedToken });
   };
 
   const inputBase = "w-full bg-transparent outline-none dark:text-white text-gray-900 dark:placeholder-gray-600 placeholder-gray-400";
@@ -124,10 +129,19 @@ const Pay: React.FC = () => {
           <p className="text-[13px] text-gray-500 mt-1">Send instant crypto payments to any wallet</p>
         </div>
 
+        {/* Unsupported chain warning */}
+        {isUnsupported && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="text-[13px] text-amber-400">
+              Unsupported network. Switch to Ethereum, Arbitrum, Optimism, Base, Polygon, BNB, or Sepolia to send payments.
+            </span>
+          </div>
+        )}
+
         <Card className="!p-7">
           <div className="space-y-5">
 
-            {/* Chain badge */}
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Payment</span>
             </div>
@@ -140,7 +154,6 @@ const Pay: React.FC = () => {
               </div>
             )}
 
-            {/* Receipt save error (payment succeeded but receipt failed) */}
             {receiptSaveError && (
               <div className="p-3 rounded-xl bg-yellow-500/8 border border-yellow-500/20 flex items-center gap-2.5">
                 <AlertCircle className="w-4 h-4 text-yellow-500 shrink-0" />
@@ -150,10 +163,32 @@ const Pay: React.FC = () => {
               </div>
             )}
 
-            {/* Tx Error */}
             {sendError && !sendErrorDetails?.message?.toLowerCase().includes('user rejected') && (
               <div className="p-3 rounded-xl bg-red-500/8 border border-red-500/20">
                 <p className="text-[13px] text-red-400">{sendErrorDetails?.message ?? 'Transaction failed. Please try again.'}</p>
+              </div>
+            )}
+
+            {/* Token selector */}
+            {supportedTokens.length > 1 && (
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-2">Token</label>
+                <div className="flex gap-1.5">
+                  {supportedTokens.map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => { setSelectedToken(t); setAmount(''); }}
+                      className={`px-4 py-2 rounded-xl text-[13px] font-semibold border transition-colors duration-150 cursor-pointer
+                        ${selectedToken === t
+                          ? 'bg-[#5D00F2] border-[#5D00F2] text-white'
+                          : 'dark:bg-white/[0.04] dark:border-white/[0.09] dark:text-gray-400 bg-black/[0.04] border-black/[0.08] text-gray-500 hover:dark:bg-white/[0.07]'
+                        }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -164,20 +199,29 @@ const Pay: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <input type="number" step="any" value={amount} onChange={e => setAmount(e.target.value)}
                     placeholder="0.00" className={`${inputBase} text-[32px] font-bold tracking-tight leading-none`} />
-                  <button type="button" onClick={() => setCurrency(c => c === 'ETH' ? 'USD' : 'ETH')}
+                  <button type="button" onClick={() => setDisplayCurrency(c => c === 'TOKEN' ? 'USD' : 'TOKEN')}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg dark:bg-white/[0.06] dark:hover:bg-white/[0.10] bg-black/[0.05] hover:bg-black/[0.09] transition-colors shrink-0">
-                    <span className="text-[13px] font-semibold dark:text-white text-gray-900">{currency}</span>
+                    <span className="text-[13px] font-semibold dark:text-white text-gray-900">
+                      {displayCurrency === 'TOKEN' ? selectedToken : 'USD'}
+                    </span>
                     <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
                   </button>
                 </div>
                 <div className="flex items-center justify-between mt-2.5">
                   <span className="text-[12px] text-gray-500 font-mono">
-                    {currency === 'ETH' ? `≈ ${formatCurrency(usdAmount)}` : `≈ ${ethAmount.toFixed(6)} ETH`}
+                    {displayCurrency === 'TOKEN'
+                      ? `≈ ${formatCurrency(usdAmount)}`
+                      : `≈ ${cryptoAmount.toFixed(selectedToken === 'ETH' ? 6 : 2)} ${selectedToken}`
+                    }
                   </span>
                   <button type="button"
-                    onClick={() => setAmount(currency === 'ETH' ? maxBal.toFixed(6) : ethToUsd(maxBal, ethPrice).toFixed(2))}
+                    onClick={() => setAmount(
+                      displayCurrency === 'TOKEN'
+                        ? maxBal.toFixed(selectedToken === 'ETH' ? 6 : 2)
+                        : tokenToUsd(maxBal, selectedToken, ethPrice).toFixed(2)
+                    )}
                     className="text-[11px] font-semibold text-cyan hover:text-cyan/80 transition-colors">
-                    {maxBal.toFixed(4)} ETH · Max
+                    {maxBal.toFixed(selectedToken === 'ETH' ? 4 : 2)} {selectedToken} · Max
                   </button>
                 </div>
               </div>
@@ -186,7 +230,6 @@ const Pay: React.FC = () => {
             {/* Recipient */}
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-widest text-gray-500 mb-2">Send to</label>
-              {/* Custom employee dropdown */}
               {employees.length > 0 && (
                 <div ref={dropdownRef} className="relative mb-2">
                   <button
@@ -259,12 +302,13 @@ const Pay: React.FC = () => {
 
             {/* Send */}
             <button onClick={handleSend}
-              disabled={isProcessing || (isConnected && (!recipient || ethAmount <= 0 || ethAmount > maxBal))}
+              disabled={isUnsupported || isProcessing || (isConnected && (!recipient || cryptoAmount <= 0 || cryptoAmount > maxBal))}
+              title={isUnsupported ? 'Switch to a supported network to continue' : undefined}
               className="w-full py-3.5 px-4 rounded-xl font-semibold text-[14px] tracking-wide transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed bg-purple hover:bg-purple/90 text-white"
               style={{ boxShadow: '0 4px 20px rgba(93,0,242,0.35)' }}>
               {isProcessing
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</>
-                : <><Send className="w-4 h-4" /> Send Payment</>
+                : <><Send className="w-4 h-4" /> Send {selectedToken}</>
               }
             </button>
 

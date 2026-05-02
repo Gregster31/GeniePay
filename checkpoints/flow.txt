@@ -36,7 +36,9 @@ How it works: When you connect your wallet, GeniePay silently authenticates you 
 Supabase issues a JWT, and PostgreSQL's Row Level Security ensures you can only ever read and write your own employee data, 
 enforced at the database level, not just in the frontend. Reconnect the same wallet on any device or browser and your entire team roster is there instantly.
 
-
+CHAINS FLOW
+We support 7 chains (Ethereum, Arbitrum, Optimism, Base, Polygon, BNB, Sepolia)
+3 tokens (USDC, USDT, ETH)
 
 
 🎨 Color Theme Changes:

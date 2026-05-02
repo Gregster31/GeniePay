@@ -63,10 +63,10 @@ describe('fetchTransactions', () => {
   });
 
   it('returns parsed transactions for a single known chainId', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: '1', result: [TX_STUB] }),
-    } as Response);
+    // First call = native txlist, second call = ERC20 tokentx (return empty)
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: '1', result: [TX_STUB] }) } as Response)
+      .mockResolvedValue({ ok: true, json: async () => ({ status: '0', result: null }) } as Response);
 
     const results = await fetchTransactions('0xaddr', 1, 10, 1);
 
@@ -80,10 +80,9 @@ describe('fetchTransactions', () => {
   });
 
   it('converts whole-number wei to an ETH string without decimals', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: '1', result: [TX_STUB] }),
-    } as Response);
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: '1', result: [TX_STUB] }) } as Response)
+      .mockResolvedValue({ ok: true, json: async () => ({ status: '0', result: null }) } as Response);
 
     const [tx] = await fetchTransactions('0xaddr', 1, 10, 1);
     // 1_000_000_000_000_000_000 wei = 1 ETH
@@ -93,10 +92,9 @@ describe('fetchTransactions', () => {
   it('converts fractional wei to a trimmed ETH decimal string', async () => {
     // 500_000_000_000_000_000 wei = 0.5 ETH
     const fractionalTx = { ...TX_STUB, value: '500000000000000000' };
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: '1', result: [fractionalTx] }),
-    } as Response);
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: '1', result: [fractionalTx] }) } as Response)
+      .mockResolvedValue({ ok: true, json: async () => ({ status: '0', result: null }) } as Response);
 
     const [tx] = await fetchTransactions('0xaddr', 1, 10, 1);
     expect(tx.value).toBe('0.5');
@@ -131,13 +129,12 @@ describe('fetchTransactions', () => {
 
     const result = await fetchTransactions('0xaddr', 1, 10, 999999);
 
-    // Unknown chainId is not in BLOCKSCOUT_ENDPOINTS, so the condition
-    // `chainId && BLOCKSCOUT_ENDPOINTS[chainId]` is falsy → all-chains fallback.
+    // Unknown chainId is not in BLOCKSCOUT_ENDPOINTS → all-chains fallback (native only, 7 chains).
     expect(result).toEqual([]);
-    expect(fetch).toHaveBeenCalledTimes(6);
+    expect(fetch).toHaveBeenCalledTimes(7);
   });
 
-  it('queries all 6 supported chains when no chainId is supplied', async () => {
+  it('queries all 7 supported chains when no chainId is supplied', async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({ status: '0', result: null }),
@@ -145,7 +142,7 @@ describe('fetchTransactions', () => {
 
     await fetchTransactions('0xaddr', 1, 10);
 
-    expect(fetch).toHaveBeenCalledTimes(6);
+    expect(fetch).toHaveBeenCalledTimes(7);
   });
 
   it('caps results to the requested limit when aggregating all chains', async () => {

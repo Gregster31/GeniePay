@@ -1,19 +1,27 @@
+import React from "react";
 import { Card, Label } from "@/components/ui";
 import { useEthPrice } from "@/hooks/useEthPrice";
 import { useGlobalBalance } from "@/hooks/useGlobalBalance";
-import { ethToUsd } from "@/utils/EthUtils";
+import { tokenToUsd } from "@/utils/EthUtils";
 import { formatCurrency } from "@/utils/Format";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { useAccount } from "wagmi";
+import { getSupportedTokens } from "@/config/tokenConfig";
+import { useSelectedToken } from "@/contexts/TokenContext";
 
 export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayroll }) => {
-  const { formattedBalance: ethBal, isLoading: bL, isError: bE, refetch, isConnected } = useGlobalBalance();
+  const { chain } = useAccount();
+  const supportedTokens = getSupportedTokens(chain?.id);
+  const { selectedToken, setSelectedToken } = useSelectedToken();
+
+  const { formattedBalance, isLoading: bL, isError: bE, refetch, isConnected } = useGlobalBalance(selectedToken);
   const { ethPrice, isLoading: pL } = useEthPrice();
   const [spin, setSpin] = useState(false);
 
-  const loading      = bL || pL;
-  const walletUsd    = ethToUsd(parseFloat(ethBal), ethPrice);
-  const payPct       = walletUsd > 0 && monthlyPayroll > 0 ? Math.min(monthlyPayroll / walletUsd * 100, 100) : 0;
+  const loading   = bL || pL;
+  const walletUsd = tokenToUsd(parseFloat(formattedBalance), selectedToken, ethPrice);
+  const payPct    = walletUsd > 0 && monthlyPayroll > 0 ? Math.min(monthlyPayroll / walletUsd * 100, 100) : 0;
   const insufficient = monthlyPayroll > walletUsd && monthlyPayroll > 0;
 
   const refresh = async () => { setSpin(true); await refetch(); setTimeout(() => setSpin(false), 600); };
@@ -39,6 +47,25 @@ export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayro
         </div>
       </div>
 
+      {/* Token selector */}
+      {supportedTokens.length > 1 && (
+        <div className="flex gap-1 mb-4">
+          {supportedTokens.map(t => (
+            <button
+              key={t}
+              onClick={() => setSelectedToken(t)}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-colors duration-150 cursor-pointer
+                ${selectedToken === t
+                  ? 'bg-[#5D00F2] border-[#5D00F2] text-white'
+                  : 'dark:bg-white/[0.04] dark:border-white/[0.09] dark:text-gray-400 bg-black/[0.04] border-black/[0.08] text-gray-500'
+                }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Big balance */}
       <div className="mb-[18px]">
         {loading ? (
@@ -53,7 +80,7 @@ export const BalanceCard: React.FC<{ monthlyPayroll: number }> = ({ monthlyPayro
                 {formatCurrency(walletUsd)}
               </span>
             </div>
-            <p className="mt-1.5 text-[11px] text-gray-500">{ethBal} ETH</p>
+            {isConnected && <p className="mt-1.5 text-[11px] text-gray-500">{formattedBalance} {selectedToken}</p>}
           </>
         )}
       </div>

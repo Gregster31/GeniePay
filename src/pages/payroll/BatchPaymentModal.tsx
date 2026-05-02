@@ -7,6 +7,8 @@ import { saveReceipt } from '@/services/ReceiptService';
 import { formatCurrency } from '@/utils/Format';
 import { sliceAddress } from '@/utils/WalletAddressSlicer';
 import type { Employee } from '@/models/EmployeeModel';
+import type { TokenSymbol } from '@/config/tokenConfig';
+import { getSupportedTokens } from '@/config/tokenConfig';
 
 interface BatchPaymentModalProps {
   isOpen: boolean;
@@ -23,6 +25,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
 }) => {
   const { chain, address, status } = useAccount();
   const queryClient = useQueryClient();
+  const supportedTokens = getSupportedTokens(chain?.id);
 
   const {
     approvalHash,
@@ -38,7 +41,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
   } = useBulkPayment();
 
   const [gasSavings, setGasSavings] = useState('60%');
-  const [selectedCurrency, setSelectedCurrency] = useState<'ETH' | 'USDC'>('ETH');
+  const [selectedCurrency, setSelectedCurrency] = useState<TokenSymbol>(supportedTokens[0] ?? 'USDC');
   const [receiptSaved, setReceiptSaved] = useState(false);
   const [receiptError, setReceiptError] = useState(false);
 
@@ -50,6 +53,14 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
       setGasSavings(estimateGasSavings(employees.length));
     }
   }, [employees.length, estimateGasSavings]);
+
+  // Auto-select first valid token when chain changes
+  useEffect(() => {
+    const tokens = getSupportedTokens(chain?.id);
+    if (tokens.length > 0 && !tokens.includes(selectedCurrency)) {
+      setSelectedCurrency(tokens[0]);
+    }
+  }, [chain?.id]);
 
   // Auto-close/reset if wallet disconnects mid-payment
   useEffect(() => {
@@ -80,7 +91,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
           name: emp.name,
           address: emp.walletAddress,
           amountUsd: emp.payUsd,
-          amountEth: selectedCurrency === 'ETH' ? emp.payUsd / capturedEthPrice : emp.payUsd,
+          amountCrypto: selectedCurrency === 'ETH' ? emp.payUsd / capturedEthPrice : emp.payUsd,
         })),
       })
         .then(() => queryClient.invalidateQueries({ queryKey: ['receipts', address] }))
@@ -234,7 +245,7 @@ export const BatchPaymentModal: React.FC<BatchPaymentModalProps> = ({
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-[#6f6b77] mb-2">Payment Currency</p>
                 <div className="flex gap-2 p-1 rounded-lg bg-gray-100 dark:bg-[#1c1b22] border border-gray-200 dark:border-[#2e2d38]">
-                  {(['ETH', 'USDC'] as const).map(cur => (
+                  {supportedTokens.map(cur => (
                     <button
                       key={cur}
                       onClick={() => setSelectedCurrency(cur)}

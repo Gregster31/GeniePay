@@ -3,7 +3,7 @@ export type ReceiptType = 'quickpay' | 'payroll';
 export interface ReceiptRecipient {
   name?: string;
   address: string;
-  amountEth?: number;
+  amountCrypto?: number;
   amountUsd?: number;
 }
 
