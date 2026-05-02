@@ -74,16 +74,6 @@ export const CHAIN_NAMES: Record<number, string> = {
   11155111: 'Sepolia',
 };
 
-export const CHAIN_COLORS: Record<number, string> = {
-  1:        '#627EEA',  // Ethereum blue
-  42161:    '#28A0F0',  // Arbitrum blue
-  10:       '#FF0420',  // Optimism red
-  8453:     '#0052FF',  // Base blue
-  137:      '#8247E5',  // Polygon purple
-  56:       '#F0B90B',  // BNB yellow
-  11155111: '#CFB5F0',  // Sepolia lavender
-};
-
 export function getSupportedTokens(chainId: number | undefined): TokenSymbol[] {
   if (!chainId) return [];
   return SUPPORTED_TOKENS_PER_CHAIN[chainId] ?? [];

@@ -3,7 +3,6 @@ import { Search, Globe, Moon, Sun, Menu, X } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useTheme } from '@/contexts/ThemeContext';
-import { CHAIN_COLORS } from '@/config/tokenConfig';
 
 interface AppHeaderProps {
   onMobileMenuToggle: () => void;
@@ -89,14 +88,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMobileMenuToggle, mobile
         <div className="hidden sm:flex items-center gap-1.5 h-10 px-3.5 rounded-lg text-[13px] font-semibold tracking-wide whitespace-nowrap border
           dark:text-gray-300 dark:bg-white/[0.04] dark:border-white/[0.07]
           text-gray-700 bg-black/[0.04] border-black/[0.08]">
-          {chain?.id && CHAIN_COLORS[chain.id] ? (
-            <span
-              className="w-[8px] h-[8px] rounded-full shrink-0"
-              style={{ backgroundColor: CHAIN_COLORS[chain.id], boxShadow: `0 0 5px ${CHAIN_COLORS[chain.id]}80` }}
-            />
-          ) : (
-            <Globe size={13} className="dark:text-[#23DDC6] text-[#0A8B7D]" />
-          )}
+          <Globe size={13} className="dark:text-[#23DDC6] text-[#0A8B7D]" />
           <span>{chain?.name ?? 'Mainnet'}</span>
         </div>
 
