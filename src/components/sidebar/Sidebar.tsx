@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Send, Users, FileText, ChevronLeft, ChevronRight, ArrowRightLeft } from 'lucide-react';
+import { LayoutDashboard, Send, Users, FileText, ChevronLeft, ChevronRight, ArrowRightLeft, BarChart2, Shuffle } from 'lucide-react';
 
-const NAV = [
+const NAV: { id: string; label: string; path: string | null; icon: React.ElementType; href?: string }[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/', icon: LayoutDashboard },
   { id: 'pay',       label: 'Quick Pay', path: '/pay',       icon: Send            },
   { id: 'payroll',   label: 'Payroll',   path: '/payroll',   icon: Users           },
   { id: 'documents', label: 'Documents', path: '/documents', icon: FileText        },
-  { id: 'transactions',   label: 'Transactions',   path: '/transactions',   icon: ArrowRightLeft         },
+  { id: 'transactions', label: 'Transactions',  path: '/transactions', icon: ArrowRightLeft },
+  { id: 'bridge',       label: 'Bridge & Swap', path: null,            icon: Shuffle, href: 'https://app.uniswap.org/' },
+  { id: 'metrics',      label: 'Metrics',       path: '/metrics',      icon: BarChart2     },
 ];
 
 interface SidebarProps {
@@ -34,12 +36,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, isMobile }) => {
         ${isMobile ? 'w-full rounded-2xl' : collapsed ? 'w-16' : 'w-[220px]'}`}
     >
       <nav className="flex-1 flex flex-col gap-0.5 p-2.5 overflow-y-auto overflow-x-hidden">
-        {NAV.map(({ id, label, path, icon: Icon }) => {
-          const active = isActive(path);
+        {NAV.map(({ id, label, path, icon: Icon, href }) => {
+          const active = path !== null && isActive(path);
           return (
             <button
               key={id}
-              onClick={() => { navigate(path); onNavigate?.(); }}
+              onClick={() => { href ? window.open(href, '_blank', 'noopener,noreferrer') : navigate(path!); onNavigate?.(); }}
               title={collapsed ? label : undefined}
               className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl border text-[13px] font-bold tracking-[0.06em] uppercase text-left whitespace-nowrap overflow-hidden transition-all duration-150
                 ${active
