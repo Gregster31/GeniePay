@@ -55,7 +55,6 @@ export const rowsToEmployees = (rows: Record<string, string>[]): CSVParseResult 
   return { valid, errors };
 };
 
-// RFC 4180-compliant CSV line parser (handles quoted fields with embedded commas)
 const parseCSVLine = (line: string): string[] => {
   const result: string[] = [];
   let current = '';
@@ -93,11 +92,10 @@ export const parseEmployeeFile = async (buffer: ArrayBuffer, fileName: string): 
         const obj: Record<string, string> = {};
         headerCols.forEach((h, i) => { obj[h] = cols[i] ?? ''; });
         return obj;
-      });
+      }).filter(row => Object.values(row).some(v => v !== ''));
       return rowsToEmployees(rawRows);
     }
 
-    // Excel formats (.xlsx / .xls)
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
 
@@ -116,7 +114,7 @@ export const parseEmployeeFile = async (buffer: ArrayBuffer, fileName: string): 
       row.eachCell((cell, col) => {
         if (headers[col]) obj[headers[col]] = String(cell.value ?? '').trim();
       });
-      rawRows.push(obj);
+      if (Object.values(obj).some(v => v !== '')) rawRows.push(obj);
     });
 
     return rowsToEmployees(rawRows);
@@ -125,6 +123,5 @@ export const parseEmployeeFile = async (buffer: ArrayBuffer, fileName: string): 
   }
 };
 
-// Downloadable template for users
 export const generateCSVTemplate = () =>
   `Name,Email,WalletAddress,Role,Department,PayUsd\nGreg Smith,greg@geniepay.com,0xAbc1234567890123456789012345678901234abcd,Developer,Engineering,5000\n`;
