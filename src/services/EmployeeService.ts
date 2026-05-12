@@ -36,8 +36,23 @@ export const signInWithWallet = async (
   const password = Array.from(new Uint8Array(hashBuf))
     .map(b => b.toString(16).padStart(2, '0')).join('');
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(error.message);
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (!signInError) return;
+
+  // 'invalid_credentials' means no account exists yet — any other error is a real failure
+  if ((signInError as { code?: string }).code !== 'invalid_credentials') {
+    throw new Error(signInError.message);
+  }
+
+  // First time this wallet connects — create the account
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+  if (signUpError) throw new Error(signUpError.message);
+
+  // Guard: if no session came back (e.g. email confirmation is enabled in Supabase dashboard),
+  // throw explicitly so the stale session from a previous wallet can never bleed through.
+  if (!signUpData.session) {
+    throw new Error('Wallet account created but requires email confirmation — disable it in Supabase Auth settings.');
+  }
 };
 
 export const signOutWallet = async (): Promise<void> => {

@@ -9,6 +9,7 @@ import Payroll    from '@/pages/payroll';
 import Transactions    from '@/pages/transactions';
 import Documents  from '@/pages/documents';
 import LandingPage from '@/pages/landing';
+import MetricsPage from '@/pages/metrics';
 
 const AppLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,7 +42,7 @@ const AppLayout: React.FC = () => {
 };
 
 const router = createBrowserRouter([
-  { path: '/landing', element: <LandingPage />, errorElement: <ErrorPage /> },
+  { path: '/landing', element: <LandingPage />,  errorElement: <ErrorPage /> },
   {
     path: '/',
     element: <AppLayout />,
@@ -52,6 +53,7 @@ const router = createBrowserRouter([
       { path: 'payroll',          element: <Payroll /> },
       { path: 'documents',        element: <Documents /> },
       { path: 'transactions',     element: <Transactions /> },
+      { path: 'metrics',          element: <MetricsPage /> },
     ],
   },
 ]);

@@ -47,7 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (async () => {
         setIsAuthenticated(false);
         setAuthError(null);
-        queryClient.removeQueries({ queryKey: ['receipts'] });
+        setEmployees([]);
+        queryClient.removeQueries({ queryKey: ['receipts', address] });
         setIsLoading(true);
         setIsLoadingEmployees(true);
         try {
